@@ -58,7 +58,7 @@ typedef struct __linkedlistitem_t {
 
 - (void)dealloc {
     [self releaseOldValue:_value];
-    if ( _pendingReleases ) AEManagedValueLinkedListAppend(&_releases, _pendingReleases);
+    if ( _pendingReleases ) AEManagedValueLinkedListPrepend(&_releases, _pendingReleases);
     [self pollReleaseList];
     pthread_mutex_destroy(&_mutex);
 }
@@ -96,7 +96,7 @@ typedef struct __linkedlistitem_t {
         linkedlistitem_t * release = (linkedlistitem_t*)calloc(1, sizeof(linkedlistitem_t));
         release->data = oldValue;
         pthread_mutex_lock(&_mutex);
-        AEManagedValueLinkedListAppend(&_pendingReleases, release);
+        AEManagedValueLinkedListPrepend(&_pendingReleases, release);
         pthread_mutex_unlock(&_mutex);
     
         if ( !self.pollTimer ) {
@@ -116,7 +116,7 @@ void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     if ( THIS->_pendingReleases && pthread_mutex_trylock(&THIS->_mutex) == 0 ) {
         // Move pending release items into the release queue
         if ( THIS->_pendingReleases ) {
-            AEManagedValueLinkedListAppend(&THIS->_releases, THIS->_pendingReleases);
+            AEManagedValueLinkedListPrepend(&THIS->_releases, THIS->_pendingReleases);
             THIS->_pendingReleases = NULL;
         }
         pthread_mutex_unlock(&THIS->_mutex);
@@ -154,10 +154,8 @@ void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     }
 }
 
-void AEManagedValueLinkedListAppend(linkedlistitem_t ** list, linkedlistitem_t * item) {
-    while ( *list ) {
-        list = &(*list)->next;
-    }
+static void AEManagedValueLinkedListPrepend(linkedlistitem_t ** list, linkedlistitem_t * item) {
+    item->next = *list;
     *list = item;
 }
 
