@@ -27,7 +27,6 @@
 #import "AERenderer.h"
 #import "AETypes.h"
 #import "AEManagedValue.h"
-#import <libkern/OSAtomic.h>
 
 NSString * const AERendererDidChangeSampleRateNotification = @"AERendererDidChangeSampleRateNotification";
 NSString * const AERendererDidChangeChannelCountNotification = @"AERendererDidChangeChannelCountNotification";

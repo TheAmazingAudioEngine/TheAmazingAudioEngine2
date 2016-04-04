@@ -32,7 +32,6 @@
 #import "AETypes.h"
 #import "AEAudioBufferListUtilities.h"
 #import "AEDSPUtilities.h"
-#import <libkern/OSAtomic.h>
 
 static const UInt32 kMicrofadeLength = 32;
 
