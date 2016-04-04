@@ -33,14 +33,13 @@
 
 NSString * const AEAudioUnitInputModuleError = @"AEAudioUnitInputModuleError";
 
-static void * kAudioSessionLatencyChanged = &kAudioSessionLatencyChanged;
-
 @interface AEAudioUnitInputModule ()
 @property (nonatomic, readwrite) int inputChannels;
 @property (nonatomic) int usableInputChannels;
 #if TARGET_OS_IPHONE
 @property (nonatomic, strong) id sessionInterruptionObserverToken;
 @property (nonatomic, strong) id mediaResetObserverToken;
+@property (nonatomic, strong) id routeChangeObserverToken;
 @property (nonatomic) NSTimeInterval inputLatency;
 #endif
 @end
@@ -52,18 +51,10 @@ static void * kAudioSessionLatencyChanged = &kAudioSessionLatencyChanged;
     if ( ![self setup] ) return nil;
     self.processFunction = AEAudioUnitInputModuleProcess;
     
-#if TARGET_OS_IPHONE
-    [[AVAudioSession sharedInstance] addObserver:self forKeyPath:@"inputLatency" options:0 context:kAudioSessionLatencyChanged];
-#endif
-    
     return self;
 }
 
 - (void)dealloc {
-#if TARGET_OS_IPHONE
-    [[AVAudioSession sharedInstance] removeObserver:self forKeyPath:@"outputLatency"];
-#endif
-    
     self.renderer = nil;
     [self teardown];
 }
@@ -218,6 +209,13 @@ static void AEAudioUnitInputModuleProcess(__unsafe_unretained AEAudioUnitInputMo
             [self start:NULL];
         }
     }];
+    
+    // Watch for audio route changes
+    self.routeChangeObserverToken =
+    [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionRouteChangeNotification object:nil
+                                                       queue:nil usingBlock:^(NSNotification *notification) {
+        self.inputLatency = [AVAudioSession sharedInstance].inputLatency;
+    }];
 #endif
     
     return YES;
@@ -229,6 +227,8 @@ static void AEAudioUnitInputModuleProcess(__unsafe_unretained AEAudioUnitInputMo
     self.sessionInterruptionObserverToken = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self.mediaResetObserverToken];
     self.mediaResetObserverToken = nil;
+    [[NSNotificationCenter defaultCenter] removeObserver:self.routeChangeObserverToken];
+    self.routeChangeObserverToken = nil;
 #endif
     AECheckOSStatus(AudioUnitUninitialize(_audioUnit), "AudioUnitUninitialize");
     AECheckOSStatus(AudioComponentInstanceDispose(_audioUnit), "AudioComponentInstanceDispose");
@@ -264,15 +264,5 @@ static void audioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, Audio
         [self updateStreamFormat];
     });
 }
-
-#if TARGET_OS_IPHONE
-- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary*)change context:(void *)context {
-    if ( context == kAudioSessionLatencyChanged ) {
-        self.inputLatency = [AVAudioSession sharedInstance].inputLatency;
-    } else {
-        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
-    }
-}
-#endif
 
 @end
