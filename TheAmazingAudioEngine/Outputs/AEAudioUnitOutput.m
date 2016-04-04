@@ -33,7 +33,12 @@
 #import "AETime.h"
 #import "AEManagedValue.h"
 #import "AEAudioBufferListUtilities.h"
+#import "AEAudioUnitInputModule.h"
 @import AVFoundation;
+
+@interface AEAudioUnitInputModule ()
+- (instancetype)initWithRenderer:(AERenderer *)renderer audioUnit:(AEIOAudioUnit *)audioUnit;
+@end
 
 @interface AEAudioUnitOutput ()
 @property (nonatomic, strong) AEIOAudioUnit * ioUnit;
@@ -44,7 +49,7 @@
 @implementation AEAudioUnitOutput
 @dynamic renderer, audioUnit, sampleRate, currentSampleRate, running, outputChannels;
 #if TARGET_OS_IPHONE
-@dynamic latencyCompensation;
+@dynamic latencyCompensation, inputModule;
 #endif
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
@@ -137,6 +142,10 @@
 
 - (void)setLatencyCompensation:(BOOL)latencyCompensation {
     self.ioUnit.latencyCompensation = latencyCompensation;
+}
+
+- (AEAudioUnitInputModule *)inputModule {
+    return [[AEAudioUnitInputModule alloc] initWithRenderer:self.renderer audioUnit:self.ioUnit];
 }
 #endif
 

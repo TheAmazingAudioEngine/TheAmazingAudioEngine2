@@ -32,6 +32,7 @@ extern "C" {
 #endif
 
 @class AERenderer;
+@class AEAudioUnitInputModule;
 
 /*!
  * Audio unit output
@@ -92,6 +93,10 @@ AudioUnit _Nullable AEAudioUnitOutputGetAudioUnit(__unsafe_unretained AEAudioUni
 //! Whether to automatically perform latency compensation (default YES)
 @property (nonatomic) BOOL latencyCompensation;
 
+//! A module that can be used to pull audio input from this unit, instead of using
+//  AEAudioUnitInputModule. Use this particularly if you intend to implement an Inter-App Audio
+//  effect node.
+@property (nonatomic, strong, readonly) AEAudioUnitInputModule * _Nonnull inputModule;
 #endif
 
 @end

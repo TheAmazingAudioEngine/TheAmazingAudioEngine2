@@ -36,6 +36,7 @@
 @property (nonatomic, strong) AEIOAudioUnit * ioUnit;
 @property (nonatomic, readwrite) int inputChannels;
 @property (nonatomic, strong) id ioUnitStreamChangeObserverToken;
+@property (nonatomic) BOOL ownsIOUnit;
 @end
 
 @implementation AEAudioUnitInputModule
@@ -45,12 +46,23 @@
 #endif
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
+    return [self initWithRenderer:renderer audioUnit:nil];
+}
+
+- (instancetype)initWithRenderer:(AERenderer *)renderer audioUnit:(AEIOAudioUnit *)audioUnit {
     if ( !(self = [super initWithRenderer:renderer]) ) return nil;
     
-    self.ioUnit = [AEIOAudioUnit new];
-    self.ioUnit.inputEnabled = YES;
+    if ( audioUnit ) {
+        self.ioUnit = audioUnit;
+        self.ioUnit.inputEnabled = YES;
+    } else {
+        self.ioUnit = [AEIOAudioUnit new];
+        self.ioUnit.inputEnabled = YES;
+        self.ioUnit.sampleRate = self.renderer.sampleRate;
+        self.ownsIOUnit = YES;
+    }
+    
     self.ioUnit.maxInputChannels = AEBufferStackGetMaximumChannelsPerBuffer(self.renderer.stack);
-    self.ioUnit.sampleRate = self.renderer.sampleRate;
     
     self.ioUnitStreamChangeObserverToken =
     [[NSNotificationCenter defaultCenter] addObserverForName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self.ioUnit
@@ -58,7 +70,9 @@
         self.inputChannels = self.ioUnit.inputChannels;
     }];
     
-    if ( ![self.ioUnit setup:NULL] ) return nil;
+    if ( self.ownsIOUnit ) {
+        if ( ![self.ioUnit setup:NULL] ) return nil;
+    }
     
     self.inputChannels = self.ioUnit.inputChannels;
     self.processFunction = AEAudioUnitInputModuleProcess;
@@ -80,10 +94,12 @@
 }
 
 - (BOOL)start:(NSError *__autoreleasing *)error {
+    if ( !self.ownsIOUnit ) return NO;
     return [self.ioUnit start:error];
 }
 
 - (void)stop {
+    if ( !self.ownsIOUnit ) return;
     [self.ioUnit stop];
 }
 
@@ -124,7 +140,9 @@ static void AEAudioUnitInputModuleProcess(__unsafe_unretained AEAudioUnitInputMo
 }
 
 - (void)rendererDidChangeSampleRate {
-    self.ioUnit.sampleRate = self.renderer.sampleRate;
+    if ( self.ownsIOUnit ) {
+        self.ioUnit.sampleRate = self.renderer.sampleRate;
+    }
 }
 
 @end
