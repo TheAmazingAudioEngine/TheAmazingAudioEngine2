@@ -190,10 +190,14 @@ NSString const * AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
                         "AudioUnitGetProperty(kAudioUnitProperty_StreamFormat)");
         self.inputChannels = MIN(asbd.mChannelsPerFrame, self.maxInputChannels);
         
+        if ( !self.outputEnabled ) {
+            self.currentSampleRate = self.sampleRate;
+        }
+        
         if ( self.inputChannels > 0 ) {
             // Set the stream format
             asbd = AEAudioDescription;
-            asbd.mSampleRate = self.sampleRate;
+            asbd.mSampleRate = self.currentSampleRate;
             asbd.mChannelsPerFrame = self.inputChannels;
             AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1,
                                                  &asbd, sizeof(asbd)),
@@ -467,11 +471,15 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
             self.inputChannels = channels;
         }
         
+        if ( !self.outputEnabled ) {
+            self.currentSampleRate = self.sampleRate;
+        }
+        
         if ( self.inputChannels > 0 ) {
             // Set the stream format
             asbd = AEAudioDescription;
             asbd.mChannelsPerFrame = self.inputChannels;
-            asbd.mSampleRate = self.sampleRate;
+            asbd.mSampleRate = self.currentSampleRate;
             AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1,
                                                  &asbd, sizeof(asbd)),
                             "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
