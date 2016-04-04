@@ -99,8 +99,10 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     AEArray * playersArray = [AEArray new];
     [playersArray updateWithContentsOfArray:players];
     
-    // Setup mic input
-    AEAudioUnitInputModule * input = [[AEAudioUnitInputModule alloc] initWithRenderer:renderer];
+    // Setup mic input (we'll draw from the output's IO audio unit). Alternatively, we could use
+    // a separate audio unit, with [[AEAudioUnitInputModule alloc] initWithRenderer:renderer]
+    AEAudioUnitInputModule * input = self.output.inputModule;
+    
     self.input = input;
     
     // Setup effects
@@ -244,14 +246,13 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         [self updatePlayingThroughSpeaker];
     }];
     
-    // Start the output and input
-    return [self.output start:error] && (!self.inputEnabled || [self.input start:error]);
+    // Start the output
+    return [self.output start:error];
 }
 
 - (void)stop {
     // Stop, and deactive the audio session
     [self.output stop];
-    [self.input stop];
     [[AVAudioSession sharedInstance] setActive:NO error:NULL];
     
     // Stop observing route changes
@@ -391,16 +392,6 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     // Update audio session category
     if ( ![self setAudioSessionCategory:nil] ) {
         return;
-    }
-    
-    // Start or stop the input module
-    if ( _inputEnabled ) {
-        NSError * error;
-        if ( ![self.input start:&error] ) {
-            NSLog(@"Couldn't start input unit: %@", error.localizedDescription);
-        }
-    } else {
-        [self.input stop];
     }
 }
 
