@@ -30,8 +30,6 @@
 extern "C" {
 #endif
 
-extern NSString * const _Nonnull AEAudioUnitInputModuleError;
-
 /*!
  * Audio input module
  *
@@ -56,6 +54,26 @@ extern NSString * const _Nonnull AEAudioUnitInputModuleError;
  * Stop the audio unit
  */
 - (void)stop;
+
+/*!
+ * Get access to audio unit
+ *
+ *  Available for realtime thread usage
+ *
+ * @param module The module instance
+ * @return The audio 
+ */
+AudioUnit _Nullable AEAudioUnitInputModuleGetAudioUnit(__unsafe_unretained AEAudioUnitInputModule * _Nonnull module);
+
+/*!
+ * Get the last received input timestamp
+ *
+ *  This gives access to the most recent AudioTimeStamp associated with input audio. Use this to perform synchronization.
+ *
+ * @param module The module instance
+ * @return The most recent audio timestamp
+ */
+AudioTimeStamp AEAudioUnitInputModuleGetInputTimestamp(__unsafe_unretained AEAudioUnitInputModule * _Nonnull module);
 
 @property (nonatomic, readonly) AudioUnit _Nonnull audioUnit; //!< The audio unit
 @property (nonatomic, readonly) BOOL running; //!< Whether unit is currently active

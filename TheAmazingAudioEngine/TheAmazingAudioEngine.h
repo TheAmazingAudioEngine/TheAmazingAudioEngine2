@@ -57,4 +57,5 @@
 #import <TheAmazingAudioEngine/AETime.h>
 #import <TheAmazingAudioEngine/AEArray.h>
 #import <TheAmazingAudioEngine/AEManagedValue.h>
+#import <TheAmazingAudioEngine/AEIOAudioUnit.h>
 

@@ -31,8 +31,6 @@
 extern "C" {
 #endif
 
-extern NSString * const _Nonnull AEAudioUnitOutputError;
-
 @class AERenderer;
 
 /*!
@@ -62,15 +60,38 @@ extern NSString * const _Nonnull AEAudioUnitOutputError;
  */
 - (void)stop;
 
-@property (nonatomic, strong, readonly) AERenderer * _Nullable renderer; //!< The renderer
-@property (nonatomic, readonly) AudioUnit _Nonnull audioUnit; //!< The audio unit
-@property (nonatomic) double sampleRate; //!< The sample rate at which to run, or zero to track the hardware sample rate
-@property (nonatomic, readonly) double currentSampleRate; //!< The current sample rate (key-value observable)
-@property (nonatomic, readonly) BOOL running; //!< Whether unit is currently active
-@property (nonatomic, readonly) int outputChannels; //!< The current number of output channels (key-value observable)
+/*!
+ * Get access to audio unit
+ *
+ *  Available for realtime thread usage
+ *
+ * @param output The output instance
+ * @return The audio unit
+ */
+AudioUnit _Nullable AEAudioUnitOutputGetAudioUnit(__unsafe_unretained AEAudioUnitOutput * _Nonnull output);
+
+//! The renderer
+@property (nonatomic, strong, readonly) AERenderer * _Nullable renderer;
+
+//! The audio unit
+@property (nonatomic, readonly) AudioUnit _Nonnull audioUnit;
+
+//! The sample rate at which to run, or zero to track the hardware sample rate
+@property (nonatomic) double sampleRate;
+
+//! The current sample rate (key-value observable)
+@property (nonatomic, readonly) double currentSampleRate;
+
+//! Whether unit is currently active
+@property (nonatomic, readonly) BOOL running;
+
+//! The current number of output channels (key-value observable)
+@property (nonatomic, readonly) int outputChannels;
 
 #if TARGET_OS_IPHONE
-@property (nonatomic) BOOL latencyCompensation; //!< Whether to automatically perform latency compensation (default YES)
+//! Whether to automatically perform latency compensation (default YES)
+@property (nonatomic) BOOL latencyCompensation;
+
 #endif
 
 @end

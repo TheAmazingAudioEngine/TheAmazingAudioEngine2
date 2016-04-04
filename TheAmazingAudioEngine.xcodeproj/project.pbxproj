@@ -14,6 +14,8 @@
 		4C94E2A61CAE6AFF006EB497 /* AEFileRecorderModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C94E2A41CAE6AFF006EB497 /* AEFileRecorderModule.m */; };
 		4C94E2C91CAF95BD006EB497 /* AEManagedValue.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C94E2C71CAF95BD006EB497 /* AEManagedValue.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C94E2CA1CAF95BD006EB497 /* AEManagedValue.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C94E2C81CAF95BD006EB497 /* AEManagedValue.m */; };
+		4C9F0F231CB1E9FC0032903E /* AEIOAudioUnit.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C9F0F211CB1E9FC0032903E /* AEIOAudioUnit.m */; };
+		4C9F0F251CB224D70032903E /* AEIOAudioUnit.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C9F0F201CB1E9FC0032903E /* AEIOAudioUnit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4CDCAC9C1CA25A29008AAEF1 /* TheAmazingAudioEngine.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4CDCAC9B1CA25A29008AAEF1 /* TheAmazingAudioEngine.h */; };
 		4CDCACAB1CA25A6E008AAEF1 /* AEArrayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CDCACAA1CA25A6E008AAEF1 /* AEArrayTests.m */; };
 		4CDCACAD1CA25A6E008AAEF1 /* libTheAmazingAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CDCAC981CA25A29008AAEF1 /* libTheAmazingAudioEngine.a */; };
@@ -106,6 +108,8 @@
 		4C94E2A41CAE6AFF006EB497 /* AEFileRecorderModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEFileRecorderModule.m; sourceTree = "<group>"; };
 		4C94E2C71CAF95BD006EB497 /* AEManagedValue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEManagedValue.h; sourceTree = "<group>"; };
 		4C94E2C81CAF95BD006EB497 /* AEManagedValue.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEManagedValue.m; sourceTree = "<group>"; };
+		4C9F0F201CB1E9FC0032903E /* AEIOAudioUnit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEIOAudioUnit.h; sourceTree = "<group>"; };
+		4C9F0F211CB1E9FC0032903E /* AEIOAudioUnit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEIOAudioUnit.m; sourceTree = "<group>"; };
 		4CDCAC981CA25A29008AAEF1 /* libTheAmazingAudioEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTheAmazingAudioEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CDCAC9B1CA25A29008AAEF1 /* TheAmazingAudioEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TheAmazingAudioEngine.h; sourceTree = "<group>"; };
 		4CDCACA81CA25A6E008AAEF1 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -300,6 +304,8 @@
 				4CDCAD321CA3C31C008AAEF1 /* AEMessageQueue.m */,
 				4CDCAD331CA3C31C008AAEF1 /* AETime.h */,
 				4CDCAD341CA3C31C008AAEF1 /* AETime.m */,
+				4C9F0F201CB1E9FC0032903E /* AEIOAudioUnit.h */,
+				4C9F0F211CB1E9FC0032903E /* AEIOAudioUnit.m */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -387,6 +393,7 @@
 				4CDCAD8A1CA5484D008AAEF1 /* AEParametricEqModule.h in Headers */,
 				4CDCAD801CA5484D008AAEF1 /* AEHighPassModule.h in Headers */,
 				4CDCACEB1CA25B6F008AAEF1 /* TheAmazingAudioEngine.h in Headers */,
+				4C9F0F251CB224D70032903E /* AEIOAudioUnit.h in Headers */,
 				4C94E2C91CAF95BD006EB497 /* AEManagedValue.h in Headers */,
 				4CDCAD391CA3C31C008AAEF1 /* AETypes.h in Headers */,
 				4CDCAD371CA3C31C008AAEF1 /* AEBufferStack.h in Headers */,
@@ -515,6 +522,7 @@
 				4CDCAD481CA3C31C008AAEF1 /* AEUtilities.m in Sources */,
 				4CDCAD3A1CA3C31C008AAEF1 /* AETypes.m in Sources */,
 				4CDCAD461CA3C31C008AAEF1 /* AETime.m in Sources */,
+				4C9F0F231CB1E9FC0032903E /* AEIOAudioUnit.m in Sources */,
 				4C94E2CA1CAF95BD006EB497 /* AEManagedValue.m in Sources */,
 				4CDCAD201CA3A688008AAEF1 /* TPCircularBuffer.c in Sources */,
 				4CDCADAD1CAB89CF008AAEF1 /* AEArray.m in Sources */,
