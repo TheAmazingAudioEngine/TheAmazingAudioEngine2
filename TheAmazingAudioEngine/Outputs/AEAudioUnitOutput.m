@@ -38,8 +38,7 @@
 @interface AEAudioUnitOutput ()
 @property (nonatomic, strong) AEIOAudioUnit * ioUnit;
 @property (nonatomic, strong) AEManagedValue * rendererValue;
-#if TARGET_OS_IPHONE
-#endif
+@property (nonatomic, strong) id ioUnitStreamChangeObserverToken;
 @end
 
 @implementation AEAudioUnitOutput
@@ -66,11 +65,12 @@
         }
     };
     
-    __weak AEAudioUnitOutput * weakSelf = self;
-    self.ioUnit.streamFormatUpdateBlock = ^{
-        renderer.sampleRate = weakSelf.ioUnit.currentSampleRate;
-        renderer.outputChannels = weakSelf.ioUnit.outputChannels;
-    };
+    self.ioUnitStreamChangeObserverToken =
+    [[NSNotificationCenter defaultCenter] addObserverForName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self.ioUnit
+                                                       queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
+        self.renderer.sampleRate = self.ioUnit.currentSampleRate;
+        self.renderer.outputChannels = self.ioUnit.outputChannels;
+    }];
     
     if ( ![self.ioUnit setup:NULL] ) return nil;
     
@@ -86,6 +86,7 @@
 }
 
 - (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self.ioUnitStreamChangeObserverToken];
     self.ioUnit = nil;
 }
 

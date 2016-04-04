@@ -35,6 +35,7 @@
 @interface AEAudioUnitInputModule ()
 @property (nonatomic, strong) AEIOAudioUnit * ioUnit;
 @property (nonatomic, readwrite) int inputChannels;
+@property (nonatomic, strong) id ioUnitStreamChangeObserverToken;
 @end
 
 @implementation AEAudioUnitInputModule
@@ -51,10 +52,11 @@
     self.ioUnit.maxInputChannels = AEBufferStackGetMaximumChannelsPerBuffer(self.renderer.stack);
     self.ioUnit.sampleRate = self.renderer.sampleRate;
     
-    __weak AEAudioUnitInputModule * weakSelf = self;
-    self.ioUnit.streamFormatUpdateBlock = ^{
-        weakSelf.inputChannels = weakSelf.ioUnit.inputChannels;
-    };
+    self.ioUnitStreamChangeObserverToken =
+    [[NSNotificationCenter defaultCenter] addObserverForName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self.ioUnit
+                                                       queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
+        self.inputChannels = self.ioUnit.inputChannels;
+    }];
     
     if ( ![self.ioUnit setup:NULL] ) return nil;
     
@@ -69,6 +71,7 @@
 }
 
 - (void)dealloc {
+    [[NSNotificationCenter defaultCenter] removeObserver:self.ioUnitStreamChangeObserverToken];
     self.renderer = nil;
 }
 

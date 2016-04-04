@@ -32,6 +32,8 @@
 #import "AEAudioBufferListUtilities.h"
 @import AVFoundation;
 
+NSString const * AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUnitDidUpdateStreamFormatNotification";
+
 @interface AEIOAudioUnit ()
 @property (nonatomic, readwrite) double currentSampleRate;
 @property (nonatomic, readwrite) int outputChannels;
@@ -312,9 +314,7 @@ AudioTimeStamp AEIOAudioUnitGetInputTimestamp(__unsafe_unretained AEIOAudioUnit 
         [self updateStreamFormat];
     } else {
         self.currentSampleRate = sampleRate;
-        if ( self.streamFormatUpdateBlock ) {
-            self.streamFormatUpdateBlock();
-        }
+        [[NSNotificationCenter defaultCenter] postNotificationName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self];
     }
 }
 
@@ -465,8 +465,8 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
                         "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
     }
     
-    if ( hasChanges && self.streamFormatUpdateBlock ) {
-        self.streamFormatUpdateBlock();
+    if ( hasChanges ) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self];
     }
     
     if ( stoppedUnit ) {

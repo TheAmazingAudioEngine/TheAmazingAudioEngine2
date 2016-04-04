@@ -42,6 +42,15 @@ typedef void (^AEIOAudioUnitRenderBlock)(AudioBufferList * _Nonnull ioData,
                                          const AudioTimeStamp * _Nonnull timestamp);
 
 /*!
+ * Stream update notification
+ *
+ *  This is broadcast when the stream format updates (sample rate/channel count).
+ *  If sample rate has changed for an output-enabled unit, this block will be performed between
+ *  stopping the unit and starting it again.
+ */
+extern NSString const * _Nonnull AEIOAudioUnitDidUpdateStreamFormatNotification;
+
+/*!
  * Audio unit interface
  *
  *  This class manages an input/output/input-output audio unit. To use it, create an instance,
@@ -124,11 +133,6 @@ AudioTimeStamp AEIOAudioUnitGetInputTimestamp(__unsafe_unretained AEIOAudioUnit 
 
 //! Whether unit is currently active
 @property (nonatomic, readonly) BOOL running;
-
-//! An optional block to be called when the stream format updates (sample rate/channel count).
-//  If sample rate has changed for an output-enabled unit, this block will be performed between
-//  stopping the unit and starting it again.
-@property (nonatomic, copy) void (^ _Nullable streamFormatUpdateBlock)();
 
 //! Whether output is enabled
 @property (nonatomic) BOOL outputEnabled;
