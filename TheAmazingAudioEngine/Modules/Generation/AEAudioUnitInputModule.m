@@ -94,7 +94,7 @@
 }
 
 - (BOOL)start:(NSError *__autoreleasing *)error {
-    if ( !self.ownsIOUnit ) return NO;
+    if ( !self.ownsIOUnit ) return YES;
     return [self.ioUnit start:error];
 }
 

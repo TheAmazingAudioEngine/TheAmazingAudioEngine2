@@ -37,6 +37,11 @@ extern "C" {
  *  a buffer onto the stack containing the received audio. The pushed buffer has
  *  the same channel count as the currently-attached audio hardware, accessible
  *  via the "inputChannels" property.
+ *
+ *  It's recommended that you do not create an instance of this class directly; instead,
+ *  use the instance returned from AEAudioUnitOutput's 
+ *  @link AEAudioUnitOutput::inputModule inputModule @endlink property, which uses the
+ *  same underlying audio unit instance as the output.
  */
 @interface AEAudioUnitInputModule : AEModule
 

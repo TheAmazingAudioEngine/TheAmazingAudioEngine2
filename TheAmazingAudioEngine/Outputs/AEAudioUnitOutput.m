@@ -135,6 +135,14 @@
     return self.ioUnit.outputChannels;
 }
 
+- (AEAudioUnitInputModule *)inputModule {
+#if TARGET_OS_IPHONE
+    return [[AEAudioUnitInputModule alloc] initWithRenderer:self.renderer audioUnit:self.ioUnit];
+#else
+    return [[AEAudioUnitInputModule alloc] initWithRenderer:self.renderer];
+#endif
+}
+
 #if TARGET_OS_IPHONE
 - (BOOL)latencyCompensation {
     return self.ioUnit.latencyCompensation;
@@ -142,10 +150,6 @@
 
 - (void)setLatencyCompensation:(BOOL)latencyCompensation {
     self.ioUnit.latencyCompensation = latencyCompensation;
-}
-
-- (AEAudioUnitInputModule *)inputModule {
-    return [[AEAudioUnitInputModule alloc] initWithRenderer:self.renderer audioUnit:self.ioUnit];
 }
 #endif
 

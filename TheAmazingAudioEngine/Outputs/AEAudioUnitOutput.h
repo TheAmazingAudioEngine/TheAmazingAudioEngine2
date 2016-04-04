@@ -92,12 +92,16 @@ AudioUnit _Nullable AEAudioUnitOutputGetAudioUnit(__unsafe_unretained AEAudioUni
 #if TARGET_OS_IPHONE
 //! Whether to automatically perform latency compensation (default YES)
 @property (nonatomic) BOOL latencyCompensation;
-
-//! A module that can be used to pull audio input from this unit, instead of using
-//  AEAudioUnitInputModule. Use this particularly if you intend to implement an Inter-App Audio
-//  effect node.
-@property (nonatomic, strong, readonly) AEAudioUnitInputModule * _Nonnull inputModule;
 #endif
+
+/*!
+ * A module that can be used to pull audio input from this unit, instead of using
+ * AEAudioUnitInputModule. Use this particularly if you intend to implement an Inter-App Audio
+ * effect node.
+ *
+ * On the Mac, this just returns an instance that uses its own audio unit.
+ */
+@property (nonatomic, strong, readonly) AEAudioUnitInputModule * _Nonnull inputModule;
 
 @end
 
