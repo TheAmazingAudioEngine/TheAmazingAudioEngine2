@@ -124,10 +124,22 @@ static const UInt32 kMicrofadeLength = 32;
 
 - (void)stop {
     self.beginBlock = nil;
-    if ( !self.pollTimer ) {
-        [self schedulePollTimer];
+    if ( _startTime ) {
+        // Not yet playing - just stop now
+        AECheckOSStatus(AudioUnitReset(self.audioUnit, kAudioUnitScope_Global, 0), "AudioUnitReset");
+        _sequenceScheduled = NO;
+        _playing = NO;
+        if ( self.completionBlock ) self.completionBlock();
+        if ( self.pollTimer ) {
+            [self.pollTimer invalidate];
+            self.pollTimer = nil;
+        }
+    } else {
+        if ( !self.pollTimer ) {
+            [self schedulePollTimer];
+        }
+        _remainingMicrofadeOutFrames = kMicrofadeLength;
     }
-    _remainingMicrofadeOutFrames = kMicrofadeLength;
 }
 
 - (AESeconds)duration {
