@@ -190,13 +190,17 @@ NSString const * AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
                         "AudioUnitGetProperty(kAudioUnitProperty_StreamFormat)");
         self.inputChannels = MIN(asbd.mChannelsPerFrame, self.maxInputChannels);
         
-        // Set the stream format
-        asbd = AEAudioDescription;
-        asbd.mSampleRate = self.sampleRate;
-        asbd.mChannelsPerFrame = self.inputChannels;
-        AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1,
-                                             &asbd, sizeof(asbd)),
-                        "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
+        if ( self.inputChannels > 0 ) {
+            // Set the stream format
+            asbd = AEAudioDescription;
+            asbd.mSampleRate = self.sampleRate;
+            asbd.mChannelsPerFrame = self.inputChannels;
+            AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1,
+                                                 &asbd, sizeof(asbd)),
+                            "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
+        } else {
+            memset(&_inputTimestamp, 0, sizeof(_inputTimestamp));
+        }
     }
     
     // Register a callback to watch for stream format changes
@@ -233,7 +237,8 @@ NSString const * AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
     // Watch for audio route changes
     self.routeChangeObserverToken =
     [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionRouteChangeNotification object:nil
-                                                       queue:nil usingBlock:^(NSNotification *notification) {
+                                                       queue:nil usingBlock:^(NSNotification *notification)
+    {
         self.outputLatency = [AVAudioSession sharedInstance].outputLatency;
         self.inputLatency = [AVAudioSession sharedInstance].inputLatency;
     }];
@@ -295,6 +300,12 @@ AudioUnit _Nonnull AEIOAudioUnitGetAudioUnit(__unsafe_unretained AEIOAudioUnit *
 OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull self,
                                   const AudioBufferList * _Nonnull buffer, UInt32 frames) {
     assert(self->_inputEnabled);
+    
+    if ( self->_inputChannels == 0 ) {
+        AEAudioBufferListSilence(buffer, AEAudioDescription, 0, frames);
+        return kAudio_ParamError;
+    }
+    
     AudioUnitRenderActionFlags flags = 0;
     AudioTimeStamp timestamp = self->_inputTimestamp;
     AEAudioBufferListCopyOnStack(mutableAbl, buffer, 0);
@@ -456,13 +467,17 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
             self.inputChannels = channels;
         }
         
-        // Set the stream format
-        asbd = AEAudioDescription;
-        asbd.mChannelsPerFrame = self.inputChannels;
-        asbd.mSampleRate = self.sampleRate;
-        AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1,
-                                             &asbd, sizeof(asbd)),
-                        "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
+        if ( self.inputChannels > 0 ) {
+            // Set the stream format
+            asbd = AEAudioDescription;
+            asbd.mChannelsPerFrame = self.inputChannels;
+            asbd.mSampleRate = self.sampleRate;
+            AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1,
+                                                 &asbd, sizeof(asbd)),
+                            "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
+        } else {
+            memset(&_inputTimestamp, 0, sizeof(_inputTimestamp));
+        }
     }
     
     if ( hasChanges ) {
