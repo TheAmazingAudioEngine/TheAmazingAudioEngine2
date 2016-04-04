@@ -731,7 +731,6 @@
 		4C9F0F721CB265F90032903E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -741,7 +740,6 @@
 		4C9F0F731CB265F90032903E /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SKIP_INSTALL = YES;
@@ -788,6 +786,14 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				OTHER_CFLAGS = (
+					"-DTPCircularBufferProduce=AECircularBufferProduce",
+					"-DTPCircularBufferConsume=AECircularBufferConsume",
+					"-D_TPCircularBufferInit=_AECircularBufferInit",
+					"-DTPCircularBufferCleanup=AECircularBufferCleanup",
+					"-DTPCircularBufferSetAtomic=AECircularBufferSetAtomic",
+					"-DTPCircularBufferClear=AECircularBufferClear",
+				);
 				PUBLIC_HEADERS_FOLDER_PATH = "$(PROJECT_NAME)";
 				SDKROOT = iphoneos;
 			};
@@ -826,6 +832,14 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				OTHER_CFLAGS = (
+					"-DTPCircularBufferProduce=AECircularBufferProduce",
+					"-DTPCircularBufferConsume=AECircularBufferConsume",
+					"-D_TPCircularBufferInit=_AECircularBufferInit",
+					"-DTPCircularBufferCleanup=AECircularBufferCleanup",
+					"-DTPCircularBufferSetAtomic=AECircularBufferSetAtomic",
+					"-DTPCircularBufferClear=AECircularBufferClear",
+				);
 				PUBLIC_HEADERS_FOLDER_PATH = "$(PROJECT_NAME)";
 				SDKROOT = iphoneos;
 				VALIDATE_PRODUCT = YES;
@@ -835,7 +849,6 @@
 		4CDCACA21CA25A29008AAEF1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
@@ -844,7 +857,6 @@
 		4CDCACA31CA25A29008AAEF1 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				OTHER_LDFLAGS = "-ObjC";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SKIP_INSTALL = YES;
 			};
