@@ -73,6 +73,7 @@
     _wetDry = 1.0;
     _pushBuffer = self.audioUnitModuleShouldPushBufferOnProcess;
     if ( subrenderer ) {
+        subrenderer.sampleRate = renderer.sampleRate;
         self.subrendererValue = [AEManagedValue new];
         self.subrendererValue.objectValue = subrenderer;
     }
