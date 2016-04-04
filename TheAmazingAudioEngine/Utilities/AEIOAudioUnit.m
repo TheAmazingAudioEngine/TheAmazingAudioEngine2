@@ -38,13 +38,13 @@ NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
 @property (nonatomic, readwrite) double currentSampleRate;
 @property (nonatomic, readwrite) int outputChannels;
 @property (nonatomic, readwrite) int inputChannels;
+@property (nonatomic) AudioTimeStamp inputTimestamp;
 #if TARGET_OS_IPHONE
 @property (nonatomic, strong) id sessionInterruptionObserverToken;
 @property (nonatomic, strong) id mediaResetObserverToken;
 @property (nonatomic, strong) id routeChangeObserverToken;
 @property (nonatomic) NSTimeInterval outputLatency;
 @property (nonatomic) NSTimeInterval inputLatency;
-@property (nonatomic) AudioTimeStamp inputTimestamp;
 #endif
 @end
 
@@ -343,7 +343,7 @@ AudioTimeStamp AEIOAudioUnitGetInputTimestamp(__unsafe_unretained AEIOAudioUnit 
 }
 
 - (void)setRenderBlock:(AEIOAudioUnitRenderBlock)renderBlock {
-    BOOL wasSetup = _audioUnit;
+    BOOL wasSetup = _audioUnit != NULL;
     BOOL wasRunning = wasSetup && self.running;
     if ( _audioUnit && _outputEnabled ) [self teardown];
     

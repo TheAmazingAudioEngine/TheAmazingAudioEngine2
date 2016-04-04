@@ -43,9 +43,11 @@
 #import <TheAmazingAudioEngine/AENewTimePitchModule.h>
 #import <TheAmazingAudioEngine/AEParametricEqModule.h>
 #import <TheAmazingAudioEngine/AEPeakLimiterModule.h>
-#import <TheAmazingAudioEngine/AEReverbModule.h>
 #import <TheAmazingAudioEngine/AEVarispeedModule.h>
 #import <TheAmazingAudioEngine/AEFileRecorderModule.h>
+#if TARGET_OS_IPHONE
+#import <TheAmazingAudioEngine/AEReverbModule.h>
+#endif
 
 #import <TheAmazingAudioEngine/AERenderer.h>
 #import <TheAmazingAudioEngine/AEAudioUnitOutput.h>
