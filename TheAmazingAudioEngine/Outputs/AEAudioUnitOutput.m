@@ -70,11 +70,12 @@
         }
     };
     
+    __weak AEAudioUnitOutput * weakSelf = self;
     self.ioUnitStreamChangeObserverToken =
     [[NSNotificationCenter defaultCenter] addObserverForName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self.ioUnit
                                                        queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
-        self.renderer.sampleRate = self.ioUnit.currentSampleRate;
-        self.renderer.outputChannels = self.ioUnit.outputChannels;
+        weakSelf.renderer.sampleRate = weakSelf.ioUnit.currentSampleRate;
+        weakSelf.renderer.outputChannels = weakSelf.ioUnit.outputChannels;
     }];
     
     if ( ![self.ioUnit setup:NULL] ) return nil;

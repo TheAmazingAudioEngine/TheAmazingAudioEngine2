@@ -78,7 +78,6 @@ NSString const * AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
     return unitRunning;
 }
 
-
 - (BOOL)setup:(NSError * _Nullable __autoreleasing *)error {
     NSAssert(!_audioUnit, @"Already setup");
     
@@ -213,6 +212,8 @@ NSString const * AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
                     "AudioUnitAddPropertyListener(kAudioUnitProperty_StreamFormat)");
     
 #if TARGET_OS_IPHONE
+    __weak AEIOAudioUnit * weakSelf = self;
+    
     // Watch for session interruptions
     __block BOOL wasRunning;
     self.sessionInterruptionObserverToken =
@@ -220,13 +221,13 @@ NSString const * AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
                                                   usingBlock:^(NSNotification *notification) {
         NSInteger type = [notification.userInfo[AVAudioSessionInterruptionTypeKey] integerValue];
         if ( type == AVAudioSessionInterruptionTypeBegan ) {
-            wasRunning = self.running;
+            wasRunning = weakSelf.running;
             if ( wasRunning ) {
-                [self stop];
+                [weakSelf stop];
             }
         } else {
             if ( wasRunning ) {
-                [self start:NULL];
+                [weakSelf start:NULL];
             }
         }
     }];
@@ -235,7 +236,7 @@ NSString const * AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
     self.mediaResetObserverToken =
     [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionMediaServicesWereResetNotification object:nil
                                                        queue:nil usingBlock:^(NSNotification *notification) {
-        [self reload];
+        [weakSelf reload];
     }];
     
     // Watch for audio route changes
@@ -243,8 +244,8 @@ NSString const * AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
     [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionRouteChangeNotification object:nil
                                                        queue:nil usingBlock:^(NSNotification *notification)
     {
-        self.outputLatency = [AVAudioSession sharedInstance].outputLatency;
-        self.inputLatency = [AVAudioSession sharedInstance].inputLatency;
+        weakSelf.outputLatency = [AVAudioSession sharedInstance].outputLatency;
+        weakSelf.inputLatency = [AVAudioSession sharedInstance].inputLatency;
     }];
 #endif
     

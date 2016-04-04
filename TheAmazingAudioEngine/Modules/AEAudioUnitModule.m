@@ -252,12 +252,13 @@ static OSStatus audioUnitRenderCallback(void                       *inRefCon,
     
 #if TARGET_OS_IPHONE
     // Watch for media reset notifications
+    __weak AEAudioUnitModule * weakSelf = self;
     self.mediaResetObserverToken =
     [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionMediaServicesWereResetNotification object:nil queue:nil
                                                   usingBlock:^(NSNotification *notification) {
-        [self teardown];
-        [self setup];
-        [self initialize];
+        [weakSelf teardown];
+        [weakSelf setup];
+        [weakSelf initialize];
     }];
 #endif
     

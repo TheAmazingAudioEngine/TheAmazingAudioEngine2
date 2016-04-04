@@ -64,10 +64,11 @@
     
     self.ioUnit.maxInputChannels = AEBufferStackGetMaximumChannelsPerBuffer(self.renderer.stack);
     
+    __weak AEAudioUnitInputModule * weakSelf = self;
     self.ioUnitStreamChangeObserverToken =
     [[NSNotificationCenter defaultCenter] addObserverForName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self.ioUnit
                                                        queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
-        self.inputChannels = self.ioUnit.inputChannels;
+        weakSelf.inputChannels = weakSelf.ioUnit.inputChannels;
     }];
     
     if ( self.ownsIOUnit ) {
