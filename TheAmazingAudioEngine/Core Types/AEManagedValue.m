@@ -25,7 +25,7 @@
 //
 
 #import "AEManagedValue.h"
-#import <pthread.h>
+#import <libkern/OSAtomic.h>
 
 typedef struct __linkedlistitem_t {
     void * data;
@@ -33,12 +33,12 @@ typedef struct __linkedlistitem_t {
 } linkedlistitem_t;
 
 @interface AEManagedValue () {
-    void * _value;
-    linkedlistitem_t * _pendingReleases;
-    linkedlistitem_t * _releases;
-    pthread_mutex_t _mutex;
-    BOOL _valueSet;
-    BOOL _isObjectValue;
+    void *             _value;
+    BOOL               _valueSet;
+    BOOL               _isObjectValue;
+    OSQueueHead        _pendingReleaseQueue;
+    int                _pendingReleaseCount;
+    OSQueueHead        _releaseQueue;
 }
 @property (nonatomic, strong) NSTimer * pollTimer;
 @end
@@ -52,15 +52,16 @@ typedef struct __linkedlistitem_t {
 
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
-    pthread_mutex_init(&_mutex, NULL);
     return self;
 }
 
 - (void)dealloc {
     [self releaseOldValue:_value];
-    if ( _pendingReleases ) AEManagedValueLinkedListPrepend(&_releases, _pendingReleases);
+    linkedlistitem_t * release;
+    while ( (release = OSAtomicDequeue(&_pendingReleaseQueue, offsetof(linkedlistitem_t, next))) ) {
+        OSAtomicEnqueue(&_releaseQueue, release, offsetof(linkedlistitem_t, next));
+    }
     [self pollReleaseList];
-    pthread_mutex_destroy(&_mutex);
 }
 
 - (id)objectValue {
@@ -95,10 +96,10 @@ typedef struct __linkedlistitem_t {
         // AEManagedValueGetValue on the audio thread
         linkedlistitem_t * release = (linkedlistitem_t*)calloc(1, sizeof(linkedlistitem_t));
         release->data = oldValue;
-        pthread_mutex_lock(&_mutex);
-        AEManagedValueLinkedListPrepend(&_pendingReleases, release);
-        pthread_mutex_unlock(&_mutex);
-    
+        
+        OSAtomicEnqueue(&_pendingReleaseQueue, release, offsetof(linkedlistitem_t, next));
+        _pendingReleaseCount++;
+        
         if ( !self.pollTimer ) {
             // Start polling for pending releases
             AEManagedValueProxy * proxy = [AEManagedValueProxy alloc];
@@ -113,13 +114,10 @@ typedef struct __linkedlistitem_t {
 
 void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     if ( !THIS ) return NULL;
-    if ( THIS->_pendingReleases && pthread_mutex_trylock(&THIS->_mutex) == 0 ) {
-        // Move pending release items into the release queue
-        if ( THIS->_pendingReleases ) {
-            AEManagedValueLinkedListPrepend(&THIS->_releases, THIS->_pendingReleases);
-            THIS->_pendingReleases = NULL;
-        }
-        pthread_mutex_unlock(&THIS->_mutex);
+    
+    linkedlistitem_t * release;
+    while ( (release = OSAtomicDequeue(&THIS->_pendingReleaseQueue, offsetof(linkedlistitem_t, next))) ) {
+        OSAtomicEnqueue(&THIS->_releaseQueue, release, offsetof(linkedlistitem_t, next));
     }
     
     return THIS->_value;
@@ -128,20 +126,16 @@ void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
 #pragma mark - Helpers
 
 - (void)pollReleaseList {
-    pthread_mutex_lock(&_mutex);
-    linkedlistitem_t * release = _releases;
-    if ( release ) {
-        while ( release ) {
-            [self releaseOldValue:release->data];
-            linkedlistitem_t * next = release->next;
-            free(release);
-            release = next;
-        }
-        _releases = NULL;
+    linkedlistitem_t * release;
+    while ( (release = OSAtomicDequeue(&_releaseQueue, offsetof(linkedlistitem_t, next))) ) {
+        [self releaseOldValue:release->data];
+        free(release);
+        _pendingReleaseCount--;
+    }
+    if ( _pendingReleaseCount == 0 ) {
         [self.pollTimer invalidate];
         self.pollTimer = nil;
     }
-    pthread_mutex_unlock(&_mutex);
 }
 
 - (void)releaseOldValue:(void *)value {
@@ -152,11 +146,6 @@ void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     } else {
         free(value);
     }
-}
-
-static void AEManagedValueLinkedListPrepend(linkedlistitem_t ** list, linkedlistitem_t * item) {
-    item->next = *list;
-    *list = item;
 }
 
 @end
