@@ -70,8 +70,8 @@ extern "C" {
  */
 AudioUnit _Nullable AEAudioUnitOutputGetAudioUnit(__unsafe_unretained AEAudioUnitOutput * _Nonnull output);
 
-//! The renderer
-@property (nonatomic, strong, readonly) AERenderer * _Nullable renderer;
+//! The renderer. You may change this at any time; assignment is thread-safe.
+@property (nonatomic, strong) AERenderer * _Nullable renderer;
 
 //! The audio unit
 @property (nonatomic, readonly) AudioUnit _Nonnull audioUnit;

@@ -31,17 +31,19 @@
 #import "AEUtilities.h"
 #import "AEBufferStack.h"
 #import "AETime.h"
+#import "AEManagedValue.h"
+#import "AEAudioBufferListUtilities.h"
 @import AVFoundation;
 
 @interface AEAudioUnitOutput ()
 @property (nonatomic, strong) AEIOAudioUnit * ioUnit;
-@property (nonatomic, strong, readwrite) AERenderer * renderer;
+@property (nonatomic, strong) AEManagedValue * rendererValue;
 #if TARGET_OS_IPHONE
 #endif
 @end
 
 @implementation AEAudioUnitOutput
-@dynamic audioUnit, sampleRate, currentSampleRate, running, outputChannels;
+@dynamic renderer, audioUnit, sampleRate, currentSampleRate, running, outputChannels;
 #if TARGET_OS_IPHONE
 @dynamic latencyCompensation;
 #endif
@@ -49,10 +51,19 @@
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
     if ( !(self = [super init]) ) return nil;
     
+    AEManagedValue * rendererValue = [AEManagedValue new];
+    rendererValue.objectValue = renderer;
+    self.rendererValue = rendererValue;
+    
     self.ioUnit = [AEIOAudioUnit new];
     self.ioUnit.outputEnabled = YES;
     self.ioUnit.renderBlock = ^(AudioBufferList * _Nonnull ioData, UInt32 frames, const AudioTimeStamp * _Nonnull timestamp) {
-        AERendererRun(renderer, ioData, frames, timestamp);
+        __unsafe_unretained AERenderer * renderer = (__bridge AERenderer*)AEManagedValueGetValue(rendererValue);
+        if ( renderer ) {
+            AERendererRun(renderer, ioData, frames, timestamp);
+        } else {
+            AEAudioBufferListSilence(ioData, AEAudioDescription, 0, frames);
+        }
     };
     
     __weak AEAudioUnitOutput * weakSelf = self;
@@ -84,6 +95,14 @@
 
 - (void)stop {
     [self.ioUnit stop];
+}
+
+- (AERenderer *)renderer {
+    return self.rendererValue.objectValue;
+}
+
+- (void)setRenderer:(AERenderer *)renderer {
+    self.rendererValue.objectValue = renderer;
 }
 
 - (AudioUnit)audioUnit {
