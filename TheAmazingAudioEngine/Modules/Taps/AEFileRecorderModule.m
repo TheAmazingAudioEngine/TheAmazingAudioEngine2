@@ -183,6 +183,7 @@ static void AEFileRecorderModuleProcess(__unsafe_unretained AEFileRecorderModule
     OSStatus status = ExtAudioFileCreateWithURL((__bridge CFURLRef)url, fileTypeID, &asbd, NULL, kAudioFileFlags_EraseFile,
                                                 &audioFile);
     if ( !AECheckOSStatus(status, "ExtAudioFileCreateWithURL") ) {
+        if ( error )
         *error = [NSError errorWithDomain:NSOSStatusErrorDomain
                                      code:status
                                  userInfo:@{ NSLocalizedDescriptionKey:
@@ -197,6 +198,7 @@ static void AEFileRecorderModuleProcess(__unsafe_unretained AEFileRecorderModule
                                      &AEAudioDescription);
     if ( !AECheckOSStatus(status, "ExtAudioFileSetProperty") ) {
         ExtAudioFileDispose(audioFile);
+        if ( error )
         *error = [NSError errorWithDomain:NSOSStatusErrorDomain
                                      code:status
                                  userInfo:@{ NSLocalizedDescriptionKey:

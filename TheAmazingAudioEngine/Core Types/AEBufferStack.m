@@ -380,5 +380,5 @@ static void * AEBufferStackPoolGetUsedBufferAtIndex(const AEBufferStackPool * po
     for ( int i=0; i<index && entry; i++ ) {
         entry = entry->next;
     }
-    return entry->buffer;
+    return entry ? entry->buffer : NULL;
 }

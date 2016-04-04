@@ -48,7 +48,7 @@ typedef void (^AEIOAudioUnitRenderBlock)(AudioBufferList * _Nonnull ioData,
  *  If sample rate has changed for an output-enabled unit, this block will be performed between
  *  stopping the unit and starting it again.
  */
-extern NSString const * _Nonnull AEIOAudioUnitDidUpdateStreamFormatNotification;
+extern NSString * const _Nonnull AEIOAudioUnitDidUpdateStreamFormatNotification;
 
 /*!
  * Audio unit interface

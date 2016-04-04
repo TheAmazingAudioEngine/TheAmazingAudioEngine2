@@ -32,7 +32,7 @@
 #import "AEAudioBufferListUtilities.h"
 @import AVFoundation;
 
-NSString const * AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUnitDidUpdateStreamFormatNotification";
+NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUnitDidUpdateStreamFormatNotification";
 
 @interface AEIOAudioUnit ()
 @property (nonatomic, readwrite) double currentSampleRate;

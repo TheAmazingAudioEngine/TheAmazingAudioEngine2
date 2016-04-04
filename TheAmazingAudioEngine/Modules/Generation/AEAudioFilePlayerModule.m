@@ -240,6 +240,7 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
     // Open the file
     result = AudioFileOpenURL((__bridge CFURLRef)url, kAudioFileReadPermission, 0, &_audioFile);
     if ( !AECheckOSStatus(result, "AudioFileOpenURL") ) {
+        if ( error )
         *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
                                  userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"Couldn't open the audio file", @"")}];
         return NO;
@@ -250,6 +251,7 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
     UInt32 size = sizeof(fileDescription);
     result = AudioFileGetProperty(_audioFile, kAudioFilePropertyDataFormat, &size, &fileDescription);
     if ( !AECheckOSStatus(result, "AudioFileGetProperty(kAudioFilePropertyDataFormat)") ) {
+        if ( error )
         *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
                                  userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"Couldn't read the audio file", @"")}];
         AudioFileClose(_audioFile);
@@ -273,6 +275,7 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
         size = sizeof(packetCount);
         result = AudioFileGetProperty(_audioFile, kAudioFilePropertyAudioDataPacketCount, &size, &packetCount);
         if ( !AECheckOSStatus(result, "AudioFileGetProperty(kAudioFilePropertyAudioDataPacketCount)") ) {
+            if ( error )
             *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
                                      userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"Couldn't read the audio file", @"")}];
             AudioFileClose(_audioFile);
@@ -283,6 +286,7 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
     }
     
     if ( fileLengthInFrames == 0 ) {
+        if ( error )
         *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:-50
                                  userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"This audio file is empty", @"")}];
         AudioFileClose(_audioFile);
