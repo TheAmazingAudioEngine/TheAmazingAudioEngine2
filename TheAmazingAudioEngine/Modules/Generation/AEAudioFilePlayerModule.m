@@ -368,7 +368,7 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
                                                0, &region, sizeof(region));
         AECheckOSStatus(result, "AudioUnitSetProperty(kAudioUnitProperty_ScheduledFileRegion)");
         
-        mainRegionStartTime = framesToPlay * sourceToOutputSampleRateScale;
+        mainRegionStartTime = (double)framesToPlay * sourceToOutputSampleRateScale;
     }
     
     // Set the main file region to play
@@ -553,8 +553,9 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
                                              0, &playTime, &size), "kAudioUnitProperty_CurrentPlayTime");
         double regionStartTimeAtFileRate = THIS->_regionStartTime * THIS->_fileSampleRate;
         double regionLengthAtFileRate = THIS->_regionDuration * THIS->_fileSampleRate;
-        THIS->_playhead = THIS->_playheadOffset + regionStartTimeAtFileRate +
-            fmod(playTime.mSampleTime * (THIS->_fileSampleRate / context->sampleRate), regionLengthAtFileRate);
+        THIS->_playhead = regionStartTimeAtFileRate +
+            fmod(THIS->_playheadOffset + playTime.mSampleTime * (THIS->_fileSampleRate / context->sampleRate),
+                 regionLengthAtFileRate);
         THIS->_anchorTime = hostTimeAtBufferEnd;
     }
 }
