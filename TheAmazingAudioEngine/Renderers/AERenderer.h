@@ -36,13 +36,27 @@ extern "C" {
 
 /*!
  * Render context
+ *
+ *  This structure is passed into the render loop block, and contains information about the
+ *  current rendering environment, as well as providing access to the render's buffer stack.
  */
 typedef struct {
-    const AudioBufferList * _Nonnull output;   //!< The output buffer list
-    UInt32 frames;                             //!< Frame count
-    double sampleRate;                         //!< Current sample rate
-    const AudioTimeStamp * _Nonnull timestamp; //!< Current timestamp
-    AEBufferStack * _Nonnull stack;            //!< The buffer stack
+    
+    //! The output buffer list. You should write to this to produce audio.
+    const AudioBufferList * _Nonnull output;
+    
+    //! The number of frames to render to the output
+    UInt32 frames;
+    
+    //! The current sample rate, in Hertz
+    double sampleRate;
+    
+    //! The current audio timestamp
+    const AudioTimeStamp * _Nonnull timestamp;
+    
+    //! The buffer stack. Use this as a workspace for generating and processing audio.
+    AEBufferStack * _Nonnull stack;
+    
 } AERenderContext;
 
 /*!
