@@ -25,6 +25,7 @@
 //
 
 #import "AEModule.h"
+#import "AETime.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -80,10 +81,29 @@ AudioUnit _Nullable AEAudioUnitInputModuleGetAudioUnit(__unsafe_unretained AEAud
  */
 AudioTimeStamp AEAudioUnitInputModuleGetInputTimestamp(__unsafe_unretained AEAudioUnitInputModule * _Nonnull module);
 
+#if TARGET_OS_IPHONE
+
+/*!
+ * Get the input latency
+ *
+ *  This function returns the hardware input latency, in seconds. If you have disabled latency compensation,
+ *  and timing is important in your app, then you should factor this value into your timing calculations.
+ *
+ * @param module The module instance
+ * @return The current input latency
+ */
+AESeconds AEAudioUnitInputModuleGetInputLatency(__unsafe_unretained AEAudioUnitInputModule * _Nonnull module);
+
+#endif
+
 @property (nonatomic, readonly) AudioUnit _Nonnull audioUnit; //!< The audio unit
 @property (nonatomic, readonly) BOOL running; //!< Whether unit is currently active
 @property (nonatomic, readonly) int inputChannels; //!< The current number of input channels (key-value observable)
+
+#if TARGET_OS_IPHONE
 @property (nonatomic) BOOL latencyCompensation; //!< Whether to automatically perform latency compensation (default YES)
+#endif
+
 @end
 
     

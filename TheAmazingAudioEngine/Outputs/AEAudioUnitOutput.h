@@ -26,6 +26,7 @@
 
 @import Foundation;
 @import AudioToolbox;
+#import "AETime.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -70,6 +71,21 @@ extern "C" {
  * @return The audio unit
  */
 AudioUnit _Nullable AEAudioUnitOutputGetAudioUnit(__unsafe_unretained AEAudioUnitOutput * _Nonnull output);
+
+#if TARGET_OS_IPHONE
+
+/*!
+ * Get the output latency
+ *
+ *  This function returns the hardware output latency, in seconds. If you have disabled latency compensation,
+ *  and timing is important in your app, then you should factor this value into your timing calculations.
+ *
+ * @param output The output instance
+ * @return The current output latency
+ */
+AESeconds AEAudioUnitOutputGetOutputLatency(__unsafe_unretained AEAudioUnitOutput * _Nonnull output);
+
+#endif
 
 //! The renderer. You may change this at any time; assignment is thread-safe.
 @property (nonatomic, strong) AERenderer * _Nullable renderer;

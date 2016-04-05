@@ -26,6 +26,7 @@
 
 @import Foundation;
 @import AudioToolbox;
+#import "AETime.h"
 
 /*!
  * Render block
@@ -121,6 +122,31 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull u
  */
 AudioTimeStamp AEIOAudioUnitGetInputTimestamp(__unsafe_unretained AEIOAudioUnit * _Nonnull unit);
 
+#if TARGET_OS_IPHONE
+
+/*!
+ * Get the input latency
+ *
+ *  This function returns the hardware input latency, in seconds. If you have disabled latency compensation,
+ *  and timing is important in your app, then you should factor this value into your timing calculations.
+ *
+ * @param unit The unit instance
+ * @return The current input latency
+ */
+AESeconds AEIOAudioUnitGetInputLatency(__unsafe_unretained AEIOAudioUnit * _Nonnull unit);
+
+/*!
+ * Get the output latency
+ *
+ *  This function returns the hardware output latency, in seconds. If you have disabled latency compensation,
+ *  and timing is important in your app, then you should factor this value into your timing calculations.
+ *
+ * @param unit The unit instance
+ * @return The current output latency
+ */
+AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Nonnull unit);
+
+#endif
 
 //! The audio unit
 @property (nonatomic, readonly) AudioUnit _Nullable audioUnit;

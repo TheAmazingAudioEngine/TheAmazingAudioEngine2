@@ -112,6 +112,10 @@
 - (void)setLatencyCompensation:(BOOL)latencyCompensation {
     self.ioUnit.latencyCompensation = latencyCompensation;
 }
+
+AESeconds AEAudioUnitInputModuleGetInputLatency(__unsafe_unretained AEAudioUnitInputModule * self) {
+    return AEIOAudioUnitGetInputLatency(self->_ioUnit);
+}
 #endif
 
 AudioTimeStamp AEAudioUnitInputModuleGetInputTimestamp(__unsafe_unretained AEAudioUnitInputModule * self) {

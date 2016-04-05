@@ -152,10 +152,14 @@
 - (void)setLatencyCompensation:(BOOL)latencyCompensation {
     self.ioUnit.latencyCompensation = latencyCompensation;
 }
+
+AESeconds AEAudioUnitOutputGetOutputLatency(__unsafe_unretained AEAudioUnitOutput * self) {
+    return AEIOAudioUnitGetOutputLatency(self->_ioUnit);
+}
 #endif
 
-AudioUnit _Nullable AEAudioUnitOutputGetAudioUnit(__unsafe_unretained AEAudioUnitOutput * _Nonnull output) {
-    return AEIOAudioUnitGetAudioUnit(output->_ioUnit);
+AudioUnit _Nullable AEAudioUnitOutputGetAudioUnit(__unsafe_unretained AEAudioUnitOutput * self) {
+    return AEIOAudioUnitGetAudioUnit(self->_ioUnit);
 }
 
 @end
