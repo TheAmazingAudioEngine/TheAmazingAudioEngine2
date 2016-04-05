@@ -43,6 +43,19 @@
 @interface AEManagedValue : NSObject
 
 /*!
+ * Update multiple AEManagedValue instances atomically
+ *
+ *  Any changes made within the block will be applied atomically with respect to the audio thread.
+ *  Any value accesses made from the realtime thread while the block is executing will return the
+ *  prior value, until the block has completed.
+ *
+ *  These may be nested safely.
+ *
+ * @param block Atomic update block
+ */
++ (void)performAtomicBatchUpdate:(void(^ _Nonnull)())block;
+
+/*!
  * Get access to the value on the realtime thread
  *
  *  The object or buffer returned is guaranteed to remain valid until the next call to this function.
@@ -50,25 +63,25 @@
  * @param managedValue The instance
  * @return The value
  */
-void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * managedValue);
+void * _Nullable AEManagedValueGetValue(__unsafe_unretained AEManagedValue * _Nonnull managedValue);
 
 /*!
  * An object. You can set this property from the main thread. Note that you can use this property, 
  * or pointerValue, but not both.
  */
-@property (nonatomic, strong) id objectValue;
+@property (nonatomic, strong) id _Nullable objectValue;
 
 /*!
  * A pointer to an allocated memory buffer. Old values will be automatically freed when the value 
  * changes. You can set this property from the main thread. Note that you can use this property, 
  * or objectValue, but not both.
  */
-@property (nonatomic) void * pointerValue;
+@property (nonatomic) void * _Nullable pointerValue;
 
 /*!
  * Block to perform when deleting old items, on main thread. If not specified, will simply use 
  * free() to dispose values set via pointerValue.
  */
-@property (nonatomic, copy) void (^releaseBlock)(void * value);
+@property (nonatomic, copy) void (^ _Nullable releaseBlock)(void * _Nonnull value);
 
 @end

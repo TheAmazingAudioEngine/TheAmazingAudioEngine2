@@ -26,19 +26,25 @@
 
 #import "AEManagedValue.h"
 #import <libkern/OSAtomic.h>
+#import <pthread.h>
 
 typedef struct __linkedlistitem_t {
     void * data;
     struct __linkedlistitem_t * next;
 } linkedlistitem_t;
 
+static int __atomicUpdateCounter = 0;
+static pthread_mutex_t __atomicUpdateMutex = PTHREAD_MUTEX_INITIALIZER;
+static NSMutableSet * __atomicUpdatedValues = nil;
+
 @interface AEManagedValue () {
-    void *             _value;
-    BOOL               _valueSet;
-    BOOL               _isObjectValue;
-    OSQueueHead        _pendingReleaseQueue;
-    int                _pendingReleaseCount;
-    OSQueueHead        _releaseQueue;
+    void *      _value;
+    BOOL        _valueSet;
+    void *      _atomicBatchUpdateLastValue;
+    BOOL        _isObjectValue;
+    OSQueueHead _pendingReleaseQueue;
+    int         _pendingReleaseCount;
+    OSQueueHead _releaseQueue;
 }
 @property (nonatomic, strong) NSTimer * pollTimer;
 @end
@@ -49,6 +55,30 @@ typedef struct __linkedlistitem_t {
 
 @implementation AEManagedValue
 @dynamic objectValue, pointerValue;
+
++ (void)performAtomicBatchUpdate:(void(^)())block {
+    if ( __atomicUpdateCounter == 0 ) {
+        __atomicUpdatedValues = [NSMutableSet set];
+        
+        pthread_mutex_lock(&__atomicUpdateMutex);
+    }
+    
+    __atomicUpdateCounter++;
+    
+    block();
+    
+    __atomicUpdateCounter--;
+    
+    if ( __atomicUpdateCounter == 0 ) {
+        pthread_mutex_unlock(&__atomicUpdateMutex);
+        
+        // Complete the update by telling the updated values the atomic operation has ended
+        for ( AEManagedValue * value in __atomicUpdatedValues ) {
+            value->_atomicBatchUpdateLastValue = value->_value;
+        }
+        __atomicUpdatedValues = nil;
+    }
+}
 
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
@@ -86,10 +116,19 @@ typedef struct __linkedlistitem_t {
 }
 
 - (void)setValue:(void *)value {
+    
     // Assign new value
     void * oldValue = _value;
     _value = value;
     _valueSet = YES;
+    
+    if ( __atomicUpdateCounter == 0 ) {
+        // Save value for recall on realtime thread during atomic batch update
+        _atomicBatchUpdateLastValue = _value;
+    } else {
+        // Remember that we updated during a batch update - we'll update _atomicBatchUpdateLastValue at the end of the update
+        [__atomicUpdatedValues addObject:self];
+    }
     
     if ( oldValue ) {
         // Mark old value as pending release - it'll be transferred to the release queue by
@@ -115,12 +154,21 @@ typedef struct __linkedlistitem_t {
 void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     if ( !THIS ) return NULL;
     
+    if ( pthread_mutex_trylock(&__atomicUpdateMutex) != 0 ) {
+        // Atomic update in progress - return previous value
+        return THIS->_atomicBatchUpdateLastValue;
+    }
+    
     linkedlistitem_t * release;
     while ( (release = OSAtomicDequeue(&THIS->_pendingReleaseQueue, offsetof(linkedlistitem_t, next))) ) {
         OSAtomicEnqueue(&THIS->_releaseQueue, release, offsetof(linkedlistitem_t, next));
     }
     
-    return THIS->_value;
+    void * value = THIS->_value;
+    
+    pthread_mutex_unlock(&__atomicUpdateMutex);
+    
+    return value;
 }
 
 #pragma mark - Helpers

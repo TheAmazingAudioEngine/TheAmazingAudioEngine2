@@ -76,6 +76,10 @@ typedef const void * AEArrayToken; //!< Token for real-thread use
  * Update the array by copying the contents of the given NSArray
  *
  *  New values will be retained, and old values will be released in a thread-safe manner.
+ *
+ *  Using this method within an AEManagedValue
+ *  @link AEManagedValue::performAtomicBatchUpdate performAtomicBatchUpdate @endlink block
+ *  will cause the update to occur atomically along with any other value updates.
  */
 - (void)updateWithContentsOfArray:(NSArray * _Nonnull)array;
 
