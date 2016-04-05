@@ -142,6 +142,7 @@
 		4C9F0FB61CB269C30032903E /* AEFileRecorderModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C94E2A31CAE6AFF006EB497 /* AEFileRecorderModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C9F0FB71CB269C30032903E /* AEVarispeedModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CDCAD761CA5484D008AAEF1 /* AEVarispeedModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C9F0FB81CB269C30032903E /* AELowShelfModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CDCAD6C1CA5484D008AAEF1 /* AELowShelfModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4C9F0FBE1CB339180032903E /* AEManagedValueTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C9F0FBD1CB339180032903E /* AEManagedValueTests.m */; };
 		4CDCAC9C1CA25A29008AAEF1 /* TheAmazingAudioEngine.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4CDCAC9B1CA25A29008AAEF1 /* TheAmazingAudioEngine.h */; };
 		4CDCACAB1CA25A6E008AAEF1 /* AEArrayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CDCACAA1CA25A6E008AAEF1 /* AEArrayTests.m */; };
 		4CDCACAD1CA25A6E008AAEF1 /* libTheAmazingAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CDCAC981CA25A29008AAEF1 /* libTheAmazingAudioEngine.a */; };
@@ -258,6 +259,7 @@
 		4C9F0F211CB1E9FC0032903E /* AEIOAudioUnit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEIOAudioUnit.m; sourceTree = "<group>"; };
 		4C9F0F741CB265F90032903E /* libTheAmazingAudioEngine OS X.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTheAmazingAudioEngine OS X.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C9F0FBC1CB269C30032903E /* libTheAmazingAudioEngine tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTheAmazingAudioEngine tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C9F0FBD1CB339180032903E /* AEManagedValueTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEManagedValueTests.m; sourceTree = "<group>"; };
 		4CDCAC981CA25A29008AAEF1 /* libTheAmazingAudioEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTheAmazingAudioEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CDCAC9B1CA25A29008AAEF1 /* TheAmazingAudioEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TheAmazingAudioEngine.h; sourceTree = "<group>"; };
 		4CDCACA81CA25A6E008AAEF1 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -402,6 +404,7 @@
 			children = (
 				4CDCACAA1CA25A6E008AAEF1 /* AEArrayTests.m */,
 				4C94E2851CAC9EAA006EB497 /* AEBufferStackTests.m */,
+				4C9F0FBD1CB339180032903E /* AEManagedValueTests.m */,
 				4CDCACAC1CA25A6E008AAEF1 /* Info.plist */,
 			);
 			path = Tests;
@@ -890,6 +893,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4C94E2861CAC9EAA006EB497 /* AEBufferStackTests.m in Sources */,
+				4C9F0FBE1CB339180032903E /* AEManagedValueTests.m in Sources */,
 				4CDCACAB1CA25A6E008AAEF1 /* AEArrayTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
