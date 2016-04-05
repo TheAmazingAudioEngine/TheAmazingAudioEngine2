@@ -51,6 +51,11 @@
  *
  *  These may be nested safely.
  *
+ *  Important: If you use this method, you must also use the AEManagedValueCommitPendingAtomicUpdates 
+ *  function at the beginning of your main render loop. This ensures batched updates are all committed
+ *  in sync with your render loop. Until this function is called, AEManagedValueGetValue returns old
+ *  values, prior to those set in the given block.
+ *
  * @param block Atomic update block
  */
 + (void)performAtomicBatchUpdate:(void(^ _Nonnull)())block;
@@ -64,6 +69,18 @@
  * @return The value
  */
 void * _Nullable AEManagedValueGetValue(__unsafe_unretained AEManagedValue * _Nonnull managedValue);
+
+/*!
+ * Commit pending atomic batch updates on the realtime thread
+ *
+ *  If you use performAtomicBatchUpdate: to change the values of multiple managed values atomically,
+ *  with respect to the render loop, then you must also call this function at the start of your top-level
+ *  render loop in order to apply updates in sync.
+ *
+ *  After you call this function, any updates made within the loop bassed to performAtomicBatchUpdate:
+ *  become available on the render thread.
+ */
+void AEManagedValueCommitPendingAtomicUpdates();
 
 /*!
  * An object. You can set this property from the main thread. Note that you can use this property, 
