@@ -45,6 +45,7 @@
 #import <TheAmazingAudioEngine/AEPeakLimiterModule.h>
 #import <TheAmazingAudioEngine/AEVarispeedModule.h>
 #import <TheAmazingAudioEngine/AEFileRecorderModule.h>
+#import <TheAmazingAudioEngine/AEMeteringModule.h>
 #if TARGET_OS_IPHONE
 #import <TheAmazingAudioEngine/AEReverbModule.h>
 #endif
