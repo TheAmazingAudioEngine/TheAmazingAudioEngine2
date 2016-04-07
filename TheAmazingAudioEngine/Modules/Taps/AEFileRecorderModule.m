@@ -32,10 +32,13 @@
 @implementation AEFileRecorderModule
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer URL:(NSURL *)url
-                            type:(AEFileRecorderModuleType)type error:(NSError **)error {
+                            type:(AEAudioFileType)type error:(NSError **)error {
     if ( !(self = [super initWithRenderer:renderer]) ) return nil;
     
-    if ( !(_audioFile = [self createAudioFileWriterForURL:url type:type error:error]) ) return nil;
+    if ( !(_audioFile = AEExtAudioFileRefCreate(url, type, self.renderer.sampleRate, 2, error)) ) return nil;
+    
+    // Prime async recording
+    ExtAudioFileWriteAsync(_audioFile, 0, NULL);
     
     self.processFunction = AEFileRecorderModuleProcess;
     
@@ -134,82 +137,6 @@ static void AEFileRecorderModuleProcess(__unsafe_unretained AEFileRecorderModule
         if ( self.completionBlock ) self.completionBlock();
         self.completionBlock = nil;
     }
-}
-
-- (ExtAudioFileRef)createAudioFileWriterForURL:(NSURL *)url type:(AEFileRecorderModuleType)type error:(NSError **)error {
-    
-    AudioStreamBasicDescription asbd = {
-        .mChannelsPerFrame = 2,
-        .mSampleRate = self.renderer.sampleRate,
-    };
-    AudioFileTypeID fileTypeID;
-    
-    if ( type == AEFileRecorderModuleTypeM4A ) {
-        // Get the output audio description for encoding AAC
-        asbd.mFormatID = kAudioFormatMPEG4AAC;
-        UInt32 size = sizeof(asbd);
-        OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &asbd);
-        if ( !AECheckOSStatus(status, "AudioFormatGetProperty(kAudioFormatProperty_FormatInfo") ) {
-            int fourCC = CFSwapInt32HostToBig(status);
-            if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain
-                                                      code:status
-                                                  userInfo:@{ NSLocalizedDescriptionKey:
-                                                                  [NSString stringWithFormat:NSLocalizedString(@"Couldn't prepare the output format (error %d/%4.4s)", @""), status, (char*)&fourCC]}];
-            return NULL;
-        }
-        fileTypeID = kAudioFileM4AType;
-        
-    } else if ( type == AEFileRecorderModuleTypeAIFFFloat32 ) {
-        asbd.mFormatID = kAudioFormatLinearPCM;
-        asbd.mFormatFlags = kLinearPCMFormatFlagIsFloat | kAudioFormatFlagIsPacked | kAudioFormatFlagIsBigEndian;
-        asbd.mBitsPerChannel = sizeof(float) * 8;
-        asbd.mBytesPerPacket = asbd.mChannelsPerFrame * sizeof(float);
-        asbd.mBytesPerFrame = asbd.mBytesPerPacket;
-        asbd.mFramesPerPacket = 1;
-        fileTypeID = kAudioFileAIFCType;
-        
-    } else { // AEFileRecorderModuleTypeAIFFInt16
-        asbd.mFormatID = kAudioFormatLinearPCM;
-        asbd.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagIsBigEndian;
-        asbd.mBitsPerChannel = 16;
-        asbd.mBytesPerPacket = asbd.mChannelsPerFrame * 2;
-        asbd.mBytesPerFrame = asbd.mBytesPerPacket;
-        asbd.mFramesPerPacket = 1;
-        fileTypeID = kAudioFileAIFFType;
-    }
-    
-    // Open the file
-    ExtAudioFileRef audioFile;
-    OSStatus status = ExtAudioFileCreateWithURL((__bridge CFURLRef)url, fileTypeID, &asbd, NULL, kAudioFileFlags_EraseFile,
-                                                &audioFile);
-    if ( !AECheckOSStatus(status, "ExtAudioFileCreateWithURL") ) {
-        if ( error )
-        *error = [NSError errorWithDomain:NSOSStatusErrorDomain
-                                     code:status
-                                 userInfo:@{ NSLocalizedDescriptionKey:
-                                                 NSLocalizedString(@"Couldn't open the output file", @"") }];
-        return NULL;
-    }
-    
-    // Set the client format
-    status = ExtAudioFileSetProperty(audioFile,
-                                     kExtAudioFileProperty_ClientDataFormat,
-                                     sizeof(AudioStreamBasicDescription),
-                                     &AEAudioDescription);
-    if ( !AECheckOSStatus(status, "ExtAudioFileSetProperty") ) {
-        ExtAudioFileDispose(audioFile);
-        if ( error )
-        *error = [NSError errorWithDomain:NSOSStatusErrorDomain
-                                     code:status
-                                 userInfo:@{ NSLocalizedDescriptionKey:
-                                                 NSLocalizedString(@"Couldn't configure the file writer", @"") }];
-        return NULL;
-    }
-    
-    // Prime async recording
-    ExtAudioFileWriteAsync(audioFile, 0, NULL);
-    
-    return audioFile;
 }
 
 - (void)finishWriting {

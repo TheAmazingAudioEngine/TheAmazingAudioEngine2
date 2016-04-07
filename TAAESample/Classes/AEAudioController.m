@@ -268,7 +268,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     
     // Create recorder
     AEFileRecorderModule * recorder = [[AEFileRecorderModule alloc] initWithRenderer:self.output.renderer
-        URL:self.recordingPath type:AEFileRecorderModuleTypeM4A error:error];
+        URL:self.recordingPath type:AEAudioFileTypeM4A error:error];
     if ( !recorder ) {
         return NO;
     }

@@ -30,15 +30,7 @@ extern "C" {
     
 #import "AEAudioUnitModule.h"
 #import "AETime.h"
-
-/*!
- * File types
- */
-typedef enum {
-    AEFileRecorderModuleTypeAIFFFloat32, //!< 32-bit floating point AIFF (AIFC)
-    AEFileRecorderModuleTypeAIFFInt16,   //!< 16-bit signed little-endian integer AIFF
-    AEFileRecorderModuleTypeM4A,         //!< AAC in an M4A container
-} AEFileRecorderModuleType;
+#import "AETypes.h"
 
 /*!
  * Audio file recorder
@@ -58,7 +50,7 @@ typedef enum {
  */
 - (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer
                                        URL:(NSURL * _Nonnull)url
-                                      type:(AEFileRecorderModuleType)type
+                                      type:(AEAudioFileType)type
                                      error:(NSError * _Nullable * _Nullable)error;
 
 /*!

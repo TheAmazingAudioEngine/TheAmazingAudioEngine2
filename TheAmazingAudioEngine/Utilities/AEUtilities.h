@@ -26,6 +26,7 @@
 
 @import Foundation;
 @import AudioToolbox;
+#import "AETypes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,7 +57,7 @@ BOOL AERateLimit(void);
  * @param operation A description of the operation, for logging purposes
  */
 #define AECheckOSStatus(result,operation) (_AECheckOSStatus((result),(operation),strrchr(__FILE__, '/')+1,__LINE__))
-static inline BOOL _AECheckOSStatus(OSStatus result, const char *operation, const char* file, int line) {
+static inline BOOL _AECheckOSStatus(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line) {
     if ( result != noErr ) {
         if ( AERateLimit() ) {
             int fourCC = CFSwapInt32HostToBig(result);
@@ -70,7 +71,28 @@ static inline BOOL _AECheckOSStatus(OSStatus result, const char *operation, cons
     }
     return YES;
 }
-    
+
+/*!
+ * Initialize an ExtAudioFileRef for writing to a file
+ *
+ *  This provides a simple way to create an audio file writer, initialised appropriately for the
+ *  given file type. To begin recording asynchronously, you should use `ExtAudioFileWriteAsync(audioFile, 0, NULL);`
+ *  to prime asynchronous recording. For writing on the main thread, use `ExtAudioFileWrite`.
+ *
+ *  Finish writing and close the file by using `ExtAudioFileDispose` once you are done.
+ *
+ *  Use this function only on the main thread.
+ *
+ * @param url URL to the file to write to
+ * @param type The type of the file to write
+ * @param sampleRate Sample rate to use for input & output
+ * @param channelCount Number of channels for input & output
+ * @param error If not NULL, the error on output
+ * @return The initialized ExtAudioFileRef, or NULL on error
+ */
+ExtAudioFileRef _Nullable AEExtAudioFileRefCreate(NSURL * _Nonnull url, AEAudioFileType fileType, double sampleRate,
+                                                  int channelCount, NSError * _Nullable * _Nullable error);
+
 #ifdef __cplusplus
 }
 #endif

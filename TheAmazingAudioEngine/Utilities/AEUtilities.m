@@ -53,3 +53,79 @@ BOOL AERateLimit(void) {
     return YES;
 }
 
+ExtAudioFileRef AEExtAudioFileRefCreate(NSURL * url, AEAudioFileType fileType, double sampleRate, int channelCount,
+                                        NSError ** error) {
+    
+    AudioStreamBasicDescription asbd = {
+        .mChannelsPerFrame = channelCount,
+        .mSampleRate = sampleRate,
+    };
+    AudioFileTypeID fileTypeID;
+    
+    if ( fileType == AEAudioFileTypeM4A ) {
+        // AAC encoding in M4A container
+        // Get the output audio description for encoding AAC
+        asbd.mFormatID = kAudioFormatMPEG4AAC;
+        UInt32 size = sizeof(asbd);
+        OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &asbd);
+        if ( !AECheckOSStatus(status, "AudioFormatGetProperty(kAudioFormatProperty_FormatInfo") ) {
+            int fourCC = CFSwapInt32HostToBig(status);
+            if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain
+                                                      code:status
+                                                  userInfo:@{ NSLocalizedDescriptionKey:
+                                                                  [NSString stringWithFormat:NSLocalizedString(@"Couldn't prepare the output format (error %d/%4.4s)", @""), status, (char*)&fourCC]}];
+            return NULL;
+        }
+        fileTypeID = kAudioFileM4AType;
+        
+    } else if ( fileType == AEAudioFileTypeAIFFFloat32 ) {
+        // 32-bit floating point
+        asbd.mFormatID = kAudioFormatLinearPCM;
+        asbd.mFormatFlags = kLinearPCMFormatFlagIsFloat | kAudioFormatFlagIsPacked | kAudioFormatFlagIsBigEndian;
+        asbd.mBitsPerChannel = sizeof(float) * 8;
+        asbd.mBytesPerPacket = asbd.mChannelsPerFrame * sizeof(float);
+        asbd.mBytesPerFrame = asbd.mBytesPerPacket;
+        asbd.mFramesPerPacket = 1;
+        fileTypeID = kAudioFileAIFCType;
+        
+    } else {
+        // 16-bit signed integer
+        asbd.mFormatID = kAudioFormatLinearPCM;
+        asbd.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagIsBigEndian;
+        asbd.mBitsPerChannel = 16;
+        asbd.mBytesPerPacket = asbd.mChannelsPerFrame * 2;
+        asbd.mBytesPerFrame = asbd.mBytesPerPacket;
+        asbd.mFramesPerPacket = 1;
+        fileTypeID = kAudioFileAIFFType;
+    }
+    
+    // Open the file
+    ExtAudioFileRef audioFile;
+    OSStatus status = ExtAudioFileCreateWithURL((__bridge CFURLRef)url, fileTypeID, &asbd, NULL, kAudioFileFlags_EraseFile,
+                                                &audioFile);
+    if ( !AECheckOSStatus(status, "ExtAudioFileCreateWithURL") ) {
+        if ( error )
+        *error = [NSError errorWithDomain:NSOSStatusErrorDomain
+                                     code:status
+                                 userInfo:@{ NSLocalizedDescriptionKey:
+                                                 NSLocalizedString(@"Couldn't open the output file", @"") }];
+        return NULL;
+    }
+    
+    // Set the client format
+    status = ExtAudioFileSetProperty(audioFile,
+                                     kExtAudioFileProperty_ClientDataFormat,
+                                     sizeof(AudioStreamBasicDescription),
+                                     &AEAudioDescription);
+    if ( !AECheckOSStatus(status, "ExtAudioFileSetProperty") ) {
+        ExtAudioFileDispose(audioFile);
+        if ( error )
+        *error = [NSError errorWithDomain:NSOSStatusErrorDomain
+                                     code:status
+                                 userInfo:@{ NSLocalizedDescriptionKey:
+                                                 NSLocalizedString(@"Couldn't configure the file writer", @"") }];
+        return NULL;
+    }
+    
+    return audioFile;
+}

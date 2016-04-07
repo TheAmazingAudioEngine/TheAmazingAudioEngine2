@@ -38,6 +38,15 @@ extern "C" {
  */
 extern const AudioStreamBasicDescription AEAudioDescription;
 
+/*!
+ * File types
+ */
+typedef enum {
+    AEAudioFileTypeAIFFFloat32, //!< 32-bit floating point AIFF (AIFC)
+    AEAudioFileTypeAIFFInt16,   //!< 16-bit signed little-endian integer AIFF
+    AEAudioFileTypeM4A,         //!< AAC in an M4A container
+} AEAudioFileType;
+
 #ifdef __cplusplus
 }
 #endif
