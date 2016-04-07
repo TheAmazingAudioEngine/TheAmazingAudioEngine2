@@ -290,6 +290,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     __weak AEAudioController * weakSelf = self;
     [recorder stopRecordingAtTime:time completionBlock:^{
         weakSelf.recording = NO;
+        weakSelf.recorderValue.objectValue = nil;
         if ( block ) block();
     }];
 }
