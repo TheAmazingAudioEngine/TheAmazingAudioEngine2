@@ -57,7 +57,7 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, AudioBufferList * buff
     
     // Clear the output buffer
     for ( int i=0; i<bufferList->mNumberBuffers; i++ ) {
-        memset(bufferList->mBuffers[i].mData, 0, bufferList->mBuffers[i].mDataByteSize);
+        memset(bufferList->mBuffers[i].mData, 0, frames * AEAudioDescription.mBytesPerFrame);
     }
     
     // Run the block

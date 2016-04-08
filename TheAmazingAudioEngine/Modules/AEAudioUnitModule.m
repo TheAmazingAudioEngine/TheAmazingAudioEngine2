@@ -146,7 +146,7 @@ static void AEAudioUnitModuleProcess(__unsafe_unretained AEAudioUnitModule * sel
             AEBufferStackPushWithChannels(context->stack, 1, 1);
             return;
         }
-        memcpy(abl->mBuffers[1].mData, abl->mBuffers[0].mData, abl->mBuffers[1].mDataByteSize);
+        memcpy(abl->mBuffers[1].mData, abl->mBuffers[0].mData, context->frames * AEAudioDescription.mBytesPerFrame);
     }
     
     if ( self->_hasInput && self->_wetDry < 1.0-DBL_EPSILON ) {
@@ -198,8 +198,8 @@ static OSStatus audioUnitRenderCallback(void                       *inRefCon,
             AEBufferStackGet(context->stack, self->_hasInput && self->_wetDry < 1.0-DBL_EPSILON ? 1 : 0);
         
         for ( int i=0; i<ioData->mNumberBuffers; i++ ) {
-            assert(ioData->mBuffers[i].mDataByteSize == abl->mBuffers[i].mDataByteSize);
-            memcpy(ioData->mBuffers[i].mData, abl->mBuffers[i].mData, ioData->mBuffers[i].mDataByteSize);
+            assert(abl->mBuffers[i].mDataByteSize >= inNumberFrames * AEAudioDescription.mBytesPerFrame);
+            memcpy(ioData->mBuffers[i].mData, abl->mBuffers[i].mData, inNumberFrames * AEAudioDescription.mBytesPerFrame);
         }
     }
     
