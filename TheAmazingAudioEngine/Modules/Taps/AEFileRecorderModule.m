@@ -66,7 +66,7 @@
     _stopTime = time ? time : AECurrentTimeInHostTicks();
     AEFileRecorderModuleWeakProxy * proxy = [AEFileRecorderModuleWeakProxy alloc];
     proxy.target = self;
-    self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:self selector:@selector(pollForCompletion)
+    self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:proxy selector:@selector(pollForCompletion)
                                                     userInfo:nil repeats:YES];
 }
 
