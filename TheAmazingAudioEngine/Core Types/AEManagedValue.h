@@ -97,7 +97,7 @@ void AEManagedValueCommitPendingAtomicUpdates();
 
 /*!
  * Block to perform when deleting old items, on main thread. If not specified, will simply use 
- * free() to dispose values set via pointerValue.
+ * free() to dispose values set via pointerValue, or CFRelease() to dispose values set via objectValue.
  */
 @property (nonatomic, copy) void (^ _Nullable releaseBlock)(void * _Nonnull value);
 
