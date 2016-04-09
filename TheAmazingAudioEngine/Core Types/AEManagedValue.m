@@ -253,6 +253,9 @@ void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     } else {
         free(value);
     }
+    if ( _releaseNotificationBlock ) {
+        _releaseNotificationBlock();
+    }
 }
 
 @end

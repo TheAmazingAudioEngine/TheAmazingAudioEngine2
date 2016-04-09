@@ -101,4 +101,9 @@ void AEManagedValueCommitPendingAtomicUpdates();
  */
 @property (nonatomic, copy) void (^ _Nullable releaseBlock)(void * _Nonnull value);
 
+/*!
+ * Block for release notifications. Use this to be informed when an old value has been released.
+ */
+@property (nonatomic, copy) void (^ _Nullable releaseNotificationBlock)(void);
+
 @end
