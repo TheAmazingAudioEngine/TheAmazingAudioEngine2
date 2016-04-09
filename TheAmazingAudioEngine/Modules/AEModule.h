@@ -97,7 +97,7 @@ void AEModuleProcess(__unsafe_unretained AEModule * _Nonnull module, const AERen
 /*!
  * The renderer
  */
-@property (nonatomic, weak) AERenderer * _Nullable renderer;
+@property (nonatomic, weak, readonly) AERenderer * _Nullable renderer;
 
 @end
 

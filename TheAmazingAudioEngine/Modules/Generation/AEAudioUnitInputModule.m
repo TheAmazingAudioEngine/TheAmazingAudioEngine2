@@ -87,7 +87,6 @@
 
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self.ioUnitStreamChangeObserverToken];
-    self.renderer = nil;
 }
 
 - (BOOL)running {

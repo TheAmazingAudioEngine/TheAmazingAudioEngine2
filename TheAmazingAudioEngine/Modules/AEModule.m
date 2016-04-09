@@ -27,6 +27,10 @@
 #import "AEModule.h"
 #import "AERenderer.h"
 
+@interface AEModule ()
+@property (nonatomic, weak, readwrite) AERenderer * renderer;
+@end
+
 @implementation AEModule
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
