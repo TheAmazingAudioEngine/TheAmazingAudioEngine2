@@ -47,6 +47,8 @@
                                                       object:_renderer];
     }
     
+    BOOL hadRenderer = _renderer != nil;
+    
     _renderer = renderer;
     
     if ( _renderer ) {
@@ -55,6 +57,10 @@
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rendererDidChangeChannelCount)
                                                      name:AERendererDidChangeChannelCountNotification object:_renderer];
         
+        if ( hadRenderer ) {
+            [self rendererDidChangeSampleRate];
+            [self rendererDidChangeChannelCount];
+        }
     }
 }
 
