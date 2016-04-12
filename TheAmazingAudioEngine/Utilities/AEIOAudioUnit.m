@@ -31,6 +31,7 @@
 #import "AETime.h"
 #import "AEAudioBufferListUtilities.h"
 @import AVFoundation;
+#import <mach/mach_time.h>
 
 NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUnitDidUpdateStreamFormatNotification";
 
@@ -47,6 +48,69 @@ NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
 @property (nonatomic) NSTimeInterval inputLatency;
 #endif
 @end
+
+
+////////////////////////////////////////////////////////////////////////////////
+// sets nr of seconds between reports, 0 = no reporting
+#define AE_REPORT_TIME 2
+
+#if AE_REPORT_TIME
+
+static OSStatus notifyCallback(
+	void *							inRefCon,
+	AudioUnitRenderActionFlags *	ioActionFlags,
+	const AudioTimeStamp *			inTimeStamp,
+	UInt32							inBusNumber,
+	UInt32							inNumberFrames,
+	AudioBufferList * __nullable	ioData)
+{
+	static UInt64 startTime = 0;
+	static UInt64 finishTime = 0;
+	
+	if (*ioActionFlags & kAudioUnitRenderAction_PreRender)
+	{
+		startTime = mach_absolute_time();
+	}
+	else
+	if (*ioActionFlags & kAudioUnitRenderAction_PostRender)
+	{
+		finishTime = mach_absolute_time();
+		
+		double renderTime = AESecondsFromHostTicks(finishTime - startTime);
+		
+		// Compute short term average time
+		static double avgTime = 0;
+		avgTime += 0.1 * (renderTime - avgTime);
+		
+		// Compute maximum time since last report
+		static double maxTime = 0;
+		if (maxTime < renderTime)
+		{ maxTime = renderTime; }
+		
+		// Check report frequency
+		static double lastTime = 0;
+		double time = AECurrentTimeInSeconds();
+		if (lastTime + AE_REPORT_TIME <= time)
+		{
+			lastTime = time;
+			double reportTime1 = avgTime;
+			double reportTime2 = maxTime;
+			dispatch_async(dispatch_get_main_queue(), \
+			^{
+				NSLog(@"Render time avg = %lfs)", reportTime1);
+				NSLog(@"Render time max = %lfs)", reportTime2);
+			});
+			
+			maxTime = 0;
+		}
+	}
+	
+	return noErr;
+}
+
+#endif // AE_REPORT_TIME
+////////////////////////////////////////////////////////////////////////////////
+
 
 @implementation AEIOAudioUnit
 @dynamic running;
@@ -152,7 +216,13 @@ NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
             return NO;
         }
     }
-    
+
+
+#if AE_REPORT_TIME
+	AudioUnitAddRenderNotify(_audioUnit, notifyCallback, nil);
+#endif
+
+	
     // Initialize
     result = AudioUnitInitialize(_audioUnit);
     if ( !AECheckOSStatus(result, "AudioUnitInitialize")) {
