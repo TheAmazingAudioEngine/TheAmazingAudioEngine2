@@ -51,9 +51,11 @@ typedef void (*AEMessageQueueMessageHandler)(void * _Nonnull userInfo, int userI
  *  forth between the realtime thread and other threads in your app. This provides for
  *  an easy lock-free synchronization method, which is important when working with audio.
  *
- *  @link AEAudioController @endlink contains its own instance of this class, and it's
- *  best to simply use that. However, you can create your own instance and use it to
- *  perform actions at particular intervals, such as on beat boundaries.
+ *  To use it, create an instance and then call AEMessageQueueProcessMessagesOnRealtimeThread from
+ *  the top of your render block, in order to poll for incoming messages on the render thread. Then
+ *  call startPolling on the main thread to begin polling for incoming messages on the main thread.
+ *  Finally, use AEMessageQueueSendMessageToMainThread from the render thread, or
+ *  performBlock:responseBlock: on the main thread, to perform a message exchange.
  */
 @interface AEMessageQueue : NSObject
 
