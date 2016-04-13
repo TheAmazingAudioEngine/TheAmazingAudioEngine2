@@ -321,6 +321,10 @@ AudioTimeStamp AEIOAudioUnitGetInputTimestamp(__unsafe_unretained AEIOAudioUnit 
     return self->_inputTimestamp;
 }
 
+double AEIOAudioUnitGetSampleRate(__unsafe_unretained AEIOAudioUnit * _Nonnull self) {
+    return self->_currentSampleRate;
+}
+
 #if TARGET_OS_IPHONE
 
 AESeconds AEIOAudioUnitGetInputLatency(__unsafe_unretained AEIOAudioUnit * _Nonnull self) {

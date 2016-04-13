@@ -122,6 +122,17 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull u
  */
 AudioTimeStamp AEIOAudioUnitGetInputTimestamp(__unsafe_unretained AEIOAudioUnit * _Nonnull unit);
 
+/*!
+ * Get the current sample rate
+ *
+ *  The sample rate is normally obtained from the current render context, but this function allows
+ *  access when the render context is not available
+ *
+ * @param unit The unit instance
+ * @return The current sample rate
+ */
+double AEIOAudioUnitGetSampleRate(__unsafe_unretained AEIOAudioUnit * _Nonnull unit);
+
 #if TARGET_OS_IPHONE
 
 /*!
