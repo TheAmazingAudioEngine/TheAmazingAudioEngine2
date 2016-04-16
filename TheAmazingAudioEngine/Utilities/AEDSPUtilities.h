@@ -31,6 +31,25 @@
 extern "C" {
 #endif
 
+/*
+	Clear buffers in AudioBufferList using AEDSPClearAudioBuffer
+	
+	@param listPtr Pointer to AudioBufferList struct
+	@param frameCount Number of frames to clear in each AudioBuffer
+*/
+void AEDSPClearBufferList(AudioBufferList *listPtr, UInt32 frameCount);
+
+
+/*
+	Clear buffer to zero using vDSP_vclr and set mDataByteSize accordingly
+	
+	@param bufferPtr Pointer to AudioBuffer struct
+	@param frameCount Number of frames to clear, 
+			mDataByteSize field will be set accordingly
+*/
+void AEDSPClearAudioBuffer(AudioBuffer *bufferPtr, UInt32 frameCount);
+
+
 /*!
  * Scale values in a buffer list by some gain value
  *
