@@ -9,6 +9,19 @@
 #import "AEDSPUtilities.h"
 @import Accelerate;
 
+void AEDSPClearBufferList(AudioBufferList *listPtr, UInt32 frameCount)
+{
+	for (UInt32 n = listPtr->mNumberBuffers; n != 0;)
+	{ AEDSPClearAudioBuffer(&listPtr->mBuffers[(n-=1)], frameCount); }
+}
+
+void AEDSPClearAudioBuffer(AudioBuffer *buffer, UInt32 frameCount)
+{
+	buffer->mDataByteSize = buffer->mNumberChannels * frameCount * sizeof(float);
+	vDSP_vclr(buffer->mData, 1, frameCount);
+}
+
+
 static const UInt32 kGainSmoothingRampDuration = 128;
 static const float kGainSmoothingRampStep = 1.0 / kGainSmoothingRampDuration;
 static const float kSmoothGainThreshold = kGainSmoothingRampStep;
