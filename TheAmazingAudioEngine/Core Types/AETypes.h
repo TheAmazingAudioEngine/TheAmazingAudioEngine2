@@ -39,6 +39,15 @@ extern "C" {
 extern const AudioStreamBasicDescription AEAudioDescription;
 
 /*!
+ * Get the TAAE audio description at a given sample rate
+ *
+ * @param channels Number of channels
+ * @param rate The sample rate
+ * @return The audio description
+ */
+AudioStreamBasicDescription AEAudioDescriptionWithChannelsAndRate(int channels, double rate);
+
+/*!
  * File types
  */
 typedef enum {

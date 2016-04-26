@@ -425,7 +425,7 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
     if ( !abl ) return;
     
     if ( !THIS->_playing ) {
-        AEAudioBufferListSilence(abl, AEAudioDescription, 0, context->frames);
+        AEAudioBufferListSilence(abl, 0, context->frames);
         return;
     }
     
@@ -438,7 +438,7 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
         = context->timestamp->mHostTime + AEHostTicksFromSeconds((double)context->frames / context->sampleRate);
     if ( startTime && startTime > hostTimeAtBufferEnd ) {
         // Start time not yet reached: emit silence
-        AEAudioBufferListSilence(abl, AEAudioDescription, 0, context->frames);
+        AEAudioBufferListSilence(abl, 0, context->frames);
         return;
         
     } else if ( startTime && startTime < context->timestamp->mHostTime ) {
@@ -456,10 +456,10 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
         while ( skipFrames > 0 ) {
             UInt32 framesToSkip = MIN(skipFrames, context->frames);
             AudioUnitRenderActionFlags flags = 0;
-            AEAudioBufferListSetLength(scratch, AEAudioDescription, framesToSkip);
+            AEAudioBufferListSetLength(scratch, framesToSkip);
             OSStatus result = AudioUnitRender(audioUnit, &flags, &timestamp, 0, framesToSkip, scratch);
             if ( !AECheckOSStatus(result, "AudioUnitRender") ) {
-                AEAudioBufferListSilence(abl, AEAudioDescription, 0, context->frames);
+                AEAudioBufferListSilence(abl, 0, context->frames);
                 return;
             }
             
@@ -475,7 +475,7 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
     UInt32 frames = context->frames;
     UInt32 silentFrames = startTime && startTime > context->timestamp->mHostTime
         ? round(AESecondsFromHostTicks(startTime - context->timestamp->mHostTime) * context->sampleRate) : 0;
-    AEAudioBufferListCopyOnStack(scratchAudioBufferList, abl, silentFrames * AEAudioDescription.mBytesPerFrame);
+    AEAudioBufferListCopyOnStack(scratchAudioBufferList, abl, silentFrames);
     AudioTimeStamp adjustedTime = *context->timestamp;
     
     if ( silentFrames > 0 ) {
@@ -496,7 +496,7 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
     AEAudioBufferListCopyOnStack(mutableAbl, abl, 0);
     OSStatus result = AudioUnitRender(audioUnit, &flags, context->timestamp, 0, frames, mutableAbl);
     if ( !AECheckOSStatus(result, "AudioUnitRender") ) {
-        AEAudioBufferListSilence(abl, AEAudioDescription, 0, context->frames);
+        AEAudioBufferListSilence(abl, 0, context->frames);
         return;
     }
     
@@ -539,7 +539,7 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
         microfadeFrames = MIN(microfadeFrames, frames);
         float start = MIN(playheadInRegionAtBufferEnd - regionLength-kMicrofadeLength, kMicrofadeLength) / kMicrofadeLength;
         float step = -1.0 / (double)kMicrofadeLength;
-        AEAudioBufferListCopyOnStack(offsetAbl, abl, offset * AEAudioDescription.mBytesPerFrame);
+        AEAudioBufferListCopyOnStack(offsetAbl, abl, offset);
         AEDSPApplyRamp(offsetAbl, &start, step, microfadeFrames);
        
         if ( playheadInRegionAtBufferEnd >= regionLength ) {

@@ -125,7 +125,7 @@ static void AEAudioUnitInputModuleProcess(__unsafe_unretained AEAudioUnitInputMo
                                           const AERenderContext * _Nonnull context) {
     if ( !self->_inputChannels ) {
         const AudioBufferList * abl = AEBufferStackPush(context->stack, 1);
-        AEAudioBufferListSilence(abl, AEAudioDescription, 0, context->frames);
+        AEAudioBufferListSilence(abl, 0, context->frames);
         return;
     }
     
@@ -139,7 +139,7 @@ static void AEAudioUnitInputModuleProcess(__unsafe_unretained AEAudioUnitInputMo
         } else {
             AECheckOSStatus(status, "AudioUnitRender");
         }
-        AEAudioBufferListSilence(abl, AEAudioDescription, 0, context->frames);
+        AEAudioBufferListSilence(abl, 0, context->frames);
     }
 }
 

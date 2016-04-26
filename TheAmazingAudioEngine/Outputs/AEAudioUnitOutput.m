@@ -92,7 +92,7 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
                     (double)frames / AEIOAudioUnitGetSampleRate(weakSelf->_ioUnit));
             #endif
         } else {
-            AEAudioBufferListSilence(ioData, AEAudioDescription, 0, frames);
+            AEAudioBufferListSilence(ioData, 0, frames);
         }
     };
     

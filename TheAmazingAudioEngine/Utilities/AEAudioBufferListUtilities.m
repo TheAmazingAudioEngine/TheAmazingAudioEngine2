@@ -26,7 +26,11 @@
 
 #import "AEAudioBufferListUtilities.h"
 
-AudioBufferList *AEAudioBufferListCreate(AudioStreamBasicDescription audioFormat, int frameCount) {
+AudioBufferList *AEAudioBufferListCreate(int frameCount) {
+    return AEAudioBufferListCreateWithFormat(AEAudioDescription, frameCount);
+}
+
+AudioBufferList *AEAudioBufferListCreateWithFormat(AudioStreamBasicDescription audioFormat, int frameCount) {
     int numberOfBuffers = audioFormat.mFormatFlags & kAudioFormatFlagIsNonInterleaved ? audioFormat.mChannelsPerFrame : 1;
     int channelsPerBuffer = audioFormat.mFormatFlags & kAudioFormatFlagIsNonInterleaved ? 1 : audioFormat.mChannelsPerFrame;
     int bytesPerBuffer = audioFormat.mBytesPerFrame * frameCount;
@@ -80,9 +84,13 @@ void AEAudioBufferListFree(AudioBufferList *bufferList ) {
     free(bufferList);
 }
 
-UInt32 AEAudioBufferListGetLength(const AudioBufferList *bufferList,
-                                  AudioStreamBasicDescription audioFormat,
-                                  int *oNumberOfChannels) {
+UInt32 AEAudioBufferListGetLength(const AudioBufferList *bufferList, int *oNumberOfChannels) {
+    return AEAudioBufferListGetLengthWithFormat(bufferList, AEAudioDescription, oNumberOfChannels);
+}
+
+UInt32 AEAudioBufferListGetLengthWithFormat(const AudioBufferList *bufferList,
+                                            AudioStreamBasicDescription audioFormat,
+                                            int *oNumberOfChannels) {
     int channelCount = audioFormat.mFormatFlags & kAudioFormatFlagIsNonInterleaved
         ? bufferList->mNumberBuffers : bufferList->mBuffers[0].mNumberChannels;
     if ( oNumberOfChannels ) {
@@ -91,27 +99,39 @@ UInt32 AEAudioBufferListGetLength(const AudioBufferList *bufferList,
     return bufferList->mBuffers[0].mDataByteSize / ((audioFormat.mBitsPerChannel/8) * channelCount);
 }
 
-void AEAudioBufferListSetLength(AudioBufferList *bufferList,
-                                AudioStreamBasicDescription audioFormat,
-                                UInt32 frames) {
+void AEAudioBufferListSetLength(AudioBufferList *bufferList, UInt32 frames) {
+    return AEAudioBufferListSetLengthWithFormat(bufferList, AEAudioDescription, frames);
+}
+
+void AEAudioBufferListSetLengthWithFormat(AudioBufferList *bufferList,
+                                          AudioStreamBasicDescription audioFormat,
+                                          UInt32 frames) {
     for ( int i=0; i<bufferList->mNumberBuffers; i++ ) {
         bufferList->mBuffers[i].mDataByteSize = frames * audioFormat.mBytesPerFrame;
     }
 }
 
-void AEAudioBufferListOffset(AudioBufferList *bufferList,
-                             AudioStreamBasicDescription audioFormat,
-                             UInt32 frames) {
+void AEAudioBufferListOffset(AudioBufferList *bufferList, UInt32 frames) {
+    return AEAudioBufferListOffsetWithFormat(bufferList, AEAudioDescription, frames);
+}
+
+void AEAudioBufferListOffsetWithFormat(AudioBufferList *bufferList,
+                                       AudioStreamBasicDescription audioFormat,
+                                       UInt32 frames) {
     for ( int i=0; i<bufferList->mNumberBuffers; i++ ) {
         bufferList->mBuffers[i].mData = (char*)bufferList->mBuffers[i].mData + frames * audioFormat.mBytesPerFrame;
         bufferList->mBuffers[i].mDataByteSize -= frames * audioFormat.mBytesPerFrame;
     }
 }
 
-void AEAudioBufferListSilence(const AudioBufferList *bufferList,
-                              AudioStreamBasicDescription audioFormat,
-                              UInt32 offset,
-                              UInt32 length) {
+void AEAudioBufferListSilence(const AudioBufferList *bufferList, UInt32 offset, UInt32 length) {
+    return AEAudioBufferListSilenceWithFormat(bufferList, AEAudioDescription, offset, length);
+}
+
+void AEAudioBufferListSilenceWithFormat(const AudioBufferList *bufferList,
+                                        AudioStreamBasicDescription audioFormat,
+                                        UInt32 offset,
+                                        UInt32 length) {
     for ( int i=0; i<bufferList->mNumberBuffers; i++ ) {
         memset((char*)bufferList->mBuffers[i].mData + offset * audioFormat.mBytesPerFrame,
                0,

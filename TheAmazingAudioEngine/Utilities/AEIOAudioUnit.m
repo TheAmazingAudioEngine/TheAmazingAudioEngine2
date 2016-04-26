@@ -307,7 +307,7 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull s
     assert(self->_inputEnabled);
     
     if ( self->_inputChannels == 0 ) {
-        AEAudioBufferListSilence(buffer, AEAudioDescription, 0, frames);
+        AEAudioBufferListSilence(buffer, 0, frames);
         return kAudio_ParamError;
     }
     

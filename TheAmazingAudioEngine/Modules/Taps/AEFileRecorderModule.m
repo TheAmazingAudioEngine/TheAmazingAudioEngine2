@@ -95,7 +95,7 @@ static void AEFileRecorderModuleProcess(__unsafe_unretained AEFileRecorderModule
     if ( !abl ) return;
     
     // Prepare stereo buffer
-    AEAudioBufferListCreateOnStack(stereoBuffer, AEAudioDescription);
+    AEAudioBufferListCreateOnStack(stereoBuffer);
     for ( int i=0; i<stereoBuffer->mNumberBuffers; i++ ) {
         stereoBuffer->mBuffers[i] = abl->mBuffers[MIN(abl->mNumberBuffers, i)];
     }

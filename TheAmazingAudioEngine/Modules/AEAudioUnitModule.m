@@ -163,7 +163,7 @@ static void AEAudioUnitModuleProcess(__unsafe_unretained AEAudioUnitModule * sel
     if ( !AECheckOSStatus(AudioUnitRender(self->_audioUnit, &flags, context->timestamp, 0, context->frames, mutableAbl),
                           "AudioUnitRender") ) {
         if ( !self->_hasInput ) {
-            AEAudioBufferListSilence(abl, AEAudioDescription, 0, context->frames);
+            AEAudioBufferListSilence(abl, 0, context->frames);
         } else if ( self->_wetDry >= 1.0-DBL_EPSILON ) {
             AEBufferStackPop(context->stack, 1);
         }
@@ -190,7 +190,7 @@ static OSStatus audioUnitRenderCallback(void                       *inRefCon,
         if ( renderer ) {
             AERendererRun(renderer, ioData, inNumberFrames, inTimeStamp);
         } else {
-            AEAudioBufferListSilence(ioData, AEAudioDescription, 0, inNumberFrames);
+            AEAudioBufferListSilence(ioData, 0, inNumberFrames);
         }
     } else {
         const AERenderContext * context = self->_currentContext;
