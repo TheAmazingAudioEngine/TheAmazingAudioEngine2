@@ -27,6 +27,7 @@
 #import "AERenderer.h"
 #import "AETypes.h"
 #import "AEManagedValue.h"
+#import "AEAudioBufferListUtilities.h"
 
 NSString * const AERendererDidChangeSampleRateNotification = @"AERendererDidChangeSampleRateNotification";
 NSString * const AERendererDidChangeChannelCountNotification = @"AERendererDidChangeChannelCountNotification";
@@ -56,9 +57,7 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, AudioBufferList * buff
     AEBufferStackSetFrameCount(THIS->_stack, frames);
     
     // Clear the output buffer
-    for ( int i=0; i<bufferList->mNumberBuffers; i++ ) {
-        memset(bufferList->mBuffers[i].mData, 0, frames * AEAudioDescription.mBytesPerFrame);
-    }
+    AEAudioBufferListSilence(bufferList, 0, frames);
     
     // Run the block
     __unsafe_unretained AERenderLoopBlock block = (__bridge AERenderLoopBlock)AEManagedValueGetValue(THIS->_blockValue);

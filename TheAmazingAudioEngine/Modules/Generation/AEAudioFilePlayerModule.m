@@ -480,9 +480,7 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
     
     if ( silentFrames > 0 ) {
         // Start time is offset into this buffer - silence beginning of buffer
-        for ( int i=0; i<abl->mNumberBuffers; i++) {
-            memset(abl->mBuffers[i].mData, 0, silentFrames * AEAudioDescription.mBytesPerFrame);
-        }
+        AEAudioBufferListSilence(abl, 0, silentFrames);
         
         // Point buffer list to remaining frames
         abl = scratchAudioBufferList;
@@ -527,8 +525,7 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
             // Silence rest of buffer and stop
             for ( int i=0; i<abl->mNumberBuffers; i++) {
                 // Silence the rest of the buffer past the end
-                memset((char*)abl->mBuffers[i].mData + (AEAudioDescription.mBytesPerFrame * microfadeFrames), 0,
-                       (AEAudioDescription.mBytesPerFrame * (frames - microfadeFrames)));
+                AEAudioBufferListSilence(abl, microfadeFrames, frames - microfadeFrames);
             }
             stopped = YES;
         }
@@ -546,8 +543,7 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
             UInt32 finalFrames = MIN(regionLength - playheadInRegion, frames);
             for ( int i=0; i<abl->mNumberBuffers; i++) {
                 // Silence the rest of the buffer past the end
-                memset((char*)abl->mBuffers[i].mData + (AEAudioDescription.mBytesPerFrame * finalFrames), 0,
-                       (AEAudioDescription.mBytesPerFrame * (frames - finalFrames)));
+                AEAudioBufferListSilence(abl, finalFrames, frames - finalFrames);
             }
             stopped = YES;
         }
