@@ -26,6 +26,7 @@
 
 @import Foundation;
 @import AudioToolbox;
+#import "AEAudioBufferListUtilities.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -111,6 +112,16 @@ void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float target
  */
 void AEDSPMix(const AudioBufferList * bufferList1, const AudioBufferList * bufferList2, float gain1, float gain2,
               BOOL monoToStereo, const AudioBufferList * output);
+
+
+/*!
+ * Silence an audio buffer list (zero out frames)
+ *
+ * @param bufferList Pointer to an AudioBufferList containing audio
+ * @param offset Offset into buffer
+ * @param length Number of frames to silence (0 for whole buffer)
+ */
+#define AEDSPSilence AEAudioBufferListSilence
 
 /*!
  * Generate oscillator/LFO
