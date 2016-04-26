@@ -49,6 +49,10 @@ NSString * const AERendererDidChangeChannelCountNotification = @"AERendererDidCh
     return self;
 }
 
+- (void)dealloc {
+    AEBufferStackFree(self.stack);
+}
+
 void AERendererRun(__unsafe_unretained AERenderer * THIS, AudioBufferList * bufferList, UInt32 frames,
                    const AudioTimeStamp * timestamp) {
     
