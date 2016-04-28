@@ -28,9 +28,14 @@
 #import "AEManagedValue.h"
 
 typedef struct {
+    void * pointer;
+    int referenceCount }
+array_entry_t;
+
+typedef struct {
     int count;
     __unsafe_unretained NSArray * objects;
-    struct array_entry_t { void * pointer; int referenceCount } entries[1];
+    array_entry_t * entries[1];
 } array_t;
 
 @interface AEArray ()
@@ -87,13 +92,12 @@ typedef struct {
         if ( priorIndex != NSNotFound ) {
             // Copy value from prior array
             newArray->entries[i] = priorArray->entries[priorIndex];
-            newArray->entries[i].referenceCount++;
+            newArray->entries[i]->referenceCount++;
         } else {
             // Add new value
-            newArray->entries[i] = (struct array_entry_t) {
-                .pointer = _mappingBlock ? _mappingBlock(item) : (__bridge void*)item,
-                .referenceCount = 1
-            };
+            newArray->entries[i] = (array_entry_t*)malloc(sizeof(array_entry_t));
+            newArray->entries[i]->pointer = _mappingBlock ? _mappingBlock(item) : (__bridge void*)item;
+            newArray->entries[i]->referenceCount = 1;
         }
         i++;
     }
@@ -112,7 +116,7 @@ int AEArrayGetCount(AEArrayToken token) {
 }
 
 void * AEArrayGetItem(AEArrayToken token, int index) {
-    return ((array_t*)token)->entries[index].pointer;
+    return ((array_t*)token)->entries[index]->pointer;
 }
 
 #pragma mark - Helpers
@@ -120,13 +124,14 @@ void * AEArrayGetItem(AEArrayToken token, int index) {
 - (void)releaseOldArray:(array_t *)array {
     if ( _mappingBlock ) {
         for ( int i=0; i<array->count; i++ ) {
-            array->entries[i].referenceCount--;
-            if ( array->entries[i].referenceCount == 0 ) {
+            array->entries[i]->referenceCount--;
+            if ( array->entries[i]->referenceCount == 0 ) {
                 if ( _releaseBlock ) {
-                    _releaseBlock(array->objects[i], array->entries[i].pointer);
-                } else if ( array->entries[i].pointer != (__bridge void*)array->objects[i] ) {
-                    free(array->entries[i].pointer);
+                    _releaseBlock(array->objects[i], array->entries[i]->pointer);
+                } else if ( array->entries[i]->pointer != (__bridge void*)array->objects[i] ) {
+                    free(array->entries[i]->pointer);
                 }
+                free(array->entries[i]);
             }
         }
     }

@@ -69,6 +69,12 @@ struct testStruct {
         return value;
     }];
     
+    NSMutableArray * released = [NSMutableArray array];
+    array.releaseBlock = ^(id item, void * bytes) {
+        [released addObject:item];
+        free(bytes);
+    };
+    
     [array updateWithContentsOfArray:@[@(1), @(2), @(3)]];
     
     AEArrayToken token = AEArrayGetToken(array);
@@ -82,22 +88,28 @@ struct testStruct {
     [array updateWithContentsOfArray:@[@(4), @(1)]];
     
     token = AEArrayGetToken(array);
+    
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.3]];
+    
     XCTAssertEqual(AEArrayGetCount(token), 2);
     XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 0))->value, 4);
     XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 1))->value, 1);
     XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 1))->otherValue, 10);
     
-    __block BOOL sawRelease = NO;
-    array.releaseBlock = ^(id item, void * bytes) {
-        if ( [item isEqual:@(4)] ) {
-            sawRelease = YES;
-        }
-        free(bytes);
-    };
+    [array updateWithContentsOfArray:@[@(1), @(2)]];
+    [array updateWithContentsOfArray:@[@(2), @(3)]];
+    
+    token = AEArrayGetToken(array);
+    
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.3]];
+    
+    XCTAssertEqual(AEArrayGetCount(token), 2);
+    XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 0))->value, 2);
+    XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 1))->value, 3);
     
     array = nil;
     
-    XCTAssertTrue(sawRelease);
+    XCTAssertEqualObjects(released, (@[@(2), @(3), @(4), @(1), @(2), @(3)]));
 }
 
 @end
