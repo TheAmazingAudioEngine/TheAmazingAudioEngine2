@@ -30,7 +30,7 @@
 typedef struct {
     int count;
     __unsafe_unretained NSArray * objects;
-    void * entries[1];
+    struct array_entry_t { void * pointer; int referenceCount } entries[1];
 } array_t;
 
 @interface AEArray ()
@@ -79,9 +79,22 @@ typedef struct {
     newArray->objects = array;
     CFBridgingRetain(array);
     
+    array_t * priorArray = (array_t*)_value.pointerValue;
+    
     int i=0;
     for ( id item in array ) {
-        newArray->entries[i] = _mappingBlock ? _mappingBlock(item) : (__bridge void*)item;
+        NSUInteger priorIndex = priorArray && priorArray->objects ? [priorArray->objects indexOfObject:item] : NSNotFound;
+        if ( priorIndex != NSNotFound ) {
+            // Copy value from prior array
+            newArray->entries[i] = priorArray->entries[priorIndex];
+            newArray->entries[i].referenceCount++;
+        } else {
+            // Add new value
+            newArray->entries[i] = (struct array_entry_t) {
+                .pointer = _mappingBlock ? _mappingBlock(item) : (__bridge void*)item,
+                .referenceCount = 1
+            };
+        }
         i++;
     }
     
@@ -99,7 +112,7 @@ int AEArrayGetCount(AEArrayToken token) {
 }
 
 void * AEArrayGetItem(AEArrayToken token, int index) {
-    return ((array_t*)token)->entries[index];
+    return ((array_t*)token)->entries[index].pointer;
 }
 
 #pragma mark - Helpers
@@ -107,10 +120,13 @@ void * AEArrayGetItem(AEArrayToken token, int index) {
 - (void)releaseOldArray:(array_t *)array {
     if ( _mappingBlock ) {
         for ( int i=0; i<array->count; i++ ) {
-            if ( _releaseBlock ) {
-                _releaseBlock(array->objects[i], array->entries[i]);
-            } else if ( array->entries[i] != (__bridge void*)array->objects[i] ) {
-                free(array->entries[i]);
+            array->entries[i].referenceCount--;
+            if ( array->entries[i].referenceCount == 0 ) {
+                if ( _releaseBlock ) {
+                    _releaseBlock(array->objects[i], array->entries[i].pointer);
+                } else if ( array->entries[i].pointer != (__bridge void*)array->objects[i] ) {
+                    free(array->entries[i].pointer);
+                }
             }
         }
     }
