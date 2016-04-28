@@ -59,6 +59,7 @@
 
 struct testStruct {
     int value;
+    int otherValue;
 };
 
 - (void)testMapping {
@@ -76,12 +77,15 @@ struct testStruct {
     XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 1))->value, 2);
     XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 2))->value, 3);
     
-    [array updateWithContentsOfArray:@[@(4), @(5)]];
+    ((struct testStruct*)AEArrayGetItem(token, 0))->otherValue = 10;
+    
+    [array updateWithContentsOfArray:@[@(4), @(1)]];
     
     token = AEArrayGetToken(array);
     XCTAssertEqual(AEArrayGetCount(token), 2);
     XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 0))->value, 4);
-    XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 1))->value, 5);
+    XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 1))->value, 1);
+    XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 1))->otherValue, 10);
     
     __block BOOL sawRelease = NO;
     array.releaseBlock = ^(id item, void * bytes) {
