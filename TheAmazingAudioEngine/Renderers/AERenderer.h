@@ -112,7 +112,7 @@ extern NSString * const _Nonnull AERendererDidChangeChannelCountNotification;
  * @param timestamp The timestamp of the current period
  */
 void AERendererRun(__unsafe_unretained AERenderer * _Nonnull renderer,
-                   AudioBufferList * _Nonnull bufferList,
+                   const AudioBufferList * _Nonnull bufferList,
                    UInt32 frames,
                    const AudioTimeStamp * _Nonnull timestamp);
 

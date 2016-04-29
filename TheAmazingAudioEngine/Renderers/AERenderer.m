@@ -53,7 +53,7 @@ NSString * const AERendererDidChangeChannelCountNotification = @"AERendererDidCh
     AEBufferStackFree(self.stack);
 }
 
-void AERendererRun(__unsafe_unretained AERenderer * THIS, AudioBufferList * bufferList, UInt32 frames,
+void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList * bufferList, UInt32 frames,
                    const AudioTimeStamp * timestamp) {
     
     // Reset the buffer stack, and set the frame count
