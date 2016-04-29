@@ -54,6 +54,8 @@
 
 #import <TheAmazingAudioEngine/AEUtilities.h>
 #import <TheAmazingAudioEngine/AEAudioBufferListUtilities.h>
+#import <TheAmazingAudioEngine/TPCircularBuffer.h>
+#import <TheAmazingAudioEngine/AECircularBuffer.h>
 #import <TheAmazingAudioEngine/AEDSPUtilities.h>
 #import <TheAmazingAudioEngine/AEMainThreadEndpoint.h>
 #import <TheAmazingAudioEngine/AEAudioThreadEndpoint.h>
