@@ -138,7 +138,9 @@ static BOOL __atomicUpdateWaitingForCommit = NO;
 
 - (void)dealloc {
     [__atomicUpdatedDeferredSyncValues removeObject:self];
-    [self releaseOldValue:_value];
+    if ( _value ) {
+        [self releaseOldValue:_value];
+    }
     linkedlistitem_t * release;
     while ( (release = OSAtomicDequeue(&_pendingReleaseQueue, offsetof(linkedlistitem_t, next))) ) {
         OSAtomicEnqueue(&_releaseQueue, release, offsetof(linkedlistitem_t, next));
