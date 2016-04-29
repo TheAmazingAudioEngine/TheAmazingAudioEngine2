@@ -29,8 +29,8 @@
 
 typedef struct {
     void * pointer;
-    int referenceCount }
-array_entry_t;
+    int referenceCount;
+} array_entry_t;
 
 typedef struct {
     int count;
@@ -76,6 +76,10 @@ typedef struct {
 }
 
 - (void)updateWithContentsOfArray:(NSArray *)array {
+    [self updateWithContentsOfArray:array customMapping:nil];
+}
+
+- (void)updateWithContentsOfArray:(NSArray *)array customMapping:(void * _Nonnull (^)(id _Nonnull, int))block {
     array = [array copy];
     
     // Create new array
@@ -96,7 +100,7 @@ typedef struct {
         } else {
             // Add new value
             newArray->entries[i] = (array_entry_t*)malloc(sizeof(array_entry_t));
-            newArray->entries[i]->pointer = _mappingBlock ? _mappingBlock(item) : (__bridge void*)item;
+            newArray->entries[i]->pointer = block ? block(item, i) : _mappingBlock ? _mappingBlock(item) : (__bridge void*)item;
             newArray->entries[i]->referenceCount = 1;
         }
         i++;

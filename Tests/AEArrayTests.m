@@ -97,7 +97,16 @@ struct testStruct {
     XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 1))->otherValue, 10);
     
     [array updateWithContentsOfArray:@[@(1), @(2)]];
-    [array updateWithContentsOfArray:@[@(2), @(3)]];
+    
+    NSMutableArray * added = [NSMutableArray array];
+    [array updateWithContentsOfArray:@[@(2), @(3)] customMapping:^void * _Nonnull(id  _Nonnull item, int index) {
+        [added addObject:@[item, @(index)]];
+        struct testStruct * value = calloc(sizeof(struct testStruct), 1);
+        value->value = ((NSNumber*)item).intValue;
+        return value;
+    }];
+    
+    XCTAssertEqualObjects(added, (@[@[@(3), @(1)]]));
     
     token = AEArrayGetToken(array);
     

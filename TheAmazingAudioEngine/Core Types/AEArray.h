@@ -76,12 +76,37 @@ typedef const void * AEArrayToken; //!< Token for real-thread use
  * Update the array by copying the contents of the given NSArray
  *
  *  New values will be retained, and old values will be released in a thread-safe manner.
+ *  If you have provided a custom mapping when initializing the instance, the custom mapping
+ *  block will be called for all new values. Values in the new array that are also present in
+ *  the prior array value will be maintained, and old values not present in the new array are released.
  *
  *  Using this method within an AEManagedValue
  *  @link AEManagedValue::performAtomicBatchUpdate performAtomicBatchUpdate @endlink block
  *  will cause the update to occur atomically along with any other value updates.
+ *
+ * @param array Array of values
  */
 - (void)updateWithContentsOfArray:(NSArray * _Nonnull)array;
+
+/*!
+ * Update the array, with custom mapping
+ *
+ *  If you provide a custom mapping using this method, it will be used instead of the one
+ *  provided when initializing this instance (if any), for all new values not present in the
+ *  previous array value. This allows you to capture state particular to an individual
+ *  update at the time of calling this method.
+ *
+ *  New values will be retained, and old values will be released in a thread-safe manner.
+ *
+ *  Using this method within an AEManagedValue
+ *  @link AEManagedValue::performAtomicBatchUpdate performAtomicBatchUpdate @endlink block
+ *  will cause the update to occur atomically along with any other value updates.
+ *
+ * @param array Array of values
+ * @param block The block mapping between objects and stored information
+ */
+- (void)updateWithContentsOfArray:(NSArray * _Nonnull)array
+                    customMapping:(void * _Nonnull(^ _Nullable)(id _Nonnull item, int index))block;
 
 /*!
  * Get the array token, for use on realtime audio thread
