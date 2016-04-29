@@ -28,6 +28,7 @@
 #import <TheAmazingAudioEngine/AETypes.h>
 
 #import <TheAmazingAudioEngine/AEModule.h>
+#import <TheAmazingAudioEngine/AESubrendererModule.h>
 #import <TheAmazingAudioEngine/AEAudioUnitModule.h>
 #import <TheAmazingAudioEngine/AEAudioUnitInputModule.h>
 #import <TheAmazingAudioEngine/AEAudioFilePlayerModule.h>
