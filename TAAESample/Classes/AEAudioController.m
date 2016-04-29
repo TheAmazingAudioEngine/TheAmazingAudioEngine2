@@ -127,7 +127,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
                 AEModuleProcess(player, context);
                 
                 // Put on output
-                AEBufferStackMixToBufferList(context->stack, 0, 0, YES, context->output);
+                AERenderContextOutput(context, 1);
                 AEBufferStackPop(context->stack, 1);
             }
         });
@@ -179,7 +179,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         }
         
         // Put on output
-        AEBufferStackMixToBufferList(context->stack, 1, 0, YES, context->output);
+        AERenderContextOutput(context, 1);
         
         if ( _inputEnabled ) {
             // Add audio input
@@ -197,7 +197,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
                     AEDSPApplyGain(AEBufferStackGet(context->stack, 0), 0.1, context->frames);
                 }
                 
-                AEBufferStackMixToBufferList(context->stack, 1, 0, YES, context->output);
+                AERenderContextOutput(context, 1);
             }
         }
         
@@ -218,7 +218,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
             AEModuleProcess(player, context);
             
             // Put on output
-            AEBufferStackMixToBufferList(context->stack, 1, 0, YES, context->output);
+            AERenderContextOutput(context, 1);
         }
     };
     

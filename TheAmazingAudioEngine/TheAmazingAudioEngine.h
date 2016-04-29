@@ -51,6 +51,7 @@
 #endif
 
 #import <TheAmazingAudioEngine/AERenderer.h>
+#import <TheAmazingAudioEngine/AERenderContext.h>
 #import <TheAmazingAudioEngine/AEAudioUnitOutput.h>
 
 #import <TheAmazingAudioEngine/AEUtilities.h>
