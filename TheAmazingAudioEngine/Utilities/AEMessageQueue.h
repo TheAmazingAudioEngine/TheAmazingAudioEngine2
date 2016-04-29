@@ -2,7 +2,7 @@
 //  AEMessageQueue.h
 //  TheAmazingAudioEngine
 //
-//  Created by Michael Tyson on 23/03/2016.
+//  Created by Michael Tyson on 29/04/2016.
 //  Copyright © 2016 A Tasty Pixel. All rights reserved.
 //
 //  This software is provided 'as-is', without any express or implied
@@ -25,8 +25,7 @@
 //
 
 @import Foundation;
-
-@class AEMessageQueue;
+#import "AETime.h"
 
 /*!
  * Main thread message handler function
@@ -42,20 +41,21 @@
  * @param userInfo          Pointer to your data
  * @param userInfoLength    Length of userInfo in bytes
  */
-typedef void (*AEMessageQueueMessageHandler)(void * _Nonnull userInfo, int userInfoLength);
+typedef void (*AEMessageQueueMessageHandler)(const void * _Nonnull data, size_t length);
 
 /*!
  * Message Queue
  *
  *  This class manages a two-way message queue which is used to pass messages back and
- *  forth between the realtime thread and other threads in your app. This provides for
+ *  forth between the audio thread and the main thread. This provides for
  *  an easy lock-free synchronization method, which is important when working with audio.
  *
- *  To use it, create an instance and then call AEMessageQueueProcessMessagesOnRealtimeThread from
- *  the top of your render block, in order to poll for incoming messages on the render thread. Then
- *  call startPolling on the main thread to begin polling for incoming messages on the main thread.
- *  Finally, use AEMessageQueueSendMessageToMainThread from the render thread, or
- *  performBlock:responseBlock: on the main thread, to perform a message exchange.
+ *  To use it, create an instance and then begin calling AEMessageQueuePoll from your render loop,
+ *  in order to poll for incoming messages on the render thread. Then call startPolling on the
+ *  main thread to begin polling for incoming messages on the main thread.
+ *
+ *  Then, use AEMessageQueuePerformOnMainThread from the audio thread, or
+ *  performBlockOnAudioThread: or performBlockOnAudioThread:completionBlock: from the main thread.
  */
 @interface AEMessageQueue : NSObject
 
@@ -65,72 +65,51 @@ typedef void (*AEMessageQueueMessageHandler)(void * _Nonnull userInfo, int userI
 - (instancetype _Nullable)init;
 
 /*!
- * Initialize with specified message buffer length
+ * Begin polling for messages from the audio thread
  *
- *  The true buffer length will be multiples of the device page size (e.g. 4096 bytes)
+ *  Call this to begin listening for messages from the audio thread.
  *
- * @param numBytes      The message buffer length in bytes.
+ * @return YES if polling started successfully, NO if there was a buffer allocation problem
  */
-- (instancetype _Nullable)initWithMessageBufferLength:(int32_t)numBytes;
+- (BOOL)startPolling;
 
 /*!
- * Start polling for messages from realtime thread to main thread
- *
- *  Call this after or right before starting the realtime thread that calls 
- *  AEMessageQueueProcessMessagesOnRealtimeThread periodically.
- *  The polling must be active for freeing up message resources, even if you don't
- *  explicitly use any responseBlocks or AEMessageQueueSendMessageToMainThread.
+ * Stop polling for messages
  */
-- (void)startPolling;
+- (void)endPolling;
 
 /*!
- * Stop polling for messages from realtime thread to main thread
- */
-- (void)stopPolling;
-
-/*!
- * Poll for main thread messages once
- *
- *  Use this method to poll the main thread message queue once. This can be useful
- *  when performing some synchronous/wait operation that is dependent on a message
- *  exchange to complete, similar to running an NSRunLoop manually.
- *
- *  Use @link startPolling @endlink/@link stopPolling @endlink to control message 
- *  processing the rest of the time.
- */
-- (void)processMainThreadMessages;
-
-/*!
- * Send a message to the realtime thread asynchronously, optionally receiving a response via a block
- *
- *  This is a synchronization mechanism that allows you to schedule actions to be performed 
- *  on the realtime thread without any locking mechanism required. Pass in a block, and
- *  the block will be performed on the realtime thread at the next call to 
- *  AEMessageQueueProcessMessagesOnRealtimeThread.
+ * Send a message to the realtime thread from the main thread
  *
  *  Important: Do not interact with any Objective-C objects inside your block, or hold locks, allocate
  *  memory or interact with the BSD subsystem, as all of these may result in audio glitches due
  *  to priority inversion.
  *
- *  If provided, the response block will be called on the main thread after the message has
- *  been processed on the realtime thread. You may exchange information from the realtime thread to 
- *  the main thread via a shared data structure (such as a struct, allocated on the heap in advance), 
+ * @param block A block to be performed on the realtime thread.
+ */
+- (void)performBlockOnAudioThread:(void (^ _Nonnull)())block;
+
+/*!
+ * Send a message to the realtime thread, with a completion block
+ *
+ *  If provided, the completion block will be called on the main thread after the message has
+ *  been processed on the realtime thread. You may exchange information from the realtime thread to
+ *  the main thread via a shared data structure (such as a struct, allocated on the heap in advance),
  *  or a __block variable.
  *
- * @param block         A block to be performed on the realtime thread.
- * @param responseBlock A block to be performed on the main thread after the handler has been run, or nil.
+ *  Important: Do not interact with any Objective-C objects inside your block, or hold locks, allocate
+ *  memory or interact with the BSD subsystem, as all of these may result in audio glitches due
+ *  to priority inversion.
+
+ * @param block  A block to be performed on the realtime thread.
+ * @param completionBlock A block to be performed on the main thread after the handler has been run, or nil.
  */
-- (void)performBlock:(void (^ _Nullable)())block responseBlock:(void (^ _Nullable)())responseBlock;
+- (void)performBlockOnAudioThread:(void (^ _Nonnull)())block completionBlock:(void (^ _Nullable)())completionBlock;
 
 /*!
  * Send a message to the main thread asynchronously
  *
- *  This is a synchronization mechanism that allows the realtime thread to schedule actions to be performed
- *  on the main thread, without any locking or memory allocation.  Pass in a function pointer and
- *  optionally a pointer to data to be copied and passed to the handler, and the function will 
- *  be called on the main thread at the next polling interval.
- *
- *  Tip: To pass a pointer (including pointers to __unsafe_unretained Objective-C objects) through the 
+ *  Tip: To pass a pointer (including pointers to __unsafe_unretained Objective-C objects) through the
  *  userInfo parameter, be sure to pass the address to the pointer, using the "&" prefix:
  *
  *  @code
@@ -155,45 +134,42 @@ typedef void (*AEMessageQueueMessageHandler)(void * _Nonnull userInfo, int userI
  *  MyObject *object = (__bridge MyObject*)*(void**)userInfo;
  *  @endcode
  *
- * @param messageQueue    The message queue instance.
- * @param handler         A pointer to a function to call on the main thread.
- * @param userInfo        Pointer to user info data to pass to handler - this will be copied.
- * @param userInfoLength  Length of userInfo in bytes.
+ * @param messageQueue The message queue instance.
+ * @param handler A pointer to a function to call on the main thread.
+ * @param data Message data (or NULL) to copy
+ * @param length Length of message data
+ * @return YES on success, or NO if out of buffer space or not polling
  */
-void AEMessageQueueSendMessageToMainThread(AEMessageQueue               * _Nonnull messageQueue,
-                                           AEMessageQueueMessageHandler _Nonnull handler,
-                                           void                         * _Nonnull userInfo,
-                                           int                           userInfoLength);
+BOOL AEMessageQueuePerformOnMainThread(AEMessageQueue * _Nonnull messageQueue,
+                                       AEMessageQueueMessageHandler _Nonnull handler,
+                                       const void * _Nonnull data,
+                                       size_t length);
 
 /*!
  * Begins a group of messages to be performed consecutively.
  *
- *  Calling this method will cause message processing on the realtime thread to be
- *  suspended until @link endMessageExchangeBlock @endlink is called.
+ *  Messages sent using sendBytes:length: between calls to this method and endMessageGroup
+ *  will be performed consecutively on the main thread during a single poll interval.
  */
-- (void)beginMessageExchangeGroup;
+- (void)beginMessageGroup;
 
 /*!
  * Ends a consecutive group of messages
  */
-- (void)endMessageExchangeGroup;
-
-
-/*!
- * Timeout for when realtime message blocks should be executed automatically
- *
- *  If greater than zero and @link AEMessageQueueProcessMessagesOnRealtimeThread @endlink 
- *  hasn't been called in this many seconds, process the messages anyway on an internal thread. 
- *
- *  Default is zero (disabled).
- */
-@property (nonatomic, assign) NSTimeInterval autoProcessTimeout;
+- (void)endMessageGroup;
 
 /*!
- * Process pending messages on realtime thread
+ * Poll for pending messages on realtime thread
  *
  *  Call this periodically from the realtime thread to process pending message blocks.
  */
-void AEMessageQueueProcessMessagesOnRealtimeThread(__unsafe_unretained AEMessageQueue * _Nonnull THIS);
+void AEMessageQueuePoll(__unsafe_unretained AEMessageQueue * _Nonnull THIS);
+
+//! The poll interval (default is 10ms)
+@property (nonatomic) AESeconds pollInterval;
+
+//! The buffer capacity, in bytes (default is 8192 bytes). Note that due to the underlying implementation,
+//! actual capacity may be larger.
+@property (nonatomic) size_t bufferCapacity;
 
 @end
