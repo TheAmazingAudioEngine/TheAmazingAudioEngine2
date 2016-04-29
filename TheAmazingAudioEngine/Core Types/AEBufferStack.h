@@ -227,18 +227,26 @@ void AEBufferStackApplyVolumeAndBalance(AEBufferStack * stack,
  *
  * @param stack The stack
  * @param bufferCount Number of buffers to process, or 0 for all
- * @param firstChannel First channel number to output to; multi-channel buffers will span multiple output channels starting here
+ * @param output The output buffer list
+ * @param frames Number of frames
+ */
+void AEBufferStackMixToBufferList(AEBufferStack * stack, int bufferCount, const AudioBufferList * output);
+
+/*!
+ * Mix stack items onto an AudioBufferList, with specific channel configuration
+ *
+ *  The given number of stack items will mixed into the buffer list.
+ *
+ * @param stack The stack
+ * @param bufferCount Number of buffers to process, or 0 for all
+ * @param outputChannelIndex First channel number to output to; multi-channel buffers will span multiple output channels starting here
  * @param monoToStereo Whether to convert any mono buffers to stereo
  * @param output The output buffer list
  * @param frames Number of frames
  */
-void AEBufferStackMixToBufferList(AEBufferStack * stack,
-                                  int bufferCount,
-                                  int firstChannel,
-                                  BOOL monoToStereo,
-                                  const AudioBufferList * output);
-    
-    
+void AEBufferStackMixToBufferListChannels(AEBufferStack * stack, int bufferCount, int outputChannelIndex,
+                                          BOOL monoToStereo, const AudioBufferList * output);
+
 /*!
  * Reset the stack
  *

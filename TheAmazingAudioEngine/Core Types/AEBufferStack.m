@@ -263,15 +263,30 @@ void AEBufferStackApplyVolumeAndBalance(AEBufferStack * stack,
     AEDSPApplyVolumeAndBalance(abl, targetVolume, currentVolume, targetBalance, currentBalance, stack->frameCount);
 }
 
-void AEBufferStackMixToBufferList(AEBufferStack * stack,
-                                  int bufferCount,
-                                  int firstChannel,
-                                  BOOL monoToStereo,
-                                  const AudioBufferList * output) {
+
+void AEBufferStackMixToBufferList(AEBufferStack * stack, int bufferCount, const AudioBufferList * output) {
+    // Mix stack items
     for ( int i=0; bufferCount ? i<bufferCount : 1; i++ ) {
         const AudioBufferList * abl = AEBufferStackGet(stack, i);
         if ( !abl ) return;
-        AEDSPMix(abl, output, 1, 1, monoToStereo, output);
+        AEDSPMix(abl, output, 1, 1, YES, output);
+    }
+}
+
+void AEBufferStackMixToBufferListChannels(AEBufferStack * stack, int bufferCount, int outputChannelIndex,
+                                          BOOL monoToStereo, const AudioBufferList * output) {
+    assert(outputChannelIndex < output->mNumberBuffers);
+    
+    // Setup output buffer
+    AEAudioBufferListCreateOnStackWithFormat(outputBuffer,
+        AEAudioDescriptionWithChannelsAndRate(output->mNumberBuffers-outputChannelIndex, 0));
+    memcpy(outputBuffer->mBuffers, &output->mBuffers[outputChannelIndex], sizeof(AudioBuffer)*outputBuffer->mNumberBuffers);
+    
+    // Mix stack items
+    for ( int i=0; bufferCount ? i<bufferCount : 1; i++ ) {
+        const AudioBufferList * abl = AEBufferStackGet(stack, i);
+        if ( !abl ) return;
+        AEDSPMix(abl, outputBuffer, 1, 1, monoToStereo, outputBuffer);
     }
 }
 
