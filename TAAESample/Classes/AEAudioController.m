@@ -253,7 +253,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
 }
 
 - (void)stop {
-    // Stop, and deactive the audio session
+    // Stop, and deactivate the audio session
     [self.output stop];
     [self.input stop]; // (this is a no-op on iOS)
     [[AVAudioSession sharedInstance] setActive:NO error:NULL];
