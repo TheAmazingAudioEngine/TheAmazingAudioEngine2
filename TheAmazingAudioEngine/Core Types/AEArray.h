@@ -117,6 +117,8 @@ typedef const void * AEArrayToken; //!< Token for real-thread use
  *  after which the array values may differ. Consequently, it is advised that AEArrayGetToken
  *  is called only once per render loop.
  *
+ *  Note: Do not use this function on the main thread
+ *
  * @param array The array
  * @return The token, for use with other accessors
  */
@@ -140,7 +142,7 @@ int AEArrayGetCount(AEArrayToken _Nonnull token);
 void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
 
 /*!
- * Enumerate object types in the array
+ * Enumerate object types in the array, for use on audio thread
  *
  *  This convenience macro provides the ability to enumerate the objects
  *  in the array, in a realtime-thread safe fashion.
@@ -148,22 +150,24 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
  *  Note: This macro calls AEArrayGetToken to access the array. Consequently, it is not
  *  recommended for use when you need to access the array in addition to this enumeration.
  *
+ *  Note: Do not use this macro on the main thread
+ *
  * @param array The array
  * @param type The object type
  * @param varname Name of object variable for inner loop
- * @param what Inner loop implementation
+ * @param inner Inner loop implementation
  */
-#define AEArrayEnumerateObjects(array, type, varname, what) { \
+#define AEArrayEnumerateObjects(array, type, varname, inner) { \
     AEArrayToken _token = AEArrayGetToken(array); \
     int _count = AEArrayGetCount(_token); \
     for ( int _i=0; _i < _count; _i++ ) { \
         __unsafe_unretained type varname = (__bridge type)AEArrayGetItem(_token, _i); \
-        { what; } \
+        { inner; } \
     } \
 }
 
 /*!
- * Enumerate pointer types in the array
+ * Enumerate pointer types in the array, for use on audio thread
  *
  *  This convenience macro provides the ability to enumerate the pointers
  *  in the array, in a realtime-thread safe fashion. It differs from AEArrayEnumerateObjects
@@ -172,20 +176,27 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
  *  Note: This macro calls AEArrayGetToken to access the array. Consequently, it is not
  *  recommended for use when you need to access the array in addition to this enumeration.
  *
+ *  Note: Do not use this macro on the main thread
+ *
  * @param array The array
  * @param type The pointer type (e.g. struct myStruct *)
  * @param varname Name of pointer variable for inner loop
- * @param what Inner loop implementation
+ * @param inner Inner loop implementation
  */
-#define AEArrayEnumeratePointers(array, type, varname, what) { \
+#define AEArrayEnumeratePointers(array, type, varname, inner) { \
     AEArrayToken _token = AEArrayGetToken(array); \
     int _count = AEArrayGetCount(_token); \
     for ( int _i=0; _i < _count; _i++ ) { \
         type varname = (type)AEArrayGetItem(_token, _i); \
-        { what; } \
+        { inner; } \
     } \
 }
 
-@property (nonatomic, strong, readonly) NSArray * _Nonnull allValues; //!< Current values
-@property (nonatomic, copy) void (^_Nullable releaseBlock)(id _Nonnull item, void * _Nonnull bytes); //!< Block to perform when deleting old items, on main thread. If not specified, will simply use free() to dispose bytes, if pointer differs from original Objective-C pointer.
+//! Current object values
+@property (nonatomic, strong, readonly) NSArray * _Nonnull allValues;
+
+//! Block to perform when deleting old items, on main thread. If not specified, will simply use
+//! free() to dispose bytes, if pointer differs from original Objective-C pointer.
+@property (nonatomic, copy) void (^_Nullable releaseBlock)(id _Nonnull item, void * _Nonnull bytes);
+
 @end
