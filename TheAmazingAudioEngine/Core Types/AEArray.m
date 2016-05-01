@@ -75,6 +75,11 @@ typedef struct {
     return array->objects ? array->objects : @[];
 }
 
+- (const void *)pointerValueAtIndex:(int)index {
+    array_t * array = (array_t*)_value.pointerValue;
+    return array->count >= index ? array->entries[index]->pointer : NULL;
+}
+
 - (void)updateWithContentsOfArray:(NSArray *)array {
     [self updateWithContentsOfArray:array customMapping:nil];
 }

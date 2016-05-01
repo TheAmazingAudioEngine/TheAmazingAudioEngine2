@@ -95,6 +95,8 @@ struct testStruct {
     XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 0))->value, 4);
     XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 1))->value, 1);
     XCTAssertEqual(((struct testStruct*)AEArrayGetItem(token, 1))->otherValue, 10);
+    XCTAssertEqual(((struct testStruct*)[array pointerValueAtIndex:1])->value, 1);
+    XCTAssertEqual(((struct testStruct*)[array pointerValueAtIndex:1])->otherValue, 10);
     
     [array updateWithContentsOfArray:@[@(1), @(2)]];
     

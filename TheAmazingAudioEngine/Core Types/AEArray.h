@@ -109,6 +109,20 @@ typedef const void * AEArrayToken; //!< Token for real-thread use
                     customMapping:(void * _Nonnull(^ _Nullable)(id _Nonnull item, int index))block;
 
 /*!
+ * Get the pointer value at the given index of the C array, as seen by the audio thread
+ *
+ *  This method allows you to access the same values as the audio thread; if you are using
+ *  a mapping block to create structures that correspond to objects in the original array,
+ *  for instance, then you may access these structures using this method.
+ *
+ *  Note: You may not modify these values.
+ *
+ * @param index Index of the item to retrieve
+ * @return Pointer to the item at the given index
+ */
+- (const void *)pointerValueAtIndex:(int)index;
+
+/*!
  * Get the array token, for use on realtime audio thread
  *
  *  In order to access this class on the audio thread, you should first use AEArrayGetToken
