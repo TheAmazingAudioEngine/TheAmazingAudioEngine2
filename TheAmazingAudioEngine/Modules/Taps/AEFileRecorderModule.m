@@ -97,7 +97,7 @@ static void AEFileRecorderModuleProcess(__unsafe_unretained AEFileRecorderModule
     // Prepare stereo buffer
     AEAudioBufferListCreateOnStack(stereoBuffer);
     for ( int i=0; i<stereoBuffer->mNumberBuffers; i++ ) {
-        stereoBuffer->mBuffers[i] = abl->mBuffers[MIN(abl->mNumberBuffers, i)];
+        stereoBuffer->mBuffers[i] = abl->mBuffers[MIN(abl->mNumberBuffers-1, i)];
     }
     
     // Advance frames, if we have a start time mid-buffer
