@@ -120,7 +120,7 @@ typedef const void * AEArrayToken; //!< Token for real-thread use
  * @param index Index of the item to retrieve
  * @return Pointer to the item at the given index
  */
-- (const void *)pointerValueAtIndex:(int)index;
+- (const void * _Nullable)pointerValueAtIndex:(int)index;
 
 /*!
  * Get the array token, for use on realtime audio thread
