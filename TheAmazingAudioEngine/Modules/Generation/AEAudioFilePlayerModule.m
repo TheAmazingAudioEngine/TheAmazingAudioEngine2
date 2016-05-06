@@ -445,7 +445,7 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
         // Start time is in the past - we need to skip some frames
         AEHostTicks skipTime = context->timestamp->mHostTime - startTime;
         UInt32 skipFrames = round(AESecondsFromHostTicks(skipTime) * context->sampleRate);
-        playhead += AESecondsFromHostTicks(skipTime) * THIS->_fileSampleRate;
+        playhead += (double)skipFrames * (THIS->_fileSampleRate / context->sampleRate);
         AudioTimeStamp timestamp = {
             .mFlags = kAudioTimeStampSampleTimeValid|kAudioTimeStampHostTimeValid,
             .mSampleTime = context->timestamp->mSampleTime - skipFrames,
