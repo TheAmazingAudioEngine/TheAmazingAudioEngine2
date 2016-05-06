@@ -52,18 +52,21 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     NSURL * url = [[NSBundle mainBundle] URLForResource:@"amen" withExtension:@"m4a"];
     AEAudioFilePlayerModule * drums = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
     drums.loop = YES;
+    drums.microfadeFrames = 32; // Microfade a little, to avoid clicks when turning on/off in the middle
     self.drums = drums;
     [players addObject:drums];
     
     url = [[NSBundle mainBundle] URLForResource:@"bass" withExtension:@"m4a"];
     AEAudioFilePlayerModule * bass = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
     bass.loop = YES;
+    bass.microfadeFrames = 32;
     self.bass = bass;
     [players addObject:bass];
     
     url = [[NSBundle mainBundle] URLForResource:@"piano" withExtension:@"m4a"];
     AEAudioFilePlayerModule * piano = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
     piano.loop = YES;
+    piano.microfadeFrames = 32;
     self.piano = piano;
     [players addObject:piano];
     

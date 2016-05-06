@@ -33,7 +33,7 @@
 #import "AEAudioBufferListUtilities.h"
 #import "AEDSPUtilities.h"
 
-static const UInt32 kMicrofadeLength = 32;
+static const UInt32 kNoValue = -1;
 
 @interface AEAudioFilePlayerModule () {
     AudioFileID _audioFile;
@@ -106,6 +106,8 @@ static const UInt32 kMicrofadeLength = 32;
 }
 
 - (void)playAtTime:(AEHostTicks)time beginBlock:(void(^)())block {
+    _remainingMicrofadeOutFrames = kNoValue;
+    
     _startTime = time;
     if ( !_playing ) {
         self.beginBlock = block;
@@ -138,7 +140,7 @@ static const UInt32 kMicrofadeLength = 32;
         if ( !self.pollTimer ) {
             [self schedulePollTimer];
         }
-        _remainingMicrofadeOutFrames = kMicrofadeLength;
+        _remainingMicrofadeOutFrames = _microfadeFrames;
     }
 }
 
@@ -415,7 +417,7 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
     _playheadOffset = position - start;
     _anchorTime = 0;
     _sequenceScheduled = YES;
-    _remainingMicrofadeInFrames = kMicrofadeLength;
+    _remainingMicrofadeInFrames = _microfadeFrames;
 }
 
 static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayerModule * THIS,
@@ -509,17 +511,19 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
     if ( THIS->_remainingMicrofadeInFrames > 0 ) {
         // Fade in
         UInt32 microfadeFrames = MIN(THIS->_remainingMicrofadeInFrames, frames);
-        float start = 1.0 - (float)THIS->_remainingMicrofadeInFrames / (float)kMicrofadeLength;
-        float step = 1.0 / (double)kMicrofadeLength;
+        float start = 1.0 - (float)THIS->_remainingMicrofadeInFrames / (float)THIS->_microfadeFrames;
+        float step = 1.0 / (double)THIS->_microfadeFrames;
         AEDSPApplyRamp(abl, &start, step, microfadeFrames);
         THIS->_remainingMicrofadeInFrames -= microfadeFrames;
         
-    } else if ( THIS->_remainingMicrofadeOutFrames > 0 ) {
+    } else if ( THIS->_remainingMicrofadeOutFrames != kNoValue ) {
         // Fade out (stopped)
         UInt32 microfadeFrames = MIN(THIS->_remainingMicrofadeOutFrames, frames);
-        float start = (float)THIS->_remainingMicrofadeOutFrames / (float)kMicrofadeLength;
-        float step = -1.0 / (double)kMicrofadeLength;
-        AEDSPApplyRamp(abl, &start, step, microfadeFrames);
+        if ( microfadeFrames > 0 ) {
+            float start = (float)THIS->_remainingMicrofadeOutFrames / (float)THIS->_microfadeFrames;
+            float step = -1.0 / (double)THIS->_microfadeFrames;
+            AEDSPApplyRamp(abl, &start, step, microfadeFrames);
+        }
         THIS->_remainingMicrofadeOutFrames -= microfadeFrames;
         if ( THIS->_remainingMicrofadeOutFrames == 0 ) {
             // Silence rest of buffer and stop
@@ -529,16 +533,18 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
             }
             stopped = YES;
         }
-    } else if ( !THIS->_loop && playheadInRegionAtBufferEnd >= regionLength-kMicrofadeLength ) {
+    } else if ( !THIS->_loop && playheadInRegionAtBufferEnd >= regionLength-THIS->_microfadeFrames ) {
         // Fade out (ended)
-        UInt32 offset = MIN(regionLength-kMicrofadeLength - playheadInRegion, frames);
-        UInt32 microfadeFrames = MIN(playheadInRegionAtBufferEnd - regionLength-kMicrofadeLength, kMicrofadeLength);
+        UInt32 offset = MIN(regionLength-THIS->_microfadeFrames - playheadInRegion, frames);
+        UInt32 microfadeFrames = MIN(playheadInRegionAtBufferEnd - regionLength - THIS->_microfadeFrames, THIS->_microfadeFrames);
         microfadeFrames = MIN(microfadeFrames, frames);
-        float start = MIN(playheadInRegionAtBufferEnd - regionLength-kMicrofadeLength, kMicrofadeLength) / kMicrofadeLength;
-        float step = -1.0 / (double)kMicrofadeLength;
-        AEAudioBufferListCopyOnStack(offsetAbl, abl, offset);
-        AEDSPApplyRamp(offsetAbl, &start, step, microfadeFrames);
-       
+        if ( microfadeFrames > 0 ) {
+            float start = MIN(playheadInRegionAtBufferEnd - regionLength - THIS->_microfadeFrames, THIS->_microfadeFrames)
+                            / THIS->_microfadeFrames;
+            float step = -1.0 / (double)THIS->_microfadeFrames;
+            AEAudioBufferListCopyOnStack(offsetAbl, abl, offset);
+            AEDSPApplyRamp(offsetAbl, &start, step, microfadeFrames);
+        }
         if ( playheadInRegionAtBufferEnd >= regionLength ) {
             UInt32 finalFrames = MIN(regionLength - playheadInRegion, frames);
             for ( int i=0; i<abl->mNumberBuffers; i++) {

@@ -114,6 +114,7 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
 @property (nonatomic, assign) AESeconds currentTime;    //!< Current playback position relative to the beginning of the file
 @property (nonatomic, readonly) BOOL playing;           //!< Whether playing (not KVO observable)
 @property (nonatomic, readwrite) BOOL loop;             //!< Whether to loop this track
+@property (nonatomic) UInt32 microfadeFrames;           //!< Number of frames to microfade at start and end (0 by default; increase to smooth out discontinuities - clicks - at start and end)
 @property (nonatomic, copy) void(^ _Nullable completionBlock)();  //!< A block to be called when non-looped playback finishes
 @end
 
