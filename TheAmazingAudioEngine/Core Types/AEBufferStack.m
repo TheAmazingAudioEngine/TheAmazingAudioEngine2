@@ -273,20 +273,16 @@ void AEBufferStackMixToBufferList(AEBufferStack * stack, int bufferCount, const 
     }
 }
 
-void AEBufferStackMixToBufferListChannels(AEBufferStack * stack, int bufferCount, int outputChannelIndex,
-                                          BOOL monoToStereo, const AudioBufferList * output) {
-    assert(outputChannelIndex < output->mNumberBuffers);
+void AEBufferStackMixToBufferListChannels(AEBufferStack * stack, int bufferCount, AEChannelSet channels, const AudioBufferList * output) {
     
     // Setup output buffer
-    AEAudioBufferListCreateOnStackWithFormat(outputBuffer,
-        AEAudioDescriptionWithChannelsAndRate(output->mNumberBuffers-outputChannelIndex, 0));
-    memcpy(outputBuffer->mBuffers, &output->mBuffers[outputChannelIndex], sizeof(AudioBuffer)*outputBuffer->mNumberBuffers);
+    AEAudioBufferListCopyOnStackWithChannelSubset(outputBuffer, output, channels);
     
     // Mix stack items
     for ( int i=0; bufferCount ? i<bufferCount : 1; i++ ) {
         const AudioBufferList * abl = AEBufferStackGet(stack, i);
         if ( !abl ) return;
-        AEDSPMix(abl, outputBuffer, 1, 1, monoToStereo, outputBuffer);
+        AEDSPMix(abl, outputBuffer, 1, 1, YES, outputBuffer);
     }
 }
 

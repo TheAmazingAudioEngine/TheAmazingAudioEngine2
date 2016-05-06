@@ -140,6 +140,22 @@ AudioBufferList *AEAudioBufferListCreateWithFormat(AudioStreamBasicDescription a
     }
 
 /*!
+ * Create a stack copy of an audio buffer list that points to a subset of its channels
+ *
+ * @param name Name of the variable to create on the stack
+ * @param sourceBufferList The original buffer list to copy
+ * @param channelSet The subset of channels
+ */
+#define AEAudioBufferListCopyOnStackWithChannelSubset(name, sourceBufferList, channelSet) \
+    int name ## _bufferCount = MIN(sourceBufferList->mNumberBuffers, channelSet.lastChannel) - \
+                               MIN(sourceBufferList->mNumberBuffers, channelSet.firstChannel) + 1; \
+    char name ## _bytes[sizeof(AudioBufferList)+(sizeof(AudioBuffer)*(name ## _bufferCount-1))]; \
+    AudioBufferList * name = (AudioBufferList*)name ## _bytes; \
+    name->mNumberBuffers = name ## _bufferCount; \
+    memcpy(name->mBuffers, &sourceBufferList->mBuffers[MIN(sourceBufferList->mNumberBuffers, channelSet.firstChannel)], \
+        sizeof(AudioBuffer) * name ## _bufferCount);
+
+/*!
  * Create a copy of an audio buffer list
  *
  *  Note: Do not use this utility from within the Core Audio thread (such as inside a render

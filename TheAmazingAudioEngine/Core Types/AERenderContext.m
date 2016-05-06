@@ -31,7 +31,6 @@ void AERenderContextOutput(const AERenderContext * context, int bufferCount) {
     AEBufferStackMixToBufferList(context->stack, bufferCount, context->output);
 }
 
-void AERenderContextOutputToChannels(const AERenderContext * _Nonnull context, int bufferCount,
-                                     int outputChannelIndex, BOOL monoToStereo) {
-    AEBufferStackMixToBufferListChannels(context->stack, bufferCount, outputChannelIndex, monoToStereo, context->output);
+void AERenderContextOutputToChannels(const AERenderContext * _Nonnull context, int bufferCount, AEChannelSet channels) {
+    AEBufferStackMixToBufferListChannels(context->stack, bufferCount, channels, context->output);
 }

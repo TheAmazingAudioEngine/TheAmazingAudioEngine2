@@ -65,7 +65,6 @@ typedef struct {
  *
  * @param context The context
  * @param bufferCount Number of buffers on the stack to process, or 0 for all
- * @param frames Number of frames
  */
 void AERenderContextOutput(const AERenderContext * _Nonnull context, int bufferCount);
 
@@ -77,12 +76,10 @@ void AERenderContextOutput(const AERenderContext * _Nonnull context, int bufferC
  *
  * @param context The context
  * @param bufferCount Number of buffers on the stack to process, or 0 for all
- * @param outputChannelIndex First channel number to output to; multi-channel buffers will span multiple output channels from this index
- * @param monoToStereo Whether to convert any mono buffers to stereo
- * @param frames Number of frames
+ * @param channels The set of channels to output to. If stereo, any mono inputs will be doubled to stereo.
+ *      If mono, any stereo inputs will be mixed down.
  */
-void AERenderContextOutputToChannels(const AERenderContext * _Nonnull context, int bufferCount,
-                                     int outputChannelIndex, BOOL monoToStereo);
+void AERenderContextOutputToChannels(const AERenderContext * _Nonnull context, int bufferCount, AEChannelSet channels);
 
 #ifdef __cplusplus
 }
