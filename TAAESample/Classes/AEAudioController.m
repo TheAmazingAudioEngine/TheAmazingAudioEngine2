@@ -326,11 +326,10 @@ static const double kMicBandpassCenterFrequency = 2000.0;
 
 - (AEHostTicks)nextSyncTimeForPlayer:(AEAudioFilePlayerModule *)player {
     AEHostTicks now = AECurrentTimeInHostTicks();
-    AEHostTicks time = now;
     
     if ( player == self.sweep ) {
         // Instant play for this oneshot
-        return time;
+        return 0;
     }
     
     // Identify time-keeper
@@ -359,11 +358,11 @@ static const double kMicBandpassCenterFrequency = 2000.0;
             self.drums.duration / 4.0;
         
         // Work out how far into this interal the timekeeper is
-        AESeconds timeIntoInterval = fmod(AEAudioFilePlayerModuleGetPlayhead(timekeeper, time), intervalLength);
+        AESeconds timeIntoInterval = fmod(AEAudioFilePlayerModuleGetPlayhead(timekeeper, now), intervalLength);
         
         // Calculate time to next interval
         AEHostTicks nextIntervalTime
-            = time + AEHostTicksFromSeconds((intervalLength - timeIntoInterval)) / self.varispeed.playbackRate;
+            = now + AEHostTicksFromSeconds((intervalLength - timeIntoInterval)) / self.varispeed.playbackRate;
         
         // Offset, for the one-shots (for aesthetic reasons!)
         if ( player == self.sample1 ) {
@@ -385,7 +384,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         return nextIntervalTime;
     }
     
-    return time;
+    return 0;
 }
 
 - (void)setInputEnabled:(BOOL)inputEnabled {
