@@ -147,12 +147,12 @@ AudioBufferList *AEAudioBufferListCreateWithFormat(AudioStreamBasicDescription a
  * @param channelSet The subset of channels
  */
 #define AEAudioBufferListCopyOnStackWithChannelSubset(name, sourceBufferList, channelSet) \
-    int name ## _bufferCount = MIN(sourceBufferList->mNumberBuffers, channelSet.lastChannel) - \
-                               MIN(sourceBufferList->mNumberBuffers, channelSet.firstChannel) + 1; \
+    int name ## _bufferCount = MIN(sourceBufferList->mNumberBuffers-1, channelSet.lastChannel) - \
+                               MIN(sourceBufferList->mNumberBuffers-1, channelSet.firstChannel) + 1; \
     char name ## _bytes[sizeof(AudioBufferList)+(sizeof(AudioBuffer)*(name ## _bufferCount-1))]; \
     AudioBufferList * name = (AudioBufferList*)name ## _bytes; \
     name->mNumberBuffers = name ## _bufferCount; \
-    memcpy(name->mBuffers, &sourceBufferList->mBuffers[MIN(sourceBufferList->mNumberBuffers, channelSet.firstChannel)], \
+    memcpy(name->mBuffers, &sourceBufferList->mBuffers[MIN(sourceBufferList->mNumberBuffers-1, channelSet.firstChannel)], \
         sizeof(AudioBuffer) * name ## _bufferCount);
 
 /*!
