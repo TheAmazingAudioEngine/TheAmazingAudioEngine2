@@ -558,14 +558,10 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
         THIS->_playing = NO;
     } else {
         // Update the playhead
-        AudioTimeStamp playTime = {};
-        UInt32 size = sizeof(playTime);
-        AECheckOSStatus(AudioUnitGetProperty(audioUnit, kAudioUnitProperty_CurrentPlayTime, kAudioUnitScope_Global,
-                                             0, &playTime, &size), "kAudioUnitProperty_CurrentPlayTime");
         double regionStartTimeAtFileRate = THIS->_regionStartTime * THIS->_fileSampleRate;
         double regionLengthAtFileRate = THIS->_regionDuration * THIS->_fileSampleRate;
         THIS->_playhead = regionStartTimeAtFileRate +
-            fmod(THIS->_playheadOffset + playTime.mSampleTime * (THIS->_fileSampleRate / context->sampleRate),
+            fmod(THIS->_playheadOffset + (playheadInRegionAtBufferEnd * (THIS->_fileSampleRate / context->sampleRate)),
                  regionLengthAtFileRate);
         THIS->_anchorTime = hostTimeAtBufferEnd;
     }
