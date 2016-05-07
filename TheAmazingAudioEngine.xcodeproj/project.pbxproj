@@ -7,9 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		4C3182D91CDC1EA90085634F /* AERenderContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3182D71CDC1EA90085634F /* AERenderContext.h */; };
-		4C3182DA1CDC1EA90085634F /* AERenderContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3182D71CDC1EA90085634F /* AERenderContext.h */; };
-		4C3182DB1CDC1EA90085634F /* AERenderContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3182D71CDC1EA90085634F /* AERenderContext.h */; };
+		4C3182D91CDC1EA90085634F /* AERenderContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3182D71CDC1EA90085634F /* AERenderContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4C3182DA1CDC1EA90085634F /* AERenderContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3182D71CDC1EA90085634F /* AERenderContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4C3182DB1CDC1EA90085634F /* AERenderContext.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C3182D71CDC1EA90085634F /* AERenderContext.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C3182DC1CDC1EA90085634F /* AERenderContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3182D81CDC1EA90085634F /* AERenderContext.m */; };
 		4C3182DD1CDC1EA90085634F /* AERenderContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3182D81CDC1EA90085634F /* AERenderContext.m */; };
 		4C3182DE1CDC1EA90085634F /* AERenderContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3182D81CDC1EA90085634F /* AERenderContext.m */; };
