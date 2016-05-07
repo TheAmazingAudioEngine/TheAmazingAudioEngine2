@@ -60,6 +60,7 @@ static void AESubrendererModuleProcess(__unsafe_unretained AESubrendererModule *
     const AudioBufferList * abl =
         AEBufferStackPushWithChannels(context->stack, 1,
                                       self->_outputChannels == 0 ? context->output->mNumberBuffers : self->_outputChannels);
+    if ( !abl ) return;
     
     __unsafe_unretained AERenderer * renderer = (__bridge AERenderer*)AEManagedValueGetValue(self->_subrendererValue);
     if ( renderer ) {
