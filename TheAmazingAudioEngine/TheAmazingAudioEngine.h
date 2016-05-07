@@ -33,6 +33,7 @@
 #import <TheAmazingAudioEngine/AEAudioUnitInputModule.h>
 #import <TheAmazingAudioEngine/AEAudioFilePlayerModule.h>
 #import <TheAmazingAudioEngine/AEOscillatorModule.h>
+#import <TheAmazingAudioEngine/AEAggregatorModule.h>
 #import <TheAmazingAudioEngine/AEBandpassModule.h>
 #import <TheAmazingAudioEngine/AEDelayModule.h>
 #import <TheAmazingAudioEngine/AEDistortionModule.h>

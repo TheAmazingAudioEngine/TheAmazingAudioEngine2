@@ -13,6 +13,12 @@
 		4C3182DC1CDC1EA90085634F /* AERenderContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3182D81CDC1EA90085634F /* AERenderContext.m */; };
 		4C3182DD1CDC1EA90085634F /* AERenderContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3182D81CDC1EA90085634F /* AERenderContext.m */; };
 		4C3182DE1CDC1EA90085634F /* AERenderContext.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3182D81CDC1EA90085634F /* AERenderContext.m */; };
+		4C3183101CDDEFDE0085634F /* AEAggregatorModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C31830E1CDDEFDE0085634F /* AEAggregatorModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4C3183111CDDEFDE0085634F /* AEAggregatorModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C31830E1CDDEFDE0085634F /* AEAggregatorModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4C3183121CDDEFDE0085634F /* AEAggregatorModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C31830E1CDDEFDE0085634F /* AEAggregatorModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4C3183131CDDEFDE0085634F /* AEAggregatorModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C31830F1CDDEFDE0085634F /* AEAggregatorModule.m */; };
+		4C3183141CDDEFDE0085634F /* AEAggregatorModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C31830F1CDDEFDE0085634F /* AEAggregatorModule.m */; };
+		4C3183151CDDEFDE0085634F /* AEAggregatorModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C31830F1CDDEFDE0085634F /* AEAggregatorModule.m */; };
 		4C77566D1CCB42AA004415A2 /* AESubrendererModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C77566B1CCB42AA004415A2 /* AESubrendererModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C77566E1CCB42AA004415A2 /* AESubrendererModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C77566B1CCB42AA004415A2 /* AESubrendererModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C77566F1CCB42AA004415A2 /* AESubrendererModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C77566B1CCB42AA004415A2 /* AESubrendererModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -290,6 +296,8 @@
 /* Begin PBXFileReference section */
 		4C3182D71CDC1EA90085634F /* AERenderContext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AERenderContext.h; sourceTree = "<group>"; };
 		4C3182D81CDC1EA90085634F /* AERenderContext.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AERenderContext.m; sourceTree = "<group>"; };
+		4C31830E1CDDEFDE0085634F /* AEAggregatorModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAggregatorModule.h; sourceTree = "<group>"; };
+		4C31830F1CDDEFDE0085634F /* AEAggregatorModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEAggregatorModule.m; sourceTree = "<group>"; };
 		4C77566B1CCB42AA004415A2 /* AESubrendererModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AESubrendererModule.h; sourceTree = "<group>"; };
 		4C77566C1CCB42AA004415A2 /* AESubrendererModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AESubrendererModule.m; sourceTree = "<group>"; };
 		4C7756961CD2E5C6004415A2 /* TPCircularBuffer+AudioBufferList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "TPCircularBuffer+AudioBufferList.c"; sourceTree = "<group>"; };
@@ -552,6 +560,8 @@
 				4CDCAD9F1CA90FD3008AAEF1 /* AEAudioFilePlayerModule.m */,
 				4CDCAD511CA3D223008AAEF1 /* AEOscillatorModule.h */,
 				4CDCAD521CA3D223008AAEF1 /* AEOscillatorModule.m */,
+				4C31830E1CDDEFDE0085634F /* AEAggregatorModule.h */,
+				4C31830F1CDDEFDE0085634F /* AEAggregatorModule.m */,
 			);
 			path = Generation;
 			sourceTree = "<group>";
@@ -621,6 +631,7 @@
 				4C9F0F5B1CB265F90032903E /* AEDistortionModule.h in Headers */,
 				4C9F0F5C1CB265F90032903E /* AEAudioUnitInputModule.h in Headers */,
 				4C9F0F5D1CB265F90032903E /* AEAudioUnitModule.h in Headers */,
+				4C3183111CDDEFDE0085634F /* AEAggregatorModule.h in Headers */,
 				4C9F0F5E1CB265F90032903E /* AELowPassModule.h in Headers */,
 				4C9F0F5F1CB265F90032903E /* AEDynamicsProcessorModule.h in Headers */,
 				4C9F0F601CB265F90032903E /* AEBandpassModule.h in Headers */,
@@ -666,6 +677,7 @@
 				4C9F0FA41CB269C30032903E /* AEDistortionModule.h in Headers */,
 				4C9F0FA51CB269C30032903E /* AEAudioUnitInputModule.h in Headers */,
 				4C9F0FA61CB269C30032903E /* AEAudioUnitModule.h in Headers */,
+				4C3183121CDDEFDE0085634F /* AEAggregatorModule.h in Headers */,
 				4C9F0FA71CB269C30032903E /* AELowPassModule.h in Headers */,
 				4C9F0FA81CB269C30032903E /* AEDynamicsProcessorModule.h in Headers */,
 				4C9F0FA91CB269C30032903E /* AEBandpassModule.h in Headers */,
@@ -697,6 +709,7 @@
 			files = (
 				4CDCAD451CA3C31C008AAEF1 /* AETime.h in Headers */,
 				4CDCAD7A1CA5484D008AAEF1 /* AEDelayModule.h in Headers */,
+				4C3183101CDDEFDE0085634F /* AEAggregatorModule.h in Headers */,
 				4C7756A01CD2E5E3004415A2 /* AECircularBuffer.h in Headers */,
 				4CDCAD471CA3C31C008AAEF1 /* AEUtilities.h in Headers */,
 				4CDCAD881CA5484D008AAEF1 /* AENewTimePitchModule.h in Headers */,
@@ -876,6 +889,7 @@
 				4C9F0F361CB265F90032903E /* AEOscillatorModule.m in Sources */,
 				4CE5F4C81CD30A1900322F03 /* AEMainThreadEndpoint.m in Sources */,
 				4C9F0F371CB265F90032903E /* AEMessageQueue.m in Sources */,
+				4C3183141CDDEFDE0085634F /* AEAggregatorModule.m in Sources */,
 				4C9F0F381CB265F90032903E /* AELowShelfModule.m in Sources */,
 				4C9F0F391CB265F90032903E /* AEAudioUnitInputModule.m in Sources */,
 				4C9F0F3A1CB265F90032903E /* AEBufferStack.m in Sources */,
@@ -920,6 +934,7 @@
 				4C9F0F801CB269C30032903E /* AEOscillatorModule.m in Sources */,
 				4CE5F4C91CD30A1900322F03 /* AEMainThreadEndpoint.m in Sources */,
 				4C9F0F811CB269C30032903E /* AEMessageQueue.m in Sources */,
+				4C3183151CDDEFDE0085634F /* AEAggregatorModule.m in Sources */,
 				4C9F0F821CB269C30032903E /* AELowShelfModule.m in Sources */,
 				4C9F0F831CB269C30032903E /* AEAudioUnitInputModule.m in Sources */,
 				4C9F0F841CB269C30032903E /* AEBufferStack.m in Sources */,
@@ -973,6 +988,7 @@
 				4CDCAD7D1CA5484D008AAEF1 /* AEDistortionModule.m in Sources */,
 				4CDCADBB1CAC95A8008AAEF1 /* AEAudioUnitOutput.m in Sources */,
 				4CDCAD851CA5484D008AAEF1 /* AELowPassModule.m in Sources */,
+				4C3183131CDDEFDE0085634F /* AEAggregatorModule.m in Sources */,
 				4CDCAD811CA5484D008AAEF1 /* AEHighPassModule.m in Sources */,
 				4CDCAD911CA5484D008AAEF1 /* AEVarispeedModule.m in Sources */,
 				4CDCAD791CA5484D008AAEF1 /* AEBandpassModule.m in Sources */,
