@@ -143,10 +143,6 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     // rules apply: No holding locks, no memory allocation, no Objective-C/Swift code.
     renderer.block = ^(const AERenderContext * _Nonnull context) {
         
-        // We're not actually using AEManagedValue's performAtomicBatchUpdate: method, but if we were,
-        // it's very important to include this commit at the start of the main render cycle.
-        AEManagedValueCommitPendingAtomicUpdates();
-        
         // See if we have an active recorder
         __unsafe_unretained AEFileRecorderModule * recorder
             = (__bridge AEFileRecorderModule *)AEManagedValueGetValue(recorderValue);
