@@ -263,6 +263,11 @@ void AEBufferStackApplyVolumeAndBalance(AEBufferStack * stack,
     AEDSPApplyVolumeAndBalance(abl, targetVolume, currentVolume, targetBalance, currentBalance, stack->frameCount);
 }
 
+void AEBufferStackSilence(AEBufferStack * stack) {
+    const AudioBufferList * abl = AEBufferStackGet(stack, 0);
+    if ( !abl ) return;
+    AEAudioBufferListSilence(abl, 0, stack->frameCount);
+}
 
 void AEBufferStackMixToBufferList(AEBufferStack * stack, int bufferCount, const AudioBufferList * output) {
     // Mix stack items

@@ -222,6 +222,15 @@ void AEBufferStackApplyVolumeAndBalance(AEBufferStack * stack,
                                         float targetBalance, float * currentBalance);
 
 /*!
+ * Silence the top buffer
+ *
+ *  This function zereos out all samples in the topmost buffer.
+ *
+ * @param stack The stack
+ */
+void AEBufferStackSilence(AEBufferStack * stack);
+
+/*!
  * Mix stack items onto an AudioBufferList
  *
  *  The given number of stack items will mixed into the buffer list.
