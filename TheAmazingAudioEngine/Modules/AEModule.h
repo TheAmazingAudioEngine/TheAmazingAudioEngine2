@@ -50,6 +50,19 @@ extern "C" {
 typedef void (*AEModuleProcessFunc)(__unsafe_unretained AEModule * _Nonnull self, const AERenderContext * _Nonnull context);
 
 /*!
+ * Active test function
+ *
+ *  Modules may set this property to the address of a function that
+ *  returns whether or not the module is currently active. If it returns
+ *  NO, the module is considered inactive and processing can be skipped
+ *  by client code.
+ *
+ * @param self A pointer to the module
+ * @returns YES if the module is active, NO otherwise
+ */
+typedef BOOL (*AEModuleIsActiveFunc)(__unsafe_unretained AEModule * _Nonnull self);
+    
+/*!
  * Module base class
  *
  *  Modules are the basic processing unit, and all provide a function to perform processing.
@@ -73,6 +86,17 @@ typedef void (*AEModuleProcessFunc)(__unsafe_unretained AEModule * _Nonnull self
 void AEModuleProcess(__unsafe_unretained AEModule * _Nonnull module, const AERenderContext * _Nonnull context);
 
 /*!
+ * Determine whether module is active
+ *
+ *  If NO is returned by this method, processing may be skipped for this
+ *  module, as it is idle.
+ *
+ * @param module The module subclass
+ * @returns Whether the module is active
+ */
+BOOL AEModuleIsActive(__unsafe_unretained AEModule * _Nonnull module);
+
+/*!
  * Notifies the module that the renderer's sample rate has changed
  *
  *  Subclasses may override this method to react to sample rate changes.
@@ -93,6 +117,16 @@ void AEModuleProcess(__unsafe_unretained AEModule * _Nonnull module, const AERen
  *  processing function to be able to process audio.
  */
 @property (nonatomic) AEModuleProcessFunc _Nonnull processFunction;
+
+/*!
+ * Active test function
+ *
+ *  Subclasses may set this property to the address of a function that 
+ *  returns whether or not the module is currently active. If it returns
+ *  NO, the module is considered inactive and processing can be skipped
+ *  by client code.
+ */
+@property (nonatomic) AEModuleIsActiveFunc _Nullable isActiveFunction;
 
 /*!
  * The renderer

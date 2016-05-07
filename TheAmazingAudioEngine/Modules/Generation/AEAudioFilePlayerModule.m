@@ -77,6 +77,7 @@ static const UInt32 kNoValue = -1;
     [self initialize];
     
     self.processFunction = AEAudioFilePlayerModuleProcess;
+    self.isActiveFunction = AEAudioFilePlayerModuleGetPlaying;
     
     return self;
 }

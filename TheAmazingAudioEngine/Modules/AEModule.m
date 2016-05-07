@@ -82,4 +82,12 @@ void AEModuleProcess(__unsafe_unretained AEModule * module, const AERenderContex
     }
 }
 
+BOOL AEModuleIsActive(__unsafe_unretained AEModule * _Nonnull module) {
+    if ( module->_isActiveFunction ) {
+        return module->_isActiveFunction(module);
+    } else {
+        return YES;
+    }
+}
+
 @end

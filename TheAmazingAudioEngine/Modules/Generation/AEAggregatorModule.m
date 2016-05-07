@@ -113,6 +113,13 @@ static void AEAggregatorModuleProcess(__unsafe_unretained AEAggregatorModule * s
     // Run each module, applying volume/balance then mixing into our output buffer
     AEArrayEnumeratePointers(self->_array, AEAggregatorModuleSubModuleEntry *, entry, {
         
+        if ( !AEModuleIsActive(entry->module) ) {
+            // Module is idle; skip (and skip the volume/balance ramp, too)
+            entry->currentVolume = entry->targetVolume;
+            entry->currentBalance = entry->targetBalance;
+            continue;
+        }
+        
         #ifdef DEBUG
         int priorStackDepth = AEBufferStackCount(context->stack);
         #endif
