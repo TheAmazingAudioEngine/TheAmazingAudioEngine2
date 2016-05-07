@@ -75,6 +75,16 @@ typedef struct {
     return array->objects ? array->objects : @[];
 }
 
+- (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state objects:(id __unsafe_unretained [])buffer count:(NSUInteger)len {
+    array_t * array = (array_t*)_value.pointerValue;
+    return [array->objects countByEnumeratingWithState:state objects:buffer count:len];
+}
+
+- (id)objectAtIndexedSubscript:(NSUInteger)idx {
+    array_t * array = (array_t*)_value.pointerValue;
+    return [array->objects objectAtIndexedSubscript:idx];
+}
+
 - (const void *)pointerValueAtIndex:(int)index {
     array_t * array = (array_t*)_value.pointerValue;
     return array->count >= index ? array->entries[index]->pointer : NULL;

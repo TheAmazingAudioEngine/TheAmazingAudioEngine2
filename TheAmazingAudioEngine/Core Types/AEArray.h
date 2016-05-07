@@ -49,7 +49,7 @@ typedef const void * AEArrayToken; //!< Token for real-thread use
  *  audio thread if using this class to manage Objective-C objects, and only interact with such objects
  *  via C functions they provide, not via Objective-C methods.
  */
-@interface AEArray : NSObject
+@interface AEArray : NSObject <NSFastEnumeration>
 
 /*!
  * Default initializer
@@ -121,6 +121,11 @@ typedef const void * AEArrayToken; //!< Token for real-thread use
  * @return Pointer to the item at the given index
  */
 - (const void * _Nullable)pointerValueAtIndex:(int)index;
+
+/*!
+ * Access objects using subscript syntax
+ */
+- (id)objectAtIndexedSubscript:(NSUInteger)idx;
 
 /*!
  * Get the array token, for use on realtime audio thread
