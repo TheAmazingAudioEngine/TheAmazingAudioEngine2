@@ -125,7 +125,7 @@ typedef const void * AEArrayToken; //!< Token for real-thread use
 /*!
  * Access objects using subscript syntax
  */
-- (id)objectAtIndexedSubscript:(NSUInteger)idx;
+- (id _Nullable)objectAtIndexedSubscript:(NSUInteger)idx;
 
 /*!
  * Get the array token, for use on realtime audio thread
