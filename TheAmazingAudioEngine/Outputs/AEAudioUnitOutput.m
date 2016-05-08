@@ -36,6 +36,9 @@
 #import "AEAudioUnitInputModule.h"
 @import AVFoundation;
 
+NSString * const AEAudioUnitOutputDidChangeSampleRateNotification = @"AEAudioUnitOutputDidChangeSampleRateNotification";
+NSString * const AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification = @"AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification";
+
 #ifdef DEBUG
 static const AESeconds kRenderTimeReportInterval = 0.0;   // Seconds between render time reports; 0 = no reporting
 static const double kRenderBudgetWarningThreshold = 0.75; // Ratio of total buffer duration to hit before budget overrun warnings
@@ -98,9 +101,22 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     
     self.ioUnitStreamChangeObserverToken =
     [[NSNotificationCenter defaultCenter] addObserverForName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self.ioUnit
-                                                       queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
+                                                       queue:NULL usingBlock:^(NSNotification * note) {
+        BOOL rateChanged = fabs(weakSelf.renderer.sampleRate - weakSelf.ioUnit.currentSampleRate) > DBL_EPSILON;
+        BOOL channelsChanged = weakSelf.renderer.numberOfOutputChannels != weakSelf.ioUnit.numberOfOutputChannels;
+        
         weakSelf.renderer.sampleRate = weakSelf.ioUnit.currentSampleRate;
         weakSelf.renderer.numberOfOutputChannels = weakSelf.ioUnit.numberOfOutputChannels;
+        
+        if ( rateChanged ) {
+           [[NSNotificationCenter defaultCenter]
+            postNotificationName:AEAudioUnitOutputDidChangeSampleRateNotification object:self];
+        }
+        
+        if ( channelsChanged ) {
+           [[NSNotificationCenter defaultCenter]
+            postNotificationName:AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification object:self];
+        }
     }];
     
     if ( ![self.ioUnit setup:NULL] ) return nil;

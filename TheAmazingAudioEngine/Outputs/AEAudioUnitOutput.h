@@ -34,6 +34,12 @@ extern "C" {
 
 @class AERenderer;
 @class AEAudioUnitInputModule;
+    
+//! Notification posted when the sample rate changes
+extern NSString * const _Nonnull AEAudioUnitOutputDidChangeSampleRateNotification;
+
+//! Notification posted when the number of output channels changes
+extern NSString * const _Nonnull AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification;
 
 /*!
  * Audio unit output
@@ -96,7 +102,7 @@ AESeconds AEAudioUnitOutputGetOutputLatency(__unsafe_unretained AEAudioUnitOutpu
 //! The sample rate at which to run, or zero to track the hardware sample rate
 @property (nonatomic) double sampleRate;
 
-//! The current sample rate (key-value observable)
+//! The current sample rate
 @property (nonatomic, readonly) double currentSampleRate;
 
 //! Whether unit is currently active

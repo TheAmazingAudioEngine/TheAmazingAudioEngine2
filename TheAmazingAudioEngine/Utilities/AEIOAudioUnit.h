@@ -165,7 +165,7 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 //! The sample rate at which to run, or zero to track the hardware sample rate
 @property (nonatomic) double sampleRate;
 
-//! The current sample rate in use (key-value observable)
+//! The current sample rate in use
 @property (nonatomic, readonly) double currentSampleRate;
 
 //! Whether unit is currently active
@@ -177,7 +177,7 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 //! The block to call when rendering output
 @property (nonatomic, copy) AEIOAudioUnitRenderBlock _Nullable renderBlock;
 
-//! The current number of output channels (key-value observable)
+//! The current number of output channels
 @property (nonatomic, readonly) int numberOfOutputChannels;
 
 
@@ -187,7 +187,7 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 //! The maximum number of input channels to support, or zero for unlimited
 @property (nonatomic) int maximumInputChannels;
 
-//! The current number of input channels in use (key-value observable)
+//! The current number of input channels in use
 @property (nonatomic, readonly) int numberOfInputChannels;
 
 #if TARGET_OS_IPHONE
