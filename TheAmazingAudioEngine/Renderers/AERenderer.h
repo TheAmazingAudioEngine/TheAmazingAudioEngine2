@@ -92,6 +92,7 @@ void AERendererRun(__unsafe_unretained AERenderer * _Nonnull renderer,
 @property (nonatomic, copy) AERenderLoopBlock _Nonnull block; //!< The output loop block. Assignment is thread-safe.
 @property (nonatomic) double sampleRate; //!< The sample rate
 @property (nonatomic) int numberOfOutputChannels; //!< The number of output channels
+@property (nonatomic) BOOL isOffline; //!< Whether rendering is offline (faster than realtime), default NO
 @property (nonatomic, readonly) AEBufferStack * _Nonnull stack; //!< Buffer stack
 @end
 

@@ -66,7 +66,14 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList 
     // Run the block
     __unsafe_unretained AERenderLoopBlock block = (__bridge AERenderLoopBlock)AEManagedValueGetValue(THIS->_blockValue);
     if ( block ) {
-        AERenderContext context = { bufferList, frames, THIS->_sampleRate, timestamp, THIS->_stack };
+        AERenderContext context = {
+            .output = bufferList,
+            .frames = frames,
+            .sampleRate = THIS->_sampleRate,
+            .timestamp = timestamp,
+            .offlineRendering = THIS->_isOffline,
+            .stack = THIS->_stack
+        };
         block(&context);
     }
 }

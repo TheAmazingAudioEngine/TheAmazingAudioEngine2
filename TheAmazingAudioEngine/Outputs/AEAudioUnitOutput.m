@@ -73,7 +73,6 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     if ( !(self = [super init]) ) return nil;
     
     AEManagedValue * rendererValue = [AEManagedValue new];
-    rendererValue.objectValue = renderer;
     self.rendererValue = rendererValue;
     
     self.ioUnit = [AEIOAudioUnit new];
@@ -126,8 +125,6 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
 #endif
     
     self.renderer = renderer;
-    self.renderer.sampleRate = self.ioUnit.currentSampleRate;
-    self.renderer.numberOfOutputChannels = self.ioUnit.numberOfOutputChannels;
     
     return self;
 }
@@ -150,6 +147,10 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
 }
 
 - (void)setRenderer:(AERenderer *)renderer {
+    renderer.sampleRate = self.ioUnit.currentSampleRate;
+    renderer.numberOfOutputChannels = self.ioUnit.numberOfOutputChannels;
+    renderer.isOffline = NO;
+    
     self.rendererValue.objectValue = renderer;
 }
 

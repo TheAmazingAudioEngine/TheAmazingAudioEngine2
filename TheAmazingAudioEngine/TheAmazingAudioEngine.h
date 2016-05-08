@@ -54,6 +54,7 @@
 #import <TheAmazingAudioEngine/AERenderer.h>
 #import <TheAmazingAudioEngine/AERenderContext.h>
 #import <TheAmazingAudioEngine/AEAudioUnitOutput.h>
+#import <TheAmazingAudioEngine/AEAudioFileOutput.h>
 
 #import <TheAmazingAudioEngine/AEUtilities.h>
 #import <TheAmazingAudioEngine/AEAudioBufferListUtilities.h>

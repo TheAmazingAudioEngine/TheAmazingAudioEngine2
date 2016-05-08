@@ -52,6 +52,9 @@ typedef struct {
     //! The current audio timestamp
     const AudioTimeStamp * _Nonnull timestamp;
     
+    //! Whether rendering is offline (faster than realtime)
+    BOOL offlineRendering;
+    
     //! The buffer stack. Use this as a workspace for generating and processing audio.
     AEBufferStack * _Nonnull stack;
     
