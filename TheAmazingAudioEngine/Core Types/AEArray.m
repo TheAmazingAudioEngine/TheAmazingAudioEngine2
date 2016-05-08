@@ -85,9 +85,17 @@ typedef struct {
     return [array->objects objectAtIndexedSubscript:idx];
 }
 
-- (const void *)pointerValueAtIndex:(int)index {
+- (void *)pointerValueAtIndex:(int)index {
     array_t * array = (array_t*)_value.pointerValue;
     return array->count >= index ? array->entries[index]->pointer : NULL;
+}
+
+- (void *)pointerValueForObject:(id)object {
+    array_t * array = (array_t*)_value.pointerValue;
+    if ( !array->objects ) return NULL;
+    NSUInteger index = [array->objects indexOfObject:object];
+    if ( index == NSNotFound ) return NULL;
+    return [self pointerValueAtIndex:(int)index];
 }
 
 - (void)updateWithContentsOfArray:(NSArray *)array {

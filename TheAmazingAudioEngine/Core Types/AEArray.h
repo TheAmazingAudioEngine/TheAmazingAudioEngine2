@@ -115,12 +115,29 @@ typedef const void * AEArrayToken; //!< Token for real-thread use
  *  a mapping block to create structures that correspond to objects in the original array,
  *  for instance, then you may access these structures using this method.
  *
- *  Note: You may not modify these values.
+ *  Note: Take care if modifying these values, as they may also be accessed from the audio 
+ *  thread
  *
  * @param index Index of the item to retrieve
  * @return Pointer to the item at the given index
  */
-- (const void * _Nullable)pointerValueAtIndex:(int)index;
+- (void * _Nullable)pointerValueAtIndex:(int)index;
+
+/*!
+ * Get the pointer value associated with the given object, if any
+ *
+ *  This method allows you to access the same values as the audio thread; if you are using
+ *  a mapping block to create structures that correspond to objects in the original array,
+ *  for instance, then you may access these structures using this method.
+ *
+ *  Note: Take care if modifying these values, as they may also be accessed from the audio
+ *  thread
+ *
+ * @param object The object
+ * @return Pointer to the item corresponding to the object
+ */
+- (void * _Nullable)pointerValueForObject:(id _Nonnull)object;
+
 
 /*!
  * Access objects using subscript syntax
