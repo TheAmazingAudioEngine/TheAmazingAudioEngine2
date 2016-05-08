@@ -88,19 +88,19 @@ typedef struct {
 }
 
 - (void)setVolume:(float)volume balance:(float)balance forModule:(AEModule *)module {
-    NSUInteger index = [self.array.allValues indexOfObject:module];
-    if ( index == NSNotFound ) return;
-    AEAggregatorModuleSubModuleEntry * entry = [self.array pointerValueAtIndex:index];
-    entry->targetVolume = volume;
-    entry->targetBalance = balance;
+    AEAggregatorModuleSubModuleEntry * entry = [self.array pointerValueForObject:module];
+    if ( entry ) {
+        entry->targetVolume = volume;
+        entry->targetBalance = balance;
+    }
 }
 
 - (void)getVolume:(float *)volume balance:(float *)balance forModule:(AEModule *)module {
-    NSUInteger index = [self.array.allValues indexOfObject:module];
-    if ( index == NSNotFound ) return;
-    AEAggregatorModuleSubModuleEntry * entry = [self.array pointerValueAtIndex:index];
-    *volume = entry->targetVolume;
-    *balance = entry->targetBalance;
+    AEAggregatorModuleSubModuleEntry * entry = [self.array pointerValueForObject:module];
+    if ( entry ) {
+        *volume = entry->targetVolume;
+        *balance = entry->targetBalance;
+    }
 }
 
 static void AEAggregatorModuleProcess(__unsafe_unretained AEAggregatorModule * self, const AERenderContext * _Nonnull context) {
