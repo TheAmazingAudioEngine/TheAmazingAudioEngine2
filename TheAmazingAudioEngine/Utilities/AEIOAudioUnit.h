@@ -178,17 +178,17 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 @property (nonatomic, copy) AEIOAudioUnitRenderBlock _Nullable renderBlock;
 
 //! The current number of output channels (key-value observable)
-@property (nonatomic, readonly) int outputChannels;
+@property (nonatomic, readonly) int numberOfOutputChannels;
 
 
 //! Whether input is enabled
 @property (nonatomic) BOOL inputEnabled;
 
-//! The max number of input channels to support, or zero for unlimited
-@property (nonatomic) int maxInputChannels;
+//! The maximum number of input channels to support, or zero for unlimited
+@property (nonatomic) int maximumInputChannels;
 
 //! The current number of input channels in use (key-value observable)
-@property (nonatomic, readonly) int inputChannels;
+@property (nonatomic, readonly) int numberOfInputChannels;
 
 #if TARGET_OS_IPHONE
 

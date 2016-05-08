@@ -30,7 +30,7 @@
 #import "AEAudioBufferListUtilities.h"
 
 NSString * const AERendererDidChangeSampleRateNotification = @"AERendererDidChangeSampleRateNotification";
-NSString * const AERendererDidChangeChannelCountNotification = @"AERendererDidChangeChannelCountNotification";
+NSString * const AERendererDidChangeNumberOfOutputChannelsNotification = @"AERendererDidChangeNumberOfOutputChannelsNotification";
 
 @interface AERenderer ()
 @property (nonatomic, strong) AEManagedValue * blockValue;
@@ -42,7 +42,7 @@ NSString * const AERendererDidChangeChannelCountNotification = @"AERendererDidCh
 
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
-    _outputChannels = 2;
+    _numberOfOutputChannels = 2;
     _sampleRate = 44100.0;
     self.blockValue = [AEManagedValue new];
     self.stack = AEBufferStackNew(0);
@@ -86,11 +86,11 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList 
     [[NSNotificationCenter defaultCenter] postNotificationName:AERendererDidChangeSampleRateNotification object:self];
 }
 
-- (void)setOutputChannels:(int)outputChannels {
-    if ( _outputChannels == outputChannels ) return;
-    _outputChannels = outputChannels;
+- (void)setNumberOfOutputChannels:(int)numberOfOutputChannels {
+    if ( _numberOfOutputChannels == numberOfOutputChannels ) return;
+    _numberOfOutputChannels = numberOfOutputChannels;
     
-    [[NSNotificationCenter defaultCenter] postNotificationName:AERendererDidChangeChannelCountNotification object:self];
+    [[NSNotificationCenter defaultCenter] postNotificationName:AERendererDidChangeNumberOfOutputChannelsNotification object:self];
 }
 
 @end

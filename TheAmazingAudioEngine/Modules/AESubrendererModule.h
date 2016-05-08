@@ -50,6 +50,6 @@
 @property (nonatomic, strong) AERenderer * _Nullable subrenderer;
 
 //! The number of channels to use, or zero to track the owning renderer's channel count. Default is 2 (stereo)
-@property (nonatomic) int outputChannels;
+@property (nonatomic) int numberOfOutputChannels;
 
 @end

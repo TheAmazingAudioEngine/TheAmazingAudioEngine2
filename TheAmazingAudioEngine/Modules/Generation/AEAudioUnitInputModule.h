@@ -37,7 +37,7 @@ extern "C" {
  *  This module receives audio input from the system audio hardware, and pushes
  *  a buffer onto the stack containing the received audio. The pushed buffer has
  *  the same channel count as the currently-attached audio hardware, accessible
- *  via the "inputChannels" property.
+ *  via the "numberOfInputChannels" property.
  *
  *  It's recommended that you do not create an instance of this class directly; instead,
  *  use the instance returned from AEAudioUnitOutput's 
@@ -98,7 +98,7 @@ AESeconds AEAudioUnitInputModuleGetInputLatency(__unsafe_unretained AEAudioUnitI
 
 @property (nonatomic, readonly) AudioUnit _Nonnull audioUnit; //!< The audio unit
 @property (nonatomic, readonly) BOOL running; //!< Whether unit is currently active
-@property (nonatomic, readonly) int inputChannels; //!< The current number of input channels (key-value observable)
+@property (nonatomic, readonly) int numberOfInputChannels; //!< The current number of input channels (key-value observable)
 
 #if TARGET_OS_IPHONE
 @property (nonatomic) BOOL latencyCompensation; //!< Whether to automatically perform latency compensation (default YES)

@@ -36,8 +36,8 @@ NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
 
 @interface AEIOAudioUnit ()
 @property (nonatomic, readwrite) double currentSampleRate;
-@property (nonatomic, readwrite) int outputChannels;
-@property (nonatomic, readwrite) int inputChannels;
+@property (nonatomic, readwrite) int numberOfOutputChannels;
+@property (nonatomic, readwrite) int numberOfInputChannels;
 @property (nonatomic) AudioTimeStamp inputTimestamp;
 #if TARGET_OS_IPHONE
 @property (nonatomic, strong) id sessionInterruptionObserverToken;
@@ -169,12 +169,12 @@ NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
                                              &asbd, &size),
                         "AudioUnitGetProperty(kAudioUnitProperty_StreamFormat)");
         self.currentSampleRate = self.sampleRate == 0 ? asbd.mSampleRate : self.sampleRate;
-        self.outputChannels = asbd.mChannelsPerFrame;
+        self.numberOfOutputChannels = asbd.mChannelsPerFrame;
         
         // Set the stream format
         asbd = AEAudioDescription;
         asbd.mSampleRate = self.currentSampleRate;
-        asbd.mChannelsPerFrame = self.outputChannels;
+        asbd.mChannelsPerFrame = self.numberOfOutputChannels;
         AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0,
                                              &asbd, sizeof(asbd)),
                         "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
@@ -187,17 +187,17 @@ NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
         AECheckOSStatus(AudioUnitGetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 1,
                                              &asbd, &size),
                         "AudioUnitGetProperty(kAudioUnitProperty_StreamFormat)");
-        self.inputChannels = MIN(asbd.mChannelsPerFrame, self.maxInputChannels);
+        self.numberOfInputChannels = MIN(asbd.mChannelsPerFrame, self.maximumInputChannels);
         
         if ( !self.outputEnabled ) {
             self.currentSampleRate = self.sampleRate;
         }
         
-        if ( self.inputChannels > 0 ) {
+        if ( self.numberOfInputChannels > 0 ) {
             // Set the stream format
             asbd = AEAudioDescription;
             asbd.mSampleRate = self.currentSampleRate;
-            asbd.mChannelsPerFrame = self.inputChannels;
+            asbd.mChannelsPerFrame = self.numberOfInputChannels;
             AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1,
                                                  &asbd, sizeof(asbd)),
                             "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
@@ -306,7 +306,7 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull s
                                   const AudioBufferList * _Nonnull buffer, UInt32 frames) {
     assert(self->_inputEnabled);
     
-    if ( self->_inputChannels == 0 ) {
+    if ( self->_numberOfInputChannels == 0 ) {
         AEAudioBufferListSilence(buffer, 0, frames);
         return kAudio_ParamError;
     }
@@ -381,10 +381,10 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     }
 }
 
-- (void)setMaxInputChannels:(int)maxInputChannels {
-    if ( _maxInputChannels == maxInputChannels ) return;
-    _maxInputChannels = maxInputChannels;
-    if ( _audioUnit && _inputEnabled && _inputChannels > _maxInputChannels ) {
+- (void)setMaximumInputChannels:(int)maximumInputChannels {
+    if ( _maximumInputChannels == maximumInputChannels ) return;
+    _maximumInputChannels = maximumInputChannels;
+    if ( _audioUnit && _inputEnabled && _numberOfInputChannels > _maximumInputChannels ) {
         [self updateStreamFormat];
     }
 }
@@ -460,14 +460,14 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
             hasChanges = YES;
         }
         
-        if ( self.outputChannels != (int)asbd.mChannelsPerFrame ) {
+        if ( self.numberOfOutputChannels != (int)asbd.mChannelsPerFrame ) {
             hasChanges = YES;
-            self.outputChannels = asbd.mChannelsPerFrame;
+            self.numberOfOutputChannels = asbd.mChannelsPerFrame;
         }
         
         // Update the stream format
         asbd = AEAudioDescription;
-        asbd.mChannelsPerFrame = self.outputChannels;
+        asbd.mChannelsPerFrame = self.numberOfOutputChannels;
         asbd.mSampleRate = self.currentSampleRate;
         AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0,
                                              &asbd, sizeof(asbd)),
@@ -482,20 +482,20 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
                                              1, &asbd, &size),
                         "AudioUnitGetProperty(kAudioUnitProperty_StreamFormat)");
         
-        int channels = MIN(asbd.mChannelsPerFrame, self.maxInputChannels);
-        if ( self.inputChannels != (int)channels ) {
+        int channels = MIN(asbd.mChannelsPerFrame, self.maximumInputChannels);
+        if ( self.numberOfInputChannels != (int)channels ) {
             hasChanges = YES;
-            self.inputChannels = channels;
+            self.numberOfInputChannels = channels;
         }
         
         if ( !self.outputEnabled ) {
             self.currentSampleRate = self.sampleRate;
         }
         
-        if ( self.inputChannels > 0 ) {
+        if ( self.numberOfInputChannels > 0 ) {
             // Set the stream format
             asbd = AEAudioDescription;
-            asbd.mChannelsPerFrame = self.inputChannels;
+            asbd.mChannelsPerFrame = self.numberOfInputChannels;
             asbd.mSampleRate = self.currentSampleRate;
             AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1,
                                                  &asbd, sizeof(asbd)),

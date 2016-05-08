@@ -61,7 +61,7 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
 @end
 
 @implementation AEAudioUnitOutput
-@dynamic renderer, audioUnit, sampleRate, currentSampleRate, running, outputChannels;
+@dynamic renderer, audioUnit, sampleRate, currentSampleRate, running, numberOfOutputChannels;
 #if TARGET_OS_IPHONE
 @dynamic latencyCompensation, inputModule;
 #endif
@@ -100,7 +100,7 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     [[NSNotificationCenter defaultCenter] addObserverForName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self.ioUnit
                                                        queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
         weakSelf.renderer.sampleRate = weakSelf.ioUnit.currentSampleRate;
-        weakSelf.renderer.outputChannels = weakSelf.ioUnit.outputChannels;
+        weakSelf.renderer.numberOfOutputChannels = weakSelf.ioUnit.numberOfOutputChannels;
     }];
     
     if ( ![self.ioUnit setup:NULL] ) return nil;
@@ -111,7 +111,7 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     
     self.renderer = renderer;
     self.renderer.sampleRate = self.ioUnit.currentSampleRate;
-    self.renderer.outputChannels = self.ioUnit.outputChannels;
+    self.renderer.numberOfOutputChannels = self.ioUnit.numberOfOutputChannels;
     
     return self;
 }
@@ -157,8 +157,8 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     return self.ioUnit.running;
 }
 
-- (int)outputChannels {
-    return self.ioUnit.outputChannels;
+- (int)numberOfOutputChannels {
+    return self.ioUnit.numberOfOutputChannels;
 }
 
 - (AEAudioUnitInputModule *)inputModule {

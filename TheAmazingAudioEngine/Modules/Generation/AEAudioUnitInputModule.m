@@ -34,7 +34,7 @@
 
 @interface AEAudioUnitInputModule ()
 @property (nonatomic, strong) AEIOAudioUnit * ioUnit;
-@property (nonatomic, readwrite) int inputChannels;
+@property (nonatomic, readwrite) int numberOfInputChannels;
 @property (nonatomic, strong) id ioUnitStreamChangeObserverToken;
 @property (nonatomic) BOOL ownsIOUnit;
 @end
@@ -62,20 +62,20 @@
         self.ownsIOUnit = YES;
     }
     
-    self.ioUnit.maxInputChannels = AEBufferStackGetMaximumChannelsPerBuffer(self.renderer.stack);
+    self.ioUnit.maximumInputChannels = AEBufferStackGetMaximumChannelsPerBuffer(self.renderer.stack);
     
     __weak AEAudioUnitInputModule * weakSelf = self;
     self.ioUnitStreamChangeObserverToken =
     [[NSNotificationCenter defaultCenter] addObserverForName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self.ioUnit
                                                        queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
-        weakSelf.inputChannels = weakSelf.ioUnit.inputChannels;
+        weakSelf.numberOfInputChannels = weakSelf.ioUnit.numberOfInputChannels;
     }];
     
     if ( self.ownsIOUnit ) {
         if ( ![self.ioUnit setup:NULL] ) return nil;
     }
     
-    self.inputChannels = self.ioUnit.inputChannels;
+    self.numberOfInputChannels = self.ioUnit.numberOfInputChannels;
     self.processFunction = AEAudioUnitInputModuleProcess;
     
 #if TARGET_OS_IPHONE
@@ -123,13 +123,13 @@ AudioTimeStamp AEAudioUnitInputModuleGetInputTimestamp(__unsafe_unretained AEAud
 
 static void AEAudioUnitInputModuleProcess(__unsafe_unretained AEAudioUnitInputModule * self,
                                           const AERenderContext * _Nonnull context) {
-    if ( !self->_inputChannels ) {
+    if ( !self->_numberOfInputChannels ) {
         const AudioBufferList * abl = AEBufferStackPush(context->stack, 1);
         AEAudioBufferListSilence(abl, 0, context->frames);
         return;
     }
     
-    const AudioBufferList * abl = AEBufferStackPushWithChannels(context->stack, 1, self->_inputChannels);
+    const AudioBufferList * abl = AEBufferStackPushWithChannels(context->stack, 1, self->_numberOfInputChannels);
     if ( !abl) return;
     
     OSStatus status = AEIOAudioUnitRenderInput(self->_ioUnit, abl, context->frames);

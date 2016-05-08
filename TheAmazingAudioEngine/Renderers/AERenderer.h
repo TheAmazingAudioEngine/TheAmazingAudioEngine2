@@ -56,7 +56,7 @@ extern NSString * const _Nonnull AERendererDidChangeSampleRateNotification;
 /*!
  * Channel count change notification
  */
-extern NSString * const _Nonnull AERendererDidChangeChannelCountNotification;
+extern NSString * const _Nonnull AERendererDidChangeNumberOfOutputChannelsNotification;
 
 
 /*!
@@ -91,7 +91,7 @@ void AERendererRun(__unsafe_unretained AERenderer * _Nonnull renderer,
 
 @property (nonatomic, copy) AERenderLoopBlock _Nonnull block; //!< The output loop block. Assignment is thread-safe.
 @property (nonatomic) double sampleRate; //!< The sample rate
-@property (nonatomic) int outputChannels; //!< The number of output channels
+@property (nonatomic) int numberOfOutputChannels; //!< The number of output channels
 @property (nonatomic, readonly) AEBufferStack * _Nonnull stack; //!< Buffer stack
 @end
 

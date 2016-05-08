@@ -102,8 +102,8 @@ AESeconds AEAudioUnitOutputGetOutputLatency(__unsafe_unretained AEAudioUnitOutpu
 //! Whether unit is currently active
 @property (nonatomic, readonly) BOOL running;
 
-//! The current number of output channels (key-value observable)
-@property (nonatomic, readonly) int outputChannels;
+//! The current number of output channels
+@property (nonatomic, readonly) int numberOfOutputChannels;
 
 #if TARGET_OS_IPHONE
 //! Whether to automatically perform latency compensation (default YES)
