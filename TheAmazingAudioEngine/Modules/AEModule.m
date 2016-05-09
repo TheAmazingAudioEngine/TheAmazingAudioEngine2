@@ -58,12 +58,12 @@
     if ( _renderer ) {
         [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rendererDidChangeSampleRate)
                                                      name:AERendererDidChangeSampleRateNotification object:_renderer];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rendererDidChangeChannelCount)
+        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rendererDidChangeNumberOfChannels)
                                                      name:AERendererDidChangeNumberOfOutputChannelsNotification object:_renderer];
         
         if ( hadRenderer ) {
             [self rendererDidChangeSampleRate];
-            [self rendererDidChangeChannelCount];
+            [self rendererDidChangeNumberOfChannels];
         }
     }
 }
@@ -72,7 +72,7 @@
     
 }
 
-- (void)rendererDidChangeChannelCount {
+- (void)rendererDidChangeNumberOfChannels {
     
 }
 

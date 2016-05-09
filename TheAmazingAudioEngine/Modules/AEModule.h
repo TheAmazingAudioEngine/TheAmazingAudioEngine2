@@ -108,7 +108,7 @@ BOOL AEModuleIsActive(__unsafe_unretained AEModule * _Nonnull module);
  *
  *  Subclasses may override this method to react to channel count changes.
  */
-- (void)rendererDidChangeChannelCount;
+- (void)rendererDidChangeNumberOfChannels;
 
 /*!
  * Process function
