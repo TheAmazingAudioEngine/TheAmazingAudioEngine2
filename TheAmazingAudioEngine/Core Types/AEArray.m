@@ -45,7 +45,7 @@ typedef struct {
 @end
 
 @implementation AEArray
-@dynamic allValues;
+@dynamic allValues, count;
 
 - (instancetype)init {
     return [self initWithCustomMapping:nil];
@@ -73,6 +73,11 @@ typedef struct {
 - (NSArray *)allValues {
     array_t * array = (array_t*)_value.pointerValue;
     return array->objects ? array->objects : @[];
+}
+
+- (int)count {
+    array_t * array = (array_t*)_value.pointerValue;
+    return array->count;
 }
 
 - (NSUInteger)countByEnumeratingWithState:(NSFastEnumerationState *)state objects:(id __unsafe_unretained [])buffer count:(NSUInteger)len {

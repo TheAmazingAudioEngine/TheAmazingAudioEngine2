@@ -228,6 +228,9 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
     } \
 }
 
+//! Number of values in array
+@property (nonatomic, readonly) int count;
+
 //! Current object values
 @property (nonatomic, strong, readonly) NSArray * _Nonnull allValues;
 
