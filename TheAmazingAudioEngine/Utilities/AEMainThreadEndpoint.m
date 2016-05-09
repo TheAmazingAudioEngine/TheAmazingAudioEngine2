@@ -39,6 +39,7 @@
 @end
 
 @implementation AEMainThreadEndpoint
+@dynamic isPolling;
 
 - (instancetype)initWithHandler:(AEMainThreadEndpointHandler)handler {
     if ( !(self = [super init]) ) return nil;
@@ -77,7 +78,12 @@
 
 - (void)endPolling {
     [self.timer invalidate];
+    self.timer = nil;
     self.buffer.pointerValue = NULL;
+}
+
+- (BOOL)isPolling {
+    return self.timer != nil;
 }
 
 - (void)setPollInterval:(AESeconds)pollInterval {

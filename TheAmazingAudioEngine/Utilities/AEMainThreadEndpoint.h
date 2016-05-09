@@ -116,4 +116,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 //! actual capacity may be larger.
 @property (nonatomic) size_t bufferCapacity;
 
+//! Whether the endpoint is presently polling for messages
+@property (nonatomic, readonly) BOOL isPolling;
+
 @end
