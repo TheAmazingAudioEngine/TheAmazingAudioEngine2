@@ -30,7 +30,7 @@
 
 @interface AELowShelfModule : AEAudioUnitModule
 
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer;
 
 //! range is from 10Hz to 200Hz. Default is 80Hz.
 @property (nonatomic) double cutoffFrequency;

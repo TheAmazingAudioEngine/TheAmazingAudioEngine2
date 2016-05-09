@@ -30,7 +30,7 @@
 
 @interface AEParametricEqModule : AEAudioUnitModule
 
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer;
 
 //! range is from 20Hz to ($SAMPLERATE/2) Hz. Default is 2000 Hz.
 @property (nonatomic) double centerFrequency;

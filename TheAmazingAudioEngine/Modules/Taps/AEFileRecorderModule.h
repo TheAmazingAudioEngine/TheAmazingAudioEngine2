@@ -48,7 +48,7 @@ extern "C" {
  * @param type The type of the file to write
  * @param error If not NULL, the error on output
  */
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer
                                        URL:(NSURL * _Nonnull)url
                                       type:(AEAudioFileType)type
                                      error:(NSError * _Nullable * _Nullable)error;

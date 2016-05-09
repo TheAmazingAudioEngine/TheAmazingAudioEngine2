@@ -30,7 +30,7 @@
 
 @interface AEDistortionModule : AEAudioUnitModule
 
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer;
 
 //! range is from 0.1 to 500 milliseconds. Default is 0.1.
 @property (nonatomic) double delay;

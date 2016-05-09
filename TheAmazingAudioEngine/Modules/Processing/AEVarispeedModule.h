@@ -30,7 +30,7 @@
 
 @interface AEVarispeedModule : AEAudioUnitModule
 
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer subrenderer:(AERenderer * _Nonnull)subrenderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer subrenderer:(AERenderer * _Nonnull)subrenderer;
 
 //! documented range is from 0.25 to 4.0, but empircal testing shows it to be 0.25 to 2.0. Default is 1.0.
 @property (nonatomic) double playbackRate;

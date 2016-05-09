@@ -42,7 +42,7 @@
  * @param renderer Owning renderer
  * @param subrenderer Sub-renderer to use to provide input
  */
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer
                                subrenderer:(AERenderer * _Nullable)subrenderer;
 
 

@@ -30,7 +30,7 @@
 
 @interface AEDynamicsProcessorModule : AEAudioUnitModule
 
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer;
 
 //! range is from -40dB to 20dB. Default is -20dB.
 @property (nonatomic) double threshold;

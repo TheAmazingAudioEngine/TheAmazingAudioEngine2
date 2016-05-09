@@ -30,7 +30,7 @@
 
 @interface AENewTimePitchModule : AEAudioUnitModule
 
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer subrenderer:(AERenderer * _Nonnull)subrenderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer subrenderer:(AERenderer * _Nonnull)subrenderer;
 
 //! range is from 1/32 to 32.0. Default is 1.0.
 @property (nonatomic) double rate;

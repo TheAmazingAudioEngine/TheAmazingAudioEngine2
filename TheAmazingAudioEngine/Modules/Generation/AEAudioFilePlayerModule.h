@@ -53,7 +53,7 @@ extern "C" {
  * @param url URL to the file to load
  * @param error If not NULL, the error on output
  */
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer
                                        URL:(NSURL * _Nonnull)url
                                      error:(NSError * _Nullable * _Nullable)error;
 

@@ -73,9 +73,9 @@ typedef BOOL (*AEModuleIsActiveFunc)(__unsafe_unretained AEModule * _Nonnull sel
 /*!
  * Initializer
  *
- * @param renderer The renderer
+ * @param renderer The renderer.
  */
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer;
 
 /*!
  * Invoke processing for a module
@@ -130,8 +130,11 @@ BOOL AEModuleIsActive(__unsafe_unretained AEModule * _Nonnull module);
 
 /*!
  * The renderer
+ *
+ *  This may be re-assigned after initialization; the module will begin
+ *  tracking the parameters of the new renderer.
  */
-@property (nonatomic, weak, readonly) AERenderer * _Nullable renderer;
+@property (nonatomic, weak) AERenderer * _Nullable renderer;
 
 @end
 

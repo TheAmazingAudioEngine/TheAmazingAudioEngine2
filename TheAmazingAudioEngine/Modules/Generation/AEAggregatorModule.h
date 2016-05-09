@@ -40,7 +40,7 @@
 /*!
  * Initializer
  */
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer;
 
 /*!
  * Add a module

@@ -46,7 +46,7 @@
  * @param renderer The renderer
  * @param audioComponentDescription The structure identifying the audio unit to instantiate
  */
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer
                       componentDescription:(AudioComponentDescription)audioComponentDescription;
 
 
@@ -61,7 +61,7 @@
  * @param audioComponentDescription The structure identifying the audio unit to instantiate
  * @param subrenderer Sub-renderer to use to provide input, or nil for default initializer behaviour
  */
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer
                       componentDescription:(AudioComponentDescription)audioComponentDescription
                                subrenderer:(AERenderer * _Nullable)subrenderer;
 

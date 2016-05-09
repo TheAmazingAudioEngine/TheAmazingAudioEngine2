@@ -30,7 +30,7 @@
 
 @interface AELowPassModule : AEAudioUnitModule
 
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer;
 
 //! range is from 10Hz to ($SAMPLERATE/2) Hz. Default is 6900 Hz.
 @property (nonatomic) double cutoffFrequency;
