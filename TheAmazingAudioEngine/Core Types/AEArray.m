@@ -160,7 +160,7 @@ void * AEArrayGetItem(AEArrayToken token, int index) {
             if ( array->entries[i]->referenceCount == 0 ) {
                 if ( _releaseBlock ) {
                     _releaseBlock(array->objects[i], array->entries[i]->pointer);
-                } else if ( array->entries[i]->pointer != (__bridge void*)array->objects[i] ) {
+                } else if ( array->entries[i]->pointer != (__bridge void*)array->objects[i] && array->entries[i]->pointer ) {
                     free(array->entries[i]->pointer);
                 }
                 free(array->entries[i]);
