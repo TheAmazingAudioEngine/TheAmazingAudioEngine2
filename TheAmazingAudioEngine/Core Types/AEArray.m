@@ -108,6 +108,12 @@ typedef struct {
 }
 
 - (void)updateWithContentsOfArray:(NSArray *)array customMapping:(void * _Nonnull (^)(id _Nonnull, int))block {
+    array_t * currentArray = (array_t*)_value.pointerValue;
+    if ( currentArray && currentArray->objects && [currentArray->objects isEqualToArray:array] ) {
+        // Arrays are identical - skip
+        return;
+    }
+    
     array = [array copy];
     
     // Create new array
