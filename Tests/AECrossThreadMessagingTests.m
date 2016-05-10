@@ -165,7 +165,7 @@ typedef struct {
     int data[2] = {1, 2};
     XCTAssertEqualObjects(self.mainThreadMessageValue4, [NSData dataWithBytes:data length:sizeof(data)]);
     
-    AEMessageQueuePerformSelectorOnMainThread(queue, self, @selector(mainThreadMessageTestWithNoArguments), AEMessageQueueArgumentNone);
+    AEMessageQueuePerformSelectorOnMainThread(queue, self, @selector(mainThreadMessageTestWithNoArguments), AEArgumentNone);
     
     [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:queue.pollInterval]];
     
@@ -176,12 +176,12 @@ typedef struct {
     int data[2] = {1, 2};
     AEMessageQueuePerformSelectorOnMainThread(queue, self,
                                               @selector(mainThreadMessageTestWithValue1:value2:value3:value4:length:),
-                                              AEMessageQueueArgumentMakeScalar(1),
-                                              AEMessageQueueArgumentMakeScalar(self),
-                                              AEMessageQueueArgumentMakeStruct(((AECrossThreadMessagingTestsTestStruct){1, 2})),
-                                              AEMessageQueueArgumentMakeData(data, sizeof(data)),
-                                              AEMessageQueueArgumentMakeScalar(sizeof(data)),
-                                              AEMessageQueueArgumentNone);
+                                              AEArgumentScalar(1),
+                                              AEArgumentScalar(self),
+                                              AEArgumentStruct(((AECrossThreadMessagingTestsTestStruct){1, 2})),
+                                              AEArgumentData(data, sizeof(data)),
+                                              AEArgumentScalar(sizeof(data)),
+                                              AEArgumentNone);
 }
 
 - (void)mainThreadMessageTestWithValue1:(int)value1

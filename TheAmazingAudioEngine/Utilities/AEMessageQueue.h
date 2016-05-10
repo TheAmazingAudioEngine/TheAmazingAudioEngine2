@@ -32,44 +32,44 @@ typedef struct {
     BOOL isValue;
     const void * _Nullable data;
     size_t length;
-} AEMessageQueueArgument;
+} AEArgument;
 
 //! Empty argument, to terminate list of arguments in AEMessageQueuePerformSelectorOnMainThread
-extern AEMessageQueueArgument AEMessageQueueArgumentNone;
+extern AEArgument AEArgumentNone;
 
 /*!
  * Create a scalar argument for use with AEMessageQueuePerformSelectorOnMainThread
  *
  *  For example, to create a literal int argument:
  *
- *      AEMessageQueueArgumentMake(1);
+ *      AEArgument(1);
  *
  *  To create a pointer argument:
  *
  *      __unsafe_unretained MyClass * myPointer;
- *      AEMessageQueueArgumentMake(myPointer);
+ *      AEArgument(myPointer);
  *
- *  To create a literal structure argument, use AEMessageQueueArgumentMakeStruct;
- *  to create an argument that points a memory region, use AEMessageQueueArgumentMakeData.
+ *  To create a literal structure argument, use AEArgumentStruct;
+ *  to create an argument that points a memory region, use AEArgumentData.
  *
  * @param argument The argument value
  * @return The initialized argument
  */
-#define AEMessageQueueArgumentMakeScalar(argument) \
-    (AEMessageQueueArgument){ YES, &(typeof(argument)){argument}, sizeof(argument) }
+#define AEArgumentScalar(argument) \
+    (AEArgument){ YES, &(typeof(argument)){argument}, sizeof(argument) }
 
 /*!
  * Create a literal structure argument for use with AEMessageQueuePerformSelectorOnMainThread
  *
  *  For example (note extra parentheses around braced structure initialization):
  *
- *      AEMessageQueueArgumentMakeStruct(((struct MyStruct) { value1, value2 }))
+ *      AEArgumentStruct(((struct MyStruct) { value1, value2 }))
  *
  * @param argument The literal struct argument
  * @return The initialized argument
  */
-#define AEMessageQueueArgumentMakeStruct(argument) \
-    (AEMessageQueueArgument){ YES, &(argument), sizeof(argument) }
+#define AEArgumentStruct(argument) \
+    (AEArgument){ YES, &(argument), sizeof(argument) }
 
 /*!
  * Create a data argument for use with AEMessageQueuePerformSelectorOnMainThread
@@ -78,14 +78,14 @@ extern AEMessageQueueArgument AEMessageQueueArgumentNone;
  *  For example:
  *
  *      void * myBuffer = ...;
- *      AEMessageQueueArgumentMakeData(myBuffer, myBufferLength);
+ *      AEArgumentData(myBuffer, myBufferLength);
  *
  * @param buffer Pointer to the buffer to copy
  * @param size Number of bytes to copy
  * @return The initialized argument
  */
-#define AEMessageQueueArgumentMakeData(buffer, size) \
-    (AEMessageQueueArgument) { NO, buffer, size }
+#define AEArgumentData(buffer, size) \
+    (AEArgument) { NO, buffer, size }
 
 /*!
  * Message Queue
@@ -159,13 +159,13 @@ extern AEMessageQueueArgument AEMessageQueueArgumentNone;
  * @param messageQueue The message queue instance
  * @param target The target object
  * @param selector The selector
- * @param arguments List of arguments, terminated by AEMessageQueueArgumentNone
+ * @param arguments List of arguments, terminated by AEArgumentNone
  * @return YES on success, or NO if out of buffer space or not polling
  */
 BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueue * _Nonnull messageQueue,
                                                __unsafe_unretained id _Nonnull target,
                                                SEL _Nonnull selector,
-                                               AEMessageQueueArgument arguments, ...);
+                                               AEArgument arguments, ...);
 
 /*!
  * Begins a group of messages to be performed consecutively.

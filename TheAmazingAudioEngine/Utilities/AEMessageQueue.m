@@ -28,7 +28,7 @@
 #import "AEMainThreadEndpoint.h"
 #import "AEAudioThreadEndpoint.h"
 
-AEMessageQueueArgument AEMessageQueueArgumentNone = {NULL, 0};
+AEArgument AEArgumentNone = {NULL, 0};
 
 typedef enum {
     AEMessageQueueMainThreadMessage,
@@ -162,7 +162,7 @@ typedef struct {
 BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueue * THIS,
                                                __unsafe_unretained id target,
                                                SEL selector,
-                                               AEMessageQueueArgument arguments, ...) {
+                                               AEArgument arguments, ...) {
     // Prepare message buffer: determine size of message
     const char * selectorString = sel_getName(selector);
     int selectorLength = (int)strlen(selectorString) + 1;
@@ -171,9 +171,9 @@ BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueu
         messageSize += sizeof(main_thread_message_arg_t) + arguments.length;
         va_list args;
         va_start(args, arguments);
-        AEMessageQueueArgument argument;
+        AEArgument argument;
         while ( 1 ) {
-            argument = va_arg(args, AEMessageQueueArgument);
+            argument = va_arg(args, AEArgument);
             if ( argument.length == 0 ) break;
             messageSize += sizeof(main_thread_message_arg_t) + argument.length;
         }
@@ -206,9 +206,9 @@ BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueu
         // Copy remaining arguments
         va_list args;
         va_start(args, arguments);
-        AEMessageQueueArgument argument;
+        AEArgument argument;
         while ( 1 ) {
-            argument = va_arg(args, AEMessageQueueArgument);
+            argument = va_arg(args, AEArgument);
             if ( argument.length == 0 ) break;
             
             main_thread_message_arg_t * arg = argumentPtr;
