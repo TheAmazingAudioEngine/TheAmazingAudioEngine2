@@ -42,12 +42,12 @@ extern AEArgument AEArgumentNone;
  *
  *  For example, to create a literal int argument:
  *
- *      AEArgument(1);
+ *      AEArgumentScalar(1);
  *
  *  To create a pointer argument:
  *
  *      __unsafe_unretained MyClass * myPointer;
- *      AEArgument(myPointer);
+ *      AEArgumentScalar(myPointer);
  *
  *  To create a literal structure argument, use AEArgumentStruct;
  *  to create an argument that points a memory region, use AEArgumentData.
@@ -59,13 +59,18 @@ extern AEArgument AEArgumentNone;
     (AEArgument){ YES, &(typeof(argument)){argument}, sizeof(argument) }
 
 /*!
- * Create a literal structure argument for use with AEMessageQueuePerformSelectorOnMainThread
+ * Create a structure argument for use with AEMessageQueuePerformSelectorOnMainThread
  *
  *  For example (note extra parentheses around braced structure initialization):
  *
  *      AEArgumentStruct(((struct MyStruct) { value1, value2 }))
  *
- * @param argument The literal struct argument
+ *  or
+ *
+ *      struct myStruct value = { value1, value2 };
+ *      AEArgumentStruct(value)
+ *
+ * @param argument The struct argument
  * @return The initialized argument
  */
 #define AEArgumentStruct(argument) \
@@ -98,7 +103,7 @@ extern AEArgument AEArgumentNone;
  *  in order to poll for incoming messages on the render thread. Then call startPolling on the
  *  main thread to begin polling for incoming messages on the main thread.
  *
- *  Then, use AEMessageQueuePerformOnMainThread from the audio thread, or
+ *  Then, use AEMessageQueuePerformSelectorOnMainThread from the audio thread, or
  *  performBlockOnAudioThread: or performBlockOnAudioThread:completionBlock: from the main thread.
  */
 @interface AEMessageQueue : NSObject
