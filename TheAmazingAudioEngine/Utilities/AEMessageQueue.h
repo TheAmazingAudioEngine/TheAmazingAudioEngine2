@@ -27,21 +27,65 @@
 @import Foundation;
 #import "AETime.h"
 
+//! Argument to method call, for use with AEMessageQueuePerformSelectorOnMainThread
+typedef struct {
+    BOOL isValue;
+    const void * _Nullable data;
+    size_t length;
+} AEMessageQueueArgument;
+
+//! Empty argument, to terminate list of arguments in AEMessageQueuePerformSelectorOnMainThread
+extern AEMessageQueueArgument AEMessageQueueArgumentNone;
+
 /*!
- * Main thread message handler function
+ * Create a scalar argument for use with AEMessageQueuePerformSelectorOnMainThread
  *
- *  Create functions of this type in order to handle messages from the realtime thread
- *  on the main thread. You then pass a pointer to these functions when using
- *  @link AEMessageQueue::AEMessageQueueSendMessageToMainThread AEMessageQueueSendMessageToMainThread @endlink 
- *  on the realtime thread, along with data to pass through via the userInfo parameter.
+ *  For example, to create a literal int argument:
  *
- *  See @link AEMessageQueue::AEMessageQueueSendMessageToMainThread AEMessageQueueSendMessageToMainThread @endlink
- *  for further discussion.
+ *      AEMessageQueueArgumentMake(1);
  *
- * @param userInfo          Pointer to your data
- * @param userInfoLength    Length of userInfo in bytes
+ *  To create a pointer argument:
+ *
+ *      __unsafe_unretained MyClass * myPointer;
+ *      AEMessageQueueArgumentMake(myPointer);
+ *
+ *  To create a literal structure argument, use AEMessageQueueArgumentMakeStruct;
+ *  to create an argument that points a memory region, use AEMessageQueueArgumentMakeData.
+ *
+ * @param argument The argument value
+ * @return The initialized argument
  */
-typedef void (*AEMessageQueueMessageHandler)(const void * _Nonnull data, size_t length);
+#define AEMessageQueueArgumentMakeScalar(argument) \
+    (AEMessageQueueArgument){ YES, &(typeof(argument)){argument}, sizeof(argument) }
+
+/*!
+ * Create a literal structure argument for use with AEMessageQueuePerformSelectorOnMainThread
+ *
+ *  For example (note extra parentheses around braced structure initialization):
+ *
+ *      AEMessageQueueArgumentMakeStruct(((struct MyStruct) { value1, value2 }))
+ *
+ * @param argument The literal struct argument
+ * @return The initialized argument
+ */
+#define AEMessageQueueArgumentMakeStruct(argument) \
+    (AEMessageQueueArgument){ YES, &(argument), sizeof(argument) }
+
+/*!
+ * Create a data argument for use with AEMessageQueuePerformSelectorOnMainThread
+ *
+ *  The memory region indicated will be copied.
+ *  For example:
+ *
+ *      void * myBuffer = ...;
+ *      AEMessageQueueArgumentMakeData(myBuffer, myBufferLength);
+ *
+ * @param buffer Pointer to the buffer to copy
+ * @param size Number of bytes to copy
+ * @return The initialized argument
+ */
+#define AEMessageQueueArgumentMakeData(buffer, size) \
+    (AEMessageQueueArgument) { NO, buffer, size }
 
 /*!
  * Message Queue
@@ -107,43 +151,21 @@ typedef void (*AEMessageQueueMessageHandler)(const void * _Nonnull data, size_t 
 - (void)performBlockOnAudioThread:(void (^ _Nonnull)())block completionBlock:(void (^ _Nullable)())completionBlock;
 
 /*!
- * Send a message to the main thread asynchronously
+ * Perform a selector on the main thread asynchronously
  *
- *  Tip: To pass a pointer (including pointers to __unsafe_unretained Objective-C objects) through the
- *  userInfo parameter, be sure to pass the address to the pointer, using the "&" prefix:
+ *  This method allows you to cause a method to be called on the main thread. You can provide any number
+ *  of arguments to the method, as pointers to the argument data.
  *
- *  @code
- *  AEMessageQueueSendMessageToMainThread(queue, myMainThreadFunction, &pointer, sizeof(void*));
- *  @endcode
- *
- *  or
- *
- *  @code
- *  AEMessageQueueSendMessageToMainThread(queue, myMainThreadFunction, &object, sizeof(MyObject*));
- *  @endcode
- *
- *  You can then retrieve the pointer value via a void** dereference from your function:
- *
- *  @code
- *  void * myPointerValue = *(void**)userInfo;
- *  @endcode
- *
- *  To access an Objective-C object pointer, you also need to bridge the pointer value:
- *
- *  @code
- *  MyObject *object = (__bridge MyObject*)*(void**)userInfo;
- *  @endcode
- *
- * @param messageQueue The message queue instance.
- * @param handler A pointer to a function to call on the main thread.
- * @param data Message data (or NULL) to copy
- * @param length Length of message data
+ * @param messageQueue The message queue instance
+ * @param target The target object
+ * @param selector The selector
+ * @param arguments List of arguments, terminated by AEMessageQueueArgumentNone
  * @return YES on success, or NO if out of buffer space or not polling
  */
-BOOL AEMessageQueuePerformOnMainThread(AEMessageQueue * _Nonnull messageQueue,
-                                       AEMessageQueueMessageHandler _Nonnull handler,
-                                       const void * _Nonnull data,
-                                       size_t length);
+BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueue * _Nonnull messageQueue,
+                                               __unsafe_unretained id _Nonnull target,
+                                               SEL _Nonnull selector,
+                                               AEMessageQueueArgument arguments, ...);
 
 /*!
  * Begins a group of messages to be performed consecutively.

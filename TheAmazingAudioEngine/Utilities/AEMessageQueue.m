@@ -28,6 +28,8 @@
 #import "AEMainThreadEndpoint.h"
 #import "AEAudioThreadEndpoint.h"
 
+AEMessageQueueArgument AEMessageQueueArgumentNone = {NULL, 0};
+
 typedef enum {
     AEMessageQueueMainThreadMessage,
     AEMessageQueueAudioThreadMessage,
@@ -43,12 +45,15 @@ typedef struct {
 // Main thread message type
 typedef struct {
     AEMessageQueueMessageType type;
-    AEMessageQueueMessageHandler handler;
-    size_t length;
-} main_thread_message_t;
+    __unsafe_unretained id target;
+    size_t selectorLength; // Length of selector including NULL terminator
+} main_thread_message_t; // Selector follows, then each argument (main_thread_message_arg_t followed by data)
 
-
-
+// Main thread argument header
+typedef struct {
+    size_t length; // Number of bytes of data
+    BOOL isValue;  // Whether to pass by value
+} main_thread_message_arg_t; // Data follows
 
 @interface AEMessageQueue ()
 @property (nonatomic, strong) AEMainThreadEndpoint * mainThreadEndpoint;
@@ -64,9 +69,42 @@ typedef struct {
     self.mainThreadEndpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void * _Nullable data, size_t length) {
         const AEMessageQueueMessageType * type = (AEMessageQueueMessageType *)data;
         if ( *type == AEMessageQueueMainThreadMessage ) {
-            // Call handler function
             const main_thread_message_t * message = (const main_thread_message_t *)data;
-            message->handler(message->length > 0 ? data + sizeof(main_thread_message_t) : NULL, message->length);
+            id target = message->target;
+            const char * selectorString = data + sizeof(main_thread_message_t);
+            const void * arguments = data + sizeof(main_thread_message_t) + message->selectorLength;
+            const void * argumentEnd = data + length;
+            
+            // Create invocation
+            SEL selector = sel_registerName(selectorString);
+            NSMethodSignature * methodSignature;
+            if ( !selector || !(methodSignature = [target methodSignatureForSelector:selector]) ) {
+                NSLog(@"AEMessageQueue: Invalid selector '%s'", selectorString);
+                return;
+            }
+            NSInvocation * invocation = [NSInvocation invocationWithMethodSignature:methodSignature];
+            invocation.selector = selector;
+            
+            // Fill in arguments
+            for ( int i = 2; i < invocation.methodSignature.numberOfArguments && arguments < argumentEnd; i++ ) {
+                const main_thread_message_arg_t * arg = arguments;
+                
+                // Verify argument
+                NSUInteger argLength;
+                const char * type = [invocation.methodSignature getArgumentTypeAtIndex:i];
+                NSGetSizeAndAlignment(type, &argLength, NULL);
+                if ( argLength != (arg->isValue ? arg->length : sizeof(void*)) ) {
+                    NSLog(@"AEMessageQueue: Incorrect argument size for selector %s argument %d", selectorString, i-2);
+                    return;
+                }
+                
+                // Assign value
+                const void * data = arguments + sizeof(main_thread_message_arg_t);
+                [invocation setArgument:(void*)(arg->isValue ? data : &data) atIndex:i];
+                arguments += sizeof(main_thread_message_arg_t) + arg->length;
+            }
+            
+            [invocation invokeWithTarget:target];
             
         } else if ( *type == AEMessageQueueAudioThreadMessage ) {
             // Clean up audio thread message, and possibly call completion block
@@ -121,22 +159,65 @@ typedef struct {
     [self.audioThreadEndpoint sendBytes:&message length:sizeof(message)];
 }
 
-BOOL AEMessageQueuePerformOnMainThread(AEMessageQueue * THIS,
-                                       AEMessageQueueMessageHandler handler,
-                                       const void * data,
-                                       size_t length) {
-    // Prepare message buffer
-    size_t messageSize = sizeof(main_thread_message_t) + length;
+BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueue * THIS,
+                                               __unsafe_unretained id target,
+                                               SEL selector,
+                                               AEMessageQueueArgument arguments, ...) {
+    // Prepare message buffer: determine size of message
+    const char * selectorString = sel_getName(selector);
+    int selectorLength = (int)strlen(selectorString) + 1;
+    size_t messageSize = sizeof(main_thread_message_t) + selectorLength;
+    if ( arguments.length > 0 ) {
+        messageSize += sizeof(main_thread_message_arg_t) + arguments.length;
+        va_list args;
+        va_start(args, arguments);
+        AEMessageQueueArgument argument;
+        while ( 1 ) {
+            argument = va_arg(args, AEMessageQueueArgument);
+            if ( argument.length == 0 ) break;
+            messageSize += sizeof(main_thread_message_arg_t) + argument.length;
+        }
+        va_end(args);
+    }
+    
+    // Create message
     void * message = AEMainThreadEndpointCreateMessage(THIS->_mainThreadEndpoint, messageSize);
     if ( !message ) return NO;
     
     // Write header
-    ((main_thread_message_t *)message)->type = AEMessageQueueMainThreadMessage;
-    ((main_thread_message_t *)message)->handler = handler;
-    ((main_thread_message_t *)message)->length = length;
-    if ( length > 0 ) {
-        // Copy in data
-        memcpy(message + sizeof(main_thread_message_t), data, length);
+    main_thread_message_t * header = message;
+    header->type = AEMessageQueueMainThreadMessage;
+    header->target = target;
+    header->selectorLength = selectorLength;
+    
+    // Copy in selector
+    memcpy(message + sizeof(main_thread_message_t), selectorString, selectorLength);
+    
+    // Copy in arguments
+    void * argumentPtr = message + sizeof(main_thread_message_t) + selectorLength;
+    if ( arguments.length > 0 ) {
+        // Copy first argument
+        main_thread_message_arg_t * arg = argumentPtr;
+        arg->isValue = arguments.isValue;
+        arg->length = arguments.length;
+        memcpy(argumentPtr + sizeof(main_thread_message_arg_t), arguments.data, arguments.length);
+        argumentPtr += sizeof(main_thread_message_arg_t) + arguments.length;
+        
+        // Copy remaining arguments
+        va_list args;
+        va_start(args, arguments);
+        AEMessageQueueArgument argument;
+        while ( 1 ) {
+            argument = va_arg(args, AEMessageQueueArgument);
+            if ( argument.length == 0 ) break;
+            
+            main_thread_message_arg_t * arg = argumentPtr;
+            arg->isValue = argument.isValue;
+            arg->length = argument.length;
+            memcpy(argumentPtr + sizeof(main_thread_message_arg_t), argument.data, argument.length);
+            argumentPtr += sizeof(main_thread_message_arg_t) + argument.length;
+        }
+        va_end(args);
     }
     
     // Dispatch

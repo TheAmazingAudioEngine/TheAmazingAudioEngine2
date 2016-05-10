@@ -11,7 +11,16 @@
 #import "AEAudioThreadEndpoint.h"
 #import "AEMessageQueue.h"
 
+typedef struct {
+    int value1;
+    int value2;
+} AECrossThreadMessagingTestsTestStruct;
+
 @interface AECrossThreadMessagingTests : XCTestCase
+@property (nonatomic) int mainThreadMessageValue1;
+@property (nonatomic, weak) id mainThreadMessageValue2;
+@property (nonatomic) AECrossThreadMessagingTestsTestStruct mainThreadMessageValue3;
+@property (nonatomic) NSData * mainThreadMessageValue4;
 @end
 
 @implementation AECrossThreadMessagingTests
@@ -106,7 +115,7 @@
     [messages removeAllObjects];
 }
 
-- (void)testMessageQueue {
+- (void)testMessageQueueAudioThreadMessaging {
     AEMessageQueue * queue = [AEMessageQueue new];
     [queue startPolling];
     
@@ -139,6 +148,55 @@
     queue = nil;
     
     XCTAssertNil(weakQueue);
+}
+
+- (void)testMessageQueueMainThreadMessaging {
+    AEMessageQueue * queue = [AEMessageQueue new];
+    [queue startPolling];
+    
+    [self sendMainThreadMessage:queue];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:queue.pollInterval]];
+    
+    XCTAssertEqual(self.mainThreadMessageValue1, 1);
+    XCTAssertEqual(self.mainThreadMessageValue2, self);
+    XCTAssertTrue(!memcmp(&_mainThreadMessageValue3, &(AECrossThreadMessagingTestsTestStruct){1, 2},
+                          sizeof(AECrossThreadMessagingTestsTestStruct)));
+    
+    int data[2] = {1, 2};
+    XCTAssertEqualObjects(self.mainThreadMessageValue4, [NSData dataWithBytes:data length:sizeof(data)]);
+    
+    AEMessageQueuePerformSelectorOnMainThread(queue, self, @selector(mainThreadMessageTestWithNoArguments), AEMessageQueueArgumentNone);
+    
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:queue.pollInterval]];
+    
+    XCTAssertEqual(self.mainThreadMessageValue1, 3);
+}
+
+- (void)sendMainThreadMessage:(AEMessageQueue*)queue {
+    int data[2] = {1, 2};
+    AEMessageQueuePerformSelectorOnMainThread(queue, self,
+                                              @selector(mainThreadMessageTestWithValue1:value2:value3:value4:length:),
+                                              AEMessageQueueArgumentMakeScalar(1),
+                                              AEMessageQueueArgumentMakeScalar(self),
+                                              AEMessageQueueArgumentMakeStruct(((AECrossThreadMessagingTestsTestStruct){1, 2})),
+                                              AEMessageQueueArgumentMakeData(data, sizeof(data)),
+                                              AEMessageQueueArgumentMakeScalar(sizeof(data)),
+                                              AEMessageQueueArgumentNone);
+}
+
+- (void)mainThreadMessageTestWithValue1:(int)value1
+                                 value2:(id)value2
+                                 value3:(AECrossThreadMessagingTestsTestStruct)value3
+                                 value4:(const char *)data
+                                 length:(size_t)dataLength {
+    self.mainThreadMessageValue1 = value1;
+    self.mainThreadMessageValue2 = value2;
+    self.mainThreadMessageValue3 = value3;
+    self.mainThreadMessageValue4 = [NSData dataWithBytes:data length:dataLength];
+}
+
+- (void)mainThreadMessageTestWithNoArguments {
+    self.mainThreadMessageValue1 = 3;
 }
 
 @end
