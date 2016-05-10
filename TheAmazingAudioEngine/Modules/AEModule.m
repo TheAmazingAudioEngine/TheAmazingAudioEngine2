@@ -43,6 +43,8 @@
 }
 
 - (void)setRenderer:(AERenderer *)renderer {
+    if ( _renderer == renderer ) return;
+    
     if ( _renderer ) {
         [self stopObservingRenderer];
     }
