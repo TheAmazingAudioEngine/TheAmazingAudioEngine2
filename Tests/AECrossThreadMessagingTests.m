@@ -50,7 +50,6 @@ typedef struct {
     XCTAssertEqualObjects(messages, (@[[NSData dataWithBytes:&value1 length:sizeof(value1)], [NSData dataWithBytes:&value2 length:sizeof(value2)], [NSData dataWithBytes:&value3 length:sizeof(value3)]]));
     [messages removeAllObjects];
     
-    endpoint.bufferCapacity = 1024;
     AEMainThreadEndpointSend(endpoint, &value1, sizeof(value1));
     [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:endpoint.pollInterval]];
     
@@ -107,7 +106,6 @@ typedef struct {
     [messages removeAllObjects];
     
     
-    endpoint.bufferCapacity = 1024;
     [endpoint sendBytes:&value1 length:sizeof(value1)];
     AEAudioThreadEndpointPoll(endpoint);
     

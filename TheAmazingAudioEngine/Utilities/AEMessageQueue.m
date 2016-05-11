@@ -63,6 +63,10 @@ typedef struct {
 @implementation AEMessageQueue
 
 - (instancetype)init {
+    return [self initWithBufferCapacity:8192];
+}
+
+- (instancetype)initWithBufferCapacity:(size_t)bufferCapacity {
     if ( !(self = [super init]) ) return nil;
     
     // Create main thread endpoint
@@ -116,7 +120,7 @@ typedef struct {
                 CFRelease((__bridge CFTypeRef)(message->completionBlock));
             }
         }
-    }];
+    } bufferCapacity:bufferCapacity];
     
     // Create audio thread endpoint
     AEMainThreadEndpoint * mainThread = _mainThreadEndpoint;
@@ -127,10 +131,9 @@ typedef struct {
         
         // Enqueue response on main thread, to clean up and possibly call completion block
         AEMainThreadEndpointSend(mainThread, data, length);
-    }];
+    } bufferCapacity:bufferCapacity];
     
     _pollInterval = self.mainThreadEndpoint.pollInterval;
-    _bufferCapacity = self.mainThreadEndpoint.bufferCapacity;
     
     return self;
 }
@@ -241,12 +244,6 @@ void AEMessageQueuePoll(__unsafe_unretained AEMessageQueue * _Nonnull THIS) {
 - (void)setPollInterval:(AESeconds)pollInterval {
     _pollInterval = pollInterval;
     self.mainThreadEndpoint.pollInterval = pollInterval;
-}
-
-- (void)setBufferCapacity:(size_t)bufferCapacity {
-    _bufferCapacity = bufferCapacity;
-    self.mainThreadEndpoint.bufferCapacity = bufferCapacity;
-    self.audioThreadEndpoint.bufferCapacity = bufferCapacity;
 }
 
 @end

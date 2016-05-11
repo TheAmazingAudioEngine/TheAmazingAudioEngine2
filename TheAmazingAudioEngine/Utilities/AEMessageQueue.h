@@ -114,6 +114,14 @@ extern AEArgument AEArgumentNone;
 - (instancetype _Nullable)init;
 
 /*!
+ * Initializer with custom buffer capacity
+ *
+ * @param bufferCapacity The buffer capacity, in bytes (default is 8192 bytes).  Note that
+ *  due to the underlying implementation, actual capacity may be larger.
+ */
+- (instancetype _Nullable)initWithBufferCapacity:(size_t)bufferCapacity;
+
+/*!
  * Begin polling for messages from the audio thread
  *
  *  Call this to begin listening for messages from the audio thread.
@@ -194,9 +202,5 @@ void AEMessageQueuePoll(__unsafe_unretained AEMessageQueue * _Nonnull THIS);
 
 //! The poll interval (default is 10ms)
 @property (nonatomic) AESeconds pollInterval;
-
-//! The buffer capacity, in bytes (default is 8192 bytes). Note that due to the underlying implementation,
-//! actual capacity may be larger.
-@property (nonatomic) size_t bufferCapacity;
 
 @end

@@ -54,11 +54,20 @@ typedef void (^AEMainThreadEndpointHandler)(const void * _Nullable data, size_t 
 @interface AEMainThreadEndpoint : NSObject
 
 /*!
- * Initializer
+ * Default initializer
  *
  * @param handler The handler block to use for incoming messages
  */
 - (instancetype _Nullable)initWithHandler:(AEMainThreadEndpointHandler _Nonnull)handler;
+
+/*!
+ * Initializer with custom buffer capacity
+ *
+ * @param handler The handler block to use for incoming messages
+ * @param bufferCapacity The buffer capacity, in bytes (default is 8192 bytes).  Note that
+ *  due to the underlying implementation, actual capacity may be larger.
+ */
+- (instancetype _Nullable)initWithHandler:(AEMainThreadEndpointHandler _Nonnull)handler bufferCapacity:(size_t)bufferCapacity;
 
 /*!
  * Begin polling for messages
@@ -111,10 +120,6 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 
 //! The poll interval (default is 10ms)
 @property (nonatomic) AESeconds pollInterval;
-
-//! The buffer capacity, in bytes (default is 8192 bytes). Note that due to the underlying implementation,
-//! actual capacity may be larger.
-@property (nonatomic) size_t bufferCapacity;
 
 //! Whether the endpoint is presently polling for messages
 @property (nonatomic, readonly) BOOL isPolling;

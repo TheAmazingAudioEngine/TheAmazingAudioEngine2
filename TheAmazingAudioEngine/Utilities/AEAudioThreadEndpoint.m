@@ -7,56 +7,43 @@
 //
 
 #import "AEAudioThreadEndpoint.h"
-
 #import "TPCircularBuffer.h"
-#import "AEManagedValue.h"
 
 @interface AEAudioThreadEndpoint () {
+    TPCircularBuffer _buffer;
     int _groupNestCount;
     int32_t _groupLength;
 }
 @property (nonatomic, copy) AEAudioThreadEndpointHandler handler;
-@property (nonatomic, strong) AEManagedValue * buffer;
 @end
 
 @implementation AEAudioThreadEndpoint
 
 - (instancetype)initWithHandler:(AEAudioThreadEndpointHandler)handler {
+    return [self initWithHandler:handler bufferCapacity:8192];
+}
+
+- (instancetype)initWithHandler:(AEAudioThreadEndpointHandler)handler bufferCapacity:(size_t)bufferCapacity {
     if ( !(self = [super init]) ) return nil;
     
-    _bufferCapacity = 8192;
     self.handler = handler;
-    self.buffer = [AEManagedValue new];
-    self.buffer.releaseBlock = ^(void * value) {
-        TPCircularBufferCleanup((TPCircularBuffer*)value);
-        free(value);
-    };
     
-    if ( ![self allocateBuffer] ) {
+    if ( !TPCircularBufferInit(&_buffer, (int32_t)bufferCapacity) ) {
         return nil;
     }
     
     return self;
 }
 
-- (void)setBufferCapacity:(size_t)bufferCapacity {
-    _bufferCapacity = bufferCapacity;
-    if ( self.buffer.pointerValue ) {
-        [self allocateBuffer];
-    }
+- (void)dealloc {
+    TPCircularBufferCleanup(&_buffer);
 }
 
 void AEAudioThreadEndpointPoll(__unsafe_unretained AEAudioThreadEndpoint * _Nonnull THIS) {
-    // Get buffer
-    TPCircularBuffer * buffer = (TPCircularBuffer *)AEManagedValueGetValue(THIS->_buffer);
-    if ( !buffer ) {
-        return;
-    }
-    
     while ( 1 ) {
         // Get pointer to readable bytes
         int32_t availableBytes;
-        void * tail = TPCircularBufferTail(buffer, &availableBytes);
+        void * tail = TPCircularBufferTail(&THIS->_buffer, &availableBytes);
         if ( availableBytes == 0 ) return;
         
         // Get length and data
@@ -67,7 +54,7 @@ void AEAudioThreadEndpointPoll(__unsafe_unretained AEAudioThreadEndpoint * _Nonn
         THIS->_handler(data, length);
         
         // Mark as read
-        TPCircularBufferConsume(buffer, (int32_t)(sizeof(size_t) + length));
+        TPCircularBufferConsume(&THIS->_buffer, (int32_t)(sizeof(size_t) + length));
     }
 }
 
@@ -90,13 +77,10 @@ void AEAudioThreadEndpointPoll(__unsafe_unretained AEAudioThreadEndpoint * _Nonn
 }
 
 - (void *)createMessageWithLength:(size_t)length {
-    // Get buffer
-    TPCircularBuffer * buffer = (TPCircularBuffer *)self.buffer.pointerValue;
-    
     // Get pointer to writable bytes
     int32_t size = (int32_t)(length + sizeof(size_t));
     int32_t availableBytes;
-    void * head = TPCircularBufferHead(buffer, &availableBytes);
+    void * head = TPCircularBufferHead(&_buffer, &availableBytes);
     if ( availableBytes < size + (_groupNestCount > 0 ? _groupLength : 0) ) {
         return nil;
     }
@@ -114,12 +98,9 @@ void AEAudioThreadEndpointPoll(__unsafe_unretained AEAudioThreadEndpoint * _Nonn
 }
 
 -(void)dispatchMessage {
-    // Get buffer
-    TPCircularBuffer * buffer = (TPCircularBuffer *)self.buffer.pointerValue;
-    
     // Get pointer to writable bytes
     int32_t availableBytes;
-    void * head = TPCircularBufferHead(buffer, &availableBytes);
+    void * head = TPCircularBufferHead(&_buffer, &availableBytes);
     if ( _groupNestCount > 0 ) {
         // If we're grouping messages, write to end of group
         head += _groupLength;
@@ -128,7 +109,7 @@ void AEAudioThreadEndpointPoll(__unsafe_unretained AEAudioThreadEndpoint * _Nonn
     size_t size = *((size_t*)head) + sizeof(size_t);
     
     if ( _groupNestCount == 0 ) {
-        TPCircularBufferProduce(buffer, (int32_t)size);
+        TPCircularBufferProduce(&_buffer, (int32_t)size);
     } else {
         _groupLength += size;
     }
@@ -142,20 +123,9 @@ void AEAudioThreadEndpointPoll(__unsafe_unretained AEAudioThreadEndpoint * _Nonn
     _groupNestCount--;
     
     if ( _groupNestCount == 0 && _groupLength > 0 ) {
-        TPCircularBuffer * buffer = (TPCircularBuffer *)self.buffer.pointerValue;
-        TPCircularBufferProduce(buffer, _groupLength);
+        TPCircularBufferProduce(&_buffer, _groupLength);
         _groupLength = 0;
     }
-}
-
-- (BOOL)allocateBuffer {
-    TPCircularBuffer * buffer = (TPCircularBuffer*)malloc(sizeof(TPCircularBuffer));
-    if ( !TPCircularBufferInit(buffer, (int32_t)self.bufferCapacity) ) {
-        free(buffer);
-        return NO;
-    }
-    self.buffer.pointerValue = buffer;
-    return YES;
 }
 
 @end

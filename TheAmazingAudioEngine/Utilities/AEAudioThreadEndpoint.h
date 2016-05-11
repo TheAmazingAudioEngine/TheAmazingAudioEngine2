@@ -36,11 +36,20 @@ typedef void (^AEAudioThreadEndpointHandler)(const void * _Nullable data, size_t
 @interface AEAudioThreadEndpoint : NSObject
 
 /*!
- * Initializer
+ * Default initializer
  *
  * @param handler The handler block to use for incoming messages
  */
 - (instancetype _Nullable)initWithHandler:(AEAudioThreadEndpointHandler _Nonnull)handler;
+
+/*!
+ * Initializer with custom buffer capacity
+ *
+ * @param handler The handler block to use for incoming messages
+ * @param bufferCapacity The buffer capacity, in bytes (default is 8192 bytes).  Note that 
+ *  due to the underlying implementation, actual capacity may be larger.
+ */
+- (instancetype _Nullable)initWithHandler:(AEAudioThreadEndpointHandler _Nonnull)handler bufferCapacity:(size_t)bufferCapacity;
 
 /*!
  * Poll for messages
@@ -93,9 +102,5 @@ void AEAudioThreadEndpointPoll(__unsafe_unretained AEAudioThreadEndpoint * _Nonn
  * Ends a consecutive group of messages
  */
 - (void)endMessageGroup;
-
-//! The buffer capacity, in bytes (default is 8192 bytes). Note that due to the underlying implementation,
-//! actual capacity may be larger.
-@property (nonatomic) size_t bufferCapacity;
 
 @end

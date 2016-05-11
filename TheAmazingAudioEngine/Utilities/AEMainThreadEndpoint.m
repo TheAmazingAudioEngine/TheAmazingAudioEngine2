@@ -26,12 +26,12 @@
 
 #import "AEMainThreadEndpoint.h"
 #import "TPCircularBuffer.h"
-#import "AEManagedValue.h"
 
-@interface AEMainThreadEndpoint ()
+@interface AEMainThreadEndpoint () {
+    TPCircularBuffer _buffer;
+}
 @property (nonatomic, copy) AEMainThreadEndpointHandler handler;
 @property (nonatomic, strong) NSTimer * timer;
-@property (nonatomic, strong) AEManagedValue * buffer;
 @end
 
 @interface AEMainThreadEndpointProxy : NSProxy
@@ -42,16 +42,18 @@
 @dynamic isPolling;
 
 - (instancetype)initWithHandler:(AEMainThreadEndpointHandler)handler {
+    return [self initWithHandler:handler bufferCapacity:8192];
+}
+
+- (instancetype)initWithHandler:(AEMainThreadEndpointHandler)handler bufferCapacity:(size_t)bufferCapacity {
     if ( !(self = [super init]) ) return nil;
     
     _pollInterval = 0.01;
-    _bufferCapacity = 8192;
     self.handler = handler;
-    self.buffer = [AEManagedValue new];
-    self.buffer.releaseBlock = ^(void * value) {
-        TPCircularBufferCleanup((TPCircularBuffer*)value);
-        free(value);
-    };
+    
+    if ( !TPCircularBufferInit(&_buffer, (int32_t)bufferCapacity) ) {
+        return nil;
+    }
     
     return self;
 }
@@ -60,15 +62,12 @@
     if ( self.timer ) {
         [self.timer invalidate];
     }
+    TPCircularBufferCleanup(&_buffer);
 }
 
 - (BOOL)startPolling {
     if ( self.timer ) {
         return YES;
-    }
-    
-    if ( ![self allocateBuffer] ) {
-        return NO;
     }
     
     [self startTimer];
@@ -79,7 +78,6 @@
 - (void)endPolling {
     [self.timer invalidate];
     self.timer = nil;
-    self.buffer.pointerValue = NULL;
 }
 
 - (BOOL)isPolling {
@@ -96,14 +94,12 @@
     }
 }
 
-- (void)setBufferCapacity:(size_t)bufferCapacity {
-    _bufferCapacity = bufferCapacity;
-    if ( self.buffer.pointerValue ) {
-        [self allocateBuffer];
-    }
-}
-
 BOOL AEMainThreadEndpointSend(__unsafe_unretained AEMainThreadEndpoint * THIS, const void * data, size_t length) {
+    
+    if ( !THIS->_timer ) {
+        // Not polling
+        return NO;
+    }
     
     // Prepare message
     void * message = AEMainThreadEndpointCreateMessage(THIS, length);
@@ -123,16 +119,11 @@ BOOL AEMainThreadEndpointSend(__unsafe_unretained AEMainThreadEndpoint * THIS, c
 }
 
 void * AEMainThreadEndpointCreateMessage(__unsafe_unretained AEMainThreadEndpoint * THIS, size_t length) {
-    // Get buffer
-    TPCircularBuffer * buffer = (TPCircularBuffer *)AEManagedValueGetValue(THIS->_buffer);
-    if ( !buffer ) {
-        return NULL;
-    }
     
     // Get pointer to writable bytes
     int32_t size = (int32_t)(length + sizeof(size_t));
     int32_t availableBytes;
-    void * head = TPCircularBufferHead(buffer, &availableBytes);
+    void * head = TPCircularBufferHead(&THIS->_buffer, &availableBytes);
     if ( availableBytes < size ) {
         return NULL;
     }
@@ -145,29 +136,14 @@ void * AEMainThreadEndpointCreateMessage(__unsafe_unretained AEMainThreadEndpoin
 }
 
 void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoint * THIS) {
-    // Get buffer
-    TPCircularBuffer * buffer = (TPCircularBuffer *)AEManagedValueGetValue(THIS->_buffer);
-    if ( !buffer ) {
-        return;
-    }
-    
+
     // Get pointer to writable bytes
     int32_t availableBytes;
-    void * head = TPCircularBufferHead(buffer, &availableBytes);
+    void * head = TPCircularBufferHead(&THIS->_buffer, &availableBytes);
     size_t size = *((size_t*)head) + sizeof(size_t);
     
     // Mark as ready to read
-    TPCircularBufferProduce(buffer, (int32_t)size);
-}
-
-- (BOOL)allocateBuffer {
-    TPCircularBuffer * buffer = (TPCircularBuffer*)malloc(sizeof(TPCircularBuffer));
-    if ( !TPCircularBufferInit(buffer, (int32_t)self.bufferCapacity) ) {
-        free(buffer);
-        return NO;
-    }
-    self.buffer.pointerValue = buffer;
-    return YES;
+    TPCircularBufferProduce(&THIS->_buffer, (int32_t)size);
 }
 
 - (void)startTimer {
@@ -178,11 +154,10 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 }
 
 - (void)poll {
-    TPCircularBuffer * buffer = (TPCircularBuffer *)self.buffer.pointerValue;
     while ( 1 ) {
         // Get pointer to readable bytes
         int32_t availableBytes;
-        void * tail = TPCircularBufferTail(buffer, &availableBytes);
+        void * tail = TPCircularBufferTail(&_buffer, &availableBytes);
         if ( availableBytes == 0 ) return;
         
         // Get length and data
@@ -193,7 +168,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
         self.handler(data, length);
         
         // Mark as read
-        TPCircularBufferConsume(buffer, (int32_t)(sizeof(size_t) + length));
+        TPCircularBufferConsume(&_buffer, (int32_t)(sizeof(size_t) + length));
     }
 }
 
