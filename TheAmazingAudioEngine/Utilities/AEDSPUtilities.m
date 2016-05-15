@@ -239,7 +239,8 @@ void AEDSPMixMono(const float * buffer1, const float * buffer2, float gain1, flo
     
     if ( gain2 != 1.0f) {
         // Pre-apply gain to second buffer
-        vDSP_vsmul(buffer2, 1, &gain2, buffer2, 1, frames);
+        vDSP_vsmul(buffer2, 1, &gain2, output, 1, frames);
+        buffer2 = output;
     }
     
     // Mix
