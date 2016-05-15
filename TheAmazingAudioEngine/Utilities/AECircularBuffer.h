@@ -76,8 +76,7 @@ void AECircularBufferCleanup(AECircularBuffer *buffer);
  *
  *  Resets buffer to original, empty state.
  *
- *  This is safe for use by consumer while producer is accessing
- *  buffer.
+ *  This is safe for use by consumer while producer is accessing the buffer.
  */
 void AECircularBufferClear(AECircularBuffer *buffer);
 
@@ -102,14 +101,18 @@ void AECircularBufferSetAtomic(AECircularBuffer *buffer, BOOL atomic);
  *
  *  This will cause the buffer to clear any existing audio, and reconfigure to use the new
  *  channel count and sample rate. Note that it will not alter the buffer's capacity; if you
- *  need to increase capacity to cater to a larger number of frames, then you'll need to cleanup
- *  and re-initialize the buffer.
+ *  need to increase capacity to cater to a larger number of channels/frames, then you'll
+ *  need to cleanup and re-initialize the buffer.
+ *
+ *  You should only use this on the consumer thread.
  *
  * @param buffer Circular buffer
  * @param channelCount Number of channels of audio you'll be working with
  * @param sampleRate Sample rate of audio, used to work with AudioTimeStamps
  */
-void AECircularBufferSetChannelCountAndSampleRate(AECircularBuffer * buffer, int channelCount, double sampleRate);
+void AECircularBufferSetChannelCountAndSampleRate(AECircularBuffer * buffer,
+                                                  int channelCount,
+                                                  double sampleRate);
 
 #pragma mark - Producing
 
