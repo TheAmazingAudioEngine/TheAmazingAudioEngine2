@@ -25,6 +25,7 @@
 		4C31831B1CDEC6560085634F /* AEAudioFileOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3183171CDEC6560085634F /* AEAudioFileOutput.m */; };
 		4C31831C1CDEC6560085634F /* AEAudioFileOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3183171CDEC6560085634F /* AEAudioFileOutput.m */; };
 		4C31831D1CDEC6560085634F /* AEAudioFileOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3183171CDEC6560085634F /* AEAudioFileOutput.m */; };
+		4C3183471CE8307A0085634F /* AEDSPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3183461CE8307A0085634F /* AEDSPUtilitiesTests.m */; };
 		4C77566D1CCB42AA004415A2 /* AESubrendererModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C77566B1CCB42AA004415A2 /* AESubrendererModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C77566E1CCB42AA004415A2 /* AESubrendererModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C77566B1CCB42AA004415A2 /* AESubrendererModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C77566F1CCB42AA004415A2 /* AESubrendererModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C77566B1CCB42AA004415A2 /* AESubrendererModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -306,6 +307,7 @@
 		4C31830F1CDDEFDE0085634F /* AEAggregatorModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEAggregatorModule.m; sourceTree = "<group>"; };
 		4C3183161CDEC6560085634F /* AEAudioFileOutput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAudioFileOutput.h; sourceTree = "<group>"; };
 		4C3183171CDEC6560085634F /* AEAudioFileOutput.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEAudioFileOutput.m; sourceTree = "<group>"; };
+		4C3183461CE8307A0085634F /* AEDSPUtilitiesTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEDSPUtilitiesTests.m; sourceTree = "<group>"; };
 		4C77566B1CCB42AA004415A2 /* AESubrendererModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AESubrendererModule.h; sourceTree = "<group>"; };
 		4C77566C1CCB42AA004415A2 /* AESubrendererModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AESubrendererModule.m; sourceTree = "<group>"; };
 		4C7756961CD2E5C6004415A2 /* TPCircularBuffer+AudioBufferList.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = "TPCircularBuffer+AudioBufferList.c"; sourceTree = "<group>"; };
@@ -475,6 +477,7 @@
 				4C94E2851CAC9EAA006EB497 /* AEBufferStackTests.m */,
 				4C9F0FBD1CB339180032903E /* AEManagedValueTests.m */,
 				4CE5F4CA1CD3135800322F03 /* AECrossThreadMessagingTests.m */,
+				4C3183461CE8307A0085634F /* AEDSPUtilitiesTests.m */,
 				4CDCACAC1CA25A6E008AAEF1 /* Info.plist */,
 			);
 			path = Tests;
@@ -1030,6 +1033,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				4C94E2861CAC9EAA006EB497 /* AEBufferStackTests.m in Sources */,
+				4C3183471CE8307A0085634F /* AEDSPUtilitiesTests.m in Sources */,
 				4CE5F4CB1CD3135800322F03 /* AECrossThreadMessagingTests.m in Sources */,
 				4C9F0FBE1CB339180032903E /* AEManagedValueTests.m in Sources */,
 				4CDCACAB1CA25A6E008AAEF1 /* AEArrayTests.m in Sources */,
