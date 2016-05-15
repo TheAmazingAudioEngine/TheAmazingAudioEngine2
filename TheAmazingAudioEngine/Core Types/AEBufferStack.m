@@ -236,7 +236,7 @@ const AudioBufferList * AEBufferStackMixWithGain(AEBufferStack * stack, int coun
             AEDSPApplyGain(abl1, abl1Gain, stack->frameCount);
         }
         
-        AEDSPMix(abl1, abl2, 1, abl2Gain, YES, abl2);
+        AEDSPMix(abl1, abl2, 1, abl2Gain, YES, stack->frameCount, abl2);
     }
     
     return AEBufferStackGet(stack, 0);
@@ -274,7 +274,7 @@ void AEBufferStackMixToBufferList(AEBufferStack * stack, int bufferCount, const 
     for ( int i=0; bufferCount ? i<bufferCount : 1; i++ ) {
         const AudioBufferList * abl = AEBufferStackGet(stack, i);
         if ( !abl ) return;
-        AEDSPMix(abl, output, 1, 1, YES, output);
+        AEDSPMix(abl, output, 1, 1, YES, stack->frameCount, output);
     }
 }
 
@@ -287,7 +287,7 @@ void AEBufferStackMixToBufferListChannels(AEBufferStack * stack, int bufferCount
     for ( int i=0; bufferCount ? i<bufferCount : 1; i++ ) {
         const AudioBufferList * abl = AEBufferStackGet(stack, i);
         if ( !abl ) return;
-        AEDSPMix(abl, outputBuffer, 1, 1, YES, outputBuffer);
+        AEDSPMix(abl, outputBuffer, 1, 1, YES, stack->frameCount, outputBuffer);
     }
 }
 

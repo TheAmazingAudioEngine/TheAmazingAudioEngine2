@@ -122,9 +122,9 @@ void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float target
 }
 
 void AEDSPMix(const AudioBufferList * abl1, const AudioBufferList * abl2, float gain1, float gain2,
-              BOOL monoToStereo, const AudioBufferList * output) {
+              BOOL monoToStereo, UInt32 frames, const AudioBufferList * output) {
     
-    int frames = output->mBuffers[0].mDataByteSize / sizeof(float);
+    if ( !frames ) frames = output->mBuffers[0].mDataByteSize / sizeof(float);
     
     if ( gain2 != 1.0f && gain1 == 1.0f ) {
         // Swap around, for efficiency
