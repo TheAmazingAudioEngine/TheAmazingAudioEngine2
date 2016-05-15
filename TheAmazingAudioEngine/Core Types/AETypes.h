@@ -76,6 +76,16 @@ extern AEChannelSet AEChannelSetDefault; //!< A default, stereo channel set
 static inline AEChannelSet AEChannelSetMake(int firstChannel, int lastChannel) {
     return (AEChannelSet) {firstChannel, lastChannel};
 }
+    
+/*!
+ * Determine number of channels in an AEChannelSet
+ *
+ * @param channelSet The channel set
+ * @return The number of channels
+ */
+static inline int AEChannelSetGetNumberOfChannels(AEChannelSet set) {
+    return set.lastChannel - set.firstChannel + 1;
+}
 
 #ifdef __cplusplus
 }
