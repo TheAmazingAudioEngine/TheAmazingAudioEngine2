@@ -206,3 +206,27 @@ void AEDSPMix(const AudioBufferList * abl1, const AudioBufferList * abl2, float 
         }
     }
 }
+
+void AEDSPMixMono(const float * buffer1, const float * buffer2, float gain1, float gain2, UInt32 frames, float * output) {
+    if ( gain2 != 1.0f && gain1 == 1.0f ) {
+        // Swap buffers around, for efficiency
+        const float * tmpb = buffer2;
+        buffer2 = buffer1;
+        buffer1 = tmpb;
+        const float tmpg = gain2;
+        gain2 = gain1;
+        gain1 = tmpg;
+    }
+    
+    if ( gain2 != 1.0f) {
+        // Pre-apply gain to second buffer
+        vDSP_vsmul(buffer2, 1, &gain2, buffer2, 1, frames);
+    }
+    
+    // Mix
+    if ( gain1 != 1.0f ) {
+        vDSP_vsma(buffer1, 1, &gain1, buffer2, 1, output, 1, frames);
+    } else {
+        vDSP_vadd(buffer1, 1, buffer2, 1, output, 1, frames);
+    }
+}

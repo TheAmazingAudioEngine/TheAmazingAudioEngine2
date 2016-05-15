@@ -114,6 +114,17 @@ void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float target
 void AEDSPMix(const AudioBufferList * bufferList1, const AudioBufferList * bufferList2, float gain1, float gain2,
               BOOL monoToStereo, UInt32 frames, const AudioBufferList * output);
 
+/*!
+ * Mix two single mono buffers
+ *
+ * @param buffer1 First buffer
+ * @param buffer2 Second buffer
+ * @param gain1 Gain factor for first buffer (power ratio)
+ * @param gain2 Gain factor for second buffer
+ * @param frames Number of frames
+ * @param output Output buffer
+ */
+void AEDSPMixMono(const float * buffer1, const float * buffer2, float gain1, float gain2, UInt32 frames, float * output);
 
 /*!
  * Silence an audio buffer list (zero out frames)
