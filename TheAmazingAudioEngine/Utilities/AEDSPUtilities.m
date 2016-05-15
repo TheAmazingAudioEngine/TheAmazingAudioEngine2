@@ -9,6 +9,7 @@
 #import "AEDSPUtilities.h"
 @import Accelerate;
 
+static const UInt32 kMaxFramesPerSlice = 4096;
 static const UInt32 kGainSmoothingRampDuration = 128;
 static const float kGainSmoothingRampStep = 1.0 / kGainSmoothingRampDuration;
 static const float kSmoothGainThreshold = kGainSmoothingRampStep;
@@ -36,6 +37,24 @@ void AEDSPApplyRamp(const AudioBufferList * bufferList, float * start, float ste
             vDSP_vrampmul(bufferList->mBuffers[i].mData, 1, &s, &step, bufferList->mBuffers[i].mData, 1, frames);
         }
         *start = s;
+    }
+}
+
+void AEDSPApplyEqualPowerRamp(const AudioBufferList * bufferList, float * start, float step, UInt32 frames, float * scratch) {
+    static float __staticBuffer[kMaxFramesPerSlice];
+    if ( !scratch ) scratch = __staticBuffer;
+    
+    // Create envelope
+    float startRadians = *start * M_PI_2;
+    float stepRadians = step * M_PI_2;
+    vDSP_vramp(&startRadians, &stepRadians, scratch, 1, frames);
+    int frameCount = frames;
+    vvsinf(scratch, scratch, &frameCount);
+    *start += frames * step;
+    
+    // Apply envelope to each buffer
+    for ( int i=0; i<bufferList->mNumberBuffers; i++ ) {
+        vDSP_vmul(bufferList->mBuffers[i].mData, 1, scratch, 1, bufferList->mBuffers[i].mData, 1, frames);
     }
 }
 

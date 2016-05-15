@@ -52,6 +52,20 @@ void AEDSPApplyGain(const AudioBufferList * bufferList, float gain, UInt32 frame
 void AEDSPApplyRamp(const AudioBufferList * bufferList, float * start, float step, UInt32 frames);
 
 /*!
+ * Apply an equal-power ramp to values in a buffer list
+ *
+ *  This uses a quarter-cycle cosine ramp envelope to preserve the power level, useful when 
+ *  crossfading two signals without causing a bump in gain in the middle of the fade.
+ *
+ * @param bufferList Audio buffer list, in non-interleaved float format
+ * @param start Starting gain (power ratio) on input; final gain value on output
+ * @param step Amount per frame to advance gain
+ * @param frames Length in frames
+ * @param scratch A scratch buffer to use, or NULL to use an internal buffer. Not thread-safe if the latter is used.
+ */
+void AEDSPApplyEqualPowerRamp(const AudioBufferList * bufferList, float * start, float step, UInt32 frames, float * scratch);
+
+/*!
  * Scale values in a buffer list by some gain value, with smoothing to avoid discontinuities
  *
  * @param bufferList Audio buffer list, in non-interleaved float format
