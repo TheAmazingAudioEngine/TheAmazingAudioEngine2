@@ -55,7 +55,7 @@ void AECircularBufferSetAtomic(AECircularBuffer *buffer, BOOL atomic) {
 void AECircularBufferSetChannelCountAndSampleRate(AECircularBuffer * buffer,
                                                   int channelCount,
                                                   double sampleRate) {
-    TPCircularBufferClear(buffer);
+    TPCircularBufferClear(&buffer->buffer);
     buffer->audioDescription = AEAudioDescriptionWithChannelsAndRate(channelCount, sampleRate);
 }
 
