@@ -28,7 +28,7 @@
 #import "AEMainThreadEndpoint.h"
 #import "AEAudioThreadEndpoint.h"
 
-AEArgument AEArgumentNone = {NULL, 0};
+AEArgument AEArgumentNone = {NO, NULL, 0};
 
 typedef enum {
     AEMessageQueueMainThreadMessage,
