@@ -24,6 +24,10 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 @import Foundation;
 #import "AETime.h"
 
@@ -204,3 +208,7 @@ void AEMessageQueuePoll(__unsafe_unretained AEMessageQueue * _Nonnull THIS);
 @property (nonatomic) AESeconds pollInterval;
 
 @end
+
+#ifdef __cplusplus
+}
+#endif

@@ -6,6 +6,10 @@
 //  Copyright © 2016 A Tasty Pixel. All rights reserved.
 //
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 @import Foundation;
 #import "AETime.h"
 
@@ -104,3 +108,7 @@ void AEAudioThreadEndpointPoll(__unsafe_unretained AEAudioThreadEndpoint * _Nonn
 - (void)endMessageGroup;
 
 @end
+
+#ifdef __cplusplus
+}
+#endif

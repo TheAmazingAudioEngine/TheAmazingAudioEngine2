@@ -24,6 +24,10 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
 @import Foundation;
 
 typedef const void * AEArrayToken; //!< Token for real-thread use
@@ -280,3 +284,7 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
 @property (nonatomic, copy) AEArrayReleaseBlock _Nullable releaseBlock;
 
 @end
+
+#ifdef __cplusplus
+}
+#endif

@@ -24,12 +24,12 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-#import "AEModule.h"
-#import "AETime.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#import "AEModule.h"
+#import "AETime.h"
 
 /*!
  * Audio input module

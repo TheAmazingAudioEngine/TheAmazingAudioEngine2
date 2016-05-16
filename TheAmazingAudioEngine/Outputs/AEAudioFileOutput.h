@@ -24,14 +24,14 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 @import Foundation;
 @import AudioToolbox;
 #import "AETime.h"
 #import "AETypes.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
 
 @class AERenderer;
 

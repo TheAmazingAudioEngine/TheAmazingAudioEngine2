@@ -24,6 +24,10 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
 @import Foundation;
 
 /*!
@@ -107,3 +111,7 @@ void AEManagedValueCommitPendingAtomicUpdates();
 @property (nonatomic, copy) void (^ _Nullable releaseNotificationBlock)(void);
 
 @end
+
+#ifdef __cplusplus
+}
+#endif

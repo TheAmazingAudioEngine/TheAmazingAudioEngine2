@@ -24,14 +24,13 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@import Foundation;
-#import "AEBufferStack.h"
-#import "AERenderer.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+@import Foundation;
+#import "AEBufferStack.h"
+#import "AERenderer.h"
 
 @class AEModule;
 

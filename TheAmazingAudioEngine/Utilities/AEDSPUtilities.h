@@ -24,13 +24,13 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@import Foundation;
-@import AudioToolbox;
-#import "AEAudioBufferListUtilities.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+@import Foundation;
+@import AudioToolbox;
+#import "AEAudioBufferListUtilities.h"
 
 /*!
  * Scale values in a buffer list by some gain value

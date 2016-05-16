@@ -24,6 +24,10 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
 @import Foundation;
 #import "AETime.h"
 
@@ -125,3 +129,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 @property (nonatomic, readonly) BOOL isPolling;
 
 @end
+
+#ifdef __cplusplus
+}
+#endif

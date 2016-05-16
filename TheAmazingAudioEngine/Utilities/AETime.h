@@ -24,11 +24,11 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@import Foundation;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+@import Foundation;
 
 typedef uint64_t AEHostTicks;
 typedef double AESeconds;

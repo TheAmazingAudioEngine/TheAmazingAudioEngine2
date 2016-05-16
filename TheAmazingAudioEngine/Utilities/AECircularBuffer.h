@@ -24,12 +24,12 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-#import "TPCircularBuffer.h"
-#import <AudioToolbox/AudioToolbox.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#import "TPCircularBuffer.h"
+#import <AudioToolbox/AudioToolbox.h>
 
 #define AECircularBufferCopyAll UINT32_MAX
 
