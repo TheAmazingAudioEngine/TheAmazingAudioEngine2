@@ -74,6 +74,30 @@ extern "C" {
 #import <TheAmazingAudioEngine/AEIOAudioUnit.h>
 
 
+/*!
+ @mainpage
+ 
+ @section Introduction
+ 
+ The programming guide for TAAE 2 has not yet been written. Until it has been, please refer to
+ the header documentation, available in the list to the left, and the TAAE 2 sample app.
+ 
+ Top-level classes of interest:
+ 
+ - AEAudioUnitOutput - The typical output used to link the renderer to the system audio output
+ - AERenderer - The main driver of audio processing, via the @link AERenderLoopBlock AERenderLoopBlock @endlink
+ - AERenderContext - The rendering context, passed to the render block
+ - @link AEBufferStack AEBufferStack @endlink - The pool of buffers used for passing around audio
+ - AEModule - A unit of processing, which can generate audio, filter it, monitor or analyze, etc.
+    - AEAudioFilePlayerModule - Play files
+    - AEAudioUnitInputModule - Get input from the system audio
+    - AEFileRecorderModule - Record files
+ - AEManagedValue - Manage a reference to an object or pointer in a thread-safe way
+ - AEArray - Manage a list of objects or pointers in a thread-safe way
+ - AEMessageQueue, AEMainThreadEndpoint, AEAudioThreadEndpoint - Cross-thread synchronisation
+ 
+*/
+
 #ifdef __cplusplus
 }
 #endif
