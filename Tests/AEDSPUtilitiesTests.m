@@ -11,6 +11,7 @@
 
 static const UInt32 kFrames = 256;
 static const float kOscillatorRate = 440.0/44100.0;
+static const float kErrorTolerance = 1.0e-6;
 
 typedef struct {
     float channels[2];
@@ -260,7 +261,7 @@ static StereoPair StereoPairMakeMono(float sample) { return (StereoPair) {{sampl
         StereoPair expected = sampleBlock(i);
         for ( int j=0; j<abl->mNumberBuffers; j++ ) {
             float sample = ((float*)abl->mBuffers[j].mData)[i];
-            if ( fabsf(sample - expected.channels[j]) > FLT_EPSILON ) {
+            if ( fabsf(sample - expected.channels[j]) > kErrorTolerance ) {
                 *message = [NSString stringWithFormat:@"sample %d channel %d, %f != %f", i, j, sample, expected.channels[j]];
                 return NO;
             }
