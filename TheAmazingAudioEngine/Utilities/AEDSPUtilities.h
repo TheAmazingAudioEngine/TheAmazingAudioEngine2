@@ -92,7 +92,7 @@ void AEDSPApplyGainSmoothedMono(float * buffer, float targetGain, float * curren
  *  This function applies gains to the given buffer to affect volume and balance, with a smoothing ramp
  *  applied to avoid discontinuities.
  *
- * @param buffer Audio buffer list, in non-interleaved float format
+ * @param bufferList Audio buffer list, in non-interleaved float format
  * @param targetVolume The target volume (power ratio)
  * @param currentVolume On input, the current volume; on output, the new volume. Store this and pass it
  *  back to this function on successive calls for a smooth ramp. If NULL, no smoothing will be applied.

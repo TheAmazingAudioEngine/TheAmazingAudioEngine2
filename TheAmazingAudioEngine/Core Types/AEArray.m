@@ -51,7 +51,7 @@ typedef struct {
     return [self initWithCustomMapping:nil];
 }
 
-- (instancetype)initWithCustomMapping:(void *(^)(id))block {
+- (instancetype)initWithCustomMapping:(AEArrayCustomMappingBlock)block {
     if ( !(self = [super init]) ) return nil;
     self.mappingBlock = block;
     
@@ -107,7 +107,7 @@ typedef struct {
     [self updateWithContentsOfArray:array customMapping:nil];
 }
 
-- (void)updateWithContentsOfArray:(NSArray *)array customMapping:(void * _Nonnull (^)(id _Nonnull, int))block {
+- (void)updateWithContentsOfArray:(NSArray *)array customMapping:(AEArrayIndexedCustomMappingBlock)block {
     array_t * currentArray = (array_t*)_value.pointerValue;
     if ( currentArray && currentArray->objects && [currentArray->objects isEqualToArray:array] ) {
         // Arrays are identical - skip

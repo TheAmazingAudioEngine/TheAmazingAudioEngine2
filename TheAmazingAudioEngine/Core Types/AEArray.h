@@ -29,6 +29,47 @@
 typedef const void * AEArrayToken; //!< Token for real-thread use
 
 /*!
+ * Block for mapping between objects and opaque pointer values
+ *
+ *  Pass a block matching this type to AEArray's initializer in order to map
+ *  between objects in the array and an arbitrary data block; this can be a pointer
+ *  to an allocated C structure, for example, or any other collection of bytes.
+ *
+ *  The block is invoked on the main thread whenever a new item is added to the array
+ *  during an update. You should allocate the memory you need, set the contents, and
+ *  return a pointer to this memory. It will be freed automatically once the item is 
+ *  removed from the array, unless you provide a custom @link AEArray::releaseBlock releaseBlock @endlink.
+ *
+ * @param item The original object
+ * @return Pointer to an allocated memory region
+ */
+typedef void * _Nullable (^AEArrayCustomMappingBlock)(id _Nonnull item);
+
+/*!
+ * Block for mapping between objects and opaque pointer values, for use with AEArray's
+ * @link AEArray::updateWithContentsOfArray:customMapping: updateWithContentsOfArray:customMapping: @endlink 
+ * method.
+ *
+ *  See documentation for AEArrayCustomMappingBlock for details.
+ *
+ * @param item The original object
+ * @return Pointer to an allocated memory region
+ */
+typedef void * _Nullable (^AEArrayIndexedCustomMappingBlock)(id _Nonnull item, int index);
+
+/*!
+ * Block for releasing allocated values
+ *
+ *  Assign a block matching this type to AEArray's releaseBlock property to provide
+ *  a custom release implementation. Use this if you are using a custom mapping block
+ *  and need to perform extra cleanup tasks beyond simply freeing the returned pointer.
+ *
+ * @param item The original object
+ * @param bytes The bytes originally returned from the custom mapping block
+ */
+typedef void (^AEArrayReleaseBlock)(id _Nonnull item, void * _Nonnull bytes);
+
+/*!
  * Real-time safe array
  *
  *  Use this class to manage access to an array of items from the audio thread. Accesses
@@ -65,12 +106,13 @@ typedef const void * AEArrayToken; //!< Token for real-thread use
  *  This allows you to provide a block that maps between the given object and a C structure, or any
  *  other collection of bytes. The block will be invoked on the main thread whenever a new item is
  *  added to the array during an update. You should allocate the memory you need, set the contents, and 
- *  return a pointer to this memory. It will be freed automatically once the item is removed from the array.
+ *  return a pointer to this memory. It will be freed automatically once the item is removed from the array,
+ *  unless you provide a custom releaseBlock.
  *
  * @param block The block mapping between objects and stored information, or nil to get the same behaviour
  *  as the default initializer.
  */
-- (instancetype _Nullable)initWithCustomMapping:(void * _Nonnull(^ _Nullable)(id _Nonnull item))block;
+- (instancetype _Nullable)initWithCustomMapping:(AEArrayCustomMappingBlock _Nullable)block;
 
 /*!
  * Update the array by copying the contents of the given NSArray
@@ -81,7 +123,7 @@ typedef const void * AEArrayToken; //!< Token for real-thread use
  *  the prior array value will be maintained, and old values not present in the new array are released.
  *
  *  Using this method within an AEManagedValue
- *  @link AEManagedValue::performAtomicBatchUpdate performAtomicBatchUpdate @endlink block
+ *  @link AEManagedValue::performAtomicBatchUpdate: performAtomicBatchUpdate @endlink block
  *  will cause the update to occur atomically along with any other value updates.
  *
  * @param array Array of values
@@ -99,14 +141,13 @@ typedef const void * AEArrayToken; //!< Token for real-thread use
  *  New values will be retained, and old values will be released in a thread-safe manner.
  *
  *  Using this method within an AEManagedValue
- *  @link AEManagedValue::performAtomicBatchUpdate performAtomicBatchUpdate @endlink block
+ *  @link AEManagedValue::performAtomicBatchUpdate: performAtomicBatchUpdate @endlink block
  *  will cause the update to occur atomically along with any other value updates.
  *
  * @param array Array of values
  * @param block The block mapping between objects and stored information
  */
-- (void)updateWithContentsOfArray:(NSArray * _Nonnull)array
-                    customMapping:(void * _Nonnull(^ _Nullable)(id _Nonnull item, int index))block;
+- (void)updateWithContentsOfArray:(NSArray * _Nonnull)array customMapping:(AEArrayIndexedCustomMappingBlock _Nullable)block;
 
 /*!
  * Get the pointer value at the given index of the C array, as seen by the audio thread
@@ -171,7 +212,7 @@ int AEArrayGetCount(AEArrayToken _Nonnull token);
 /*!
  * Get the item at a given index
  *
- * @param array The array
+ * @param token The array token, as returned from AEArrayGetToken
  * @param index The item index
  * @return Item at the given index
  */
@@ -236,6 +277,6 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
 
 //! Block to perform when deleting old items, on main thread. If not specified, will simply use
 //! free() to dispose bytes, if pointer differs from original Objective-C pointer.
-@property (nonatomic, copy) void (^_Nullable releaseBlock)(id _Nonnull item, void * _Nonnull bytes);
+@property (nonatomic, copy) AEArrayReleaseBlock _Nullable releaseBlock;
 
 @end

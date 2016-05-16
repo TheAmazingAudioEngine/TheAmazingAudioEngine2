@@ -105,7 +105,7 @@ AudioUnit _Nullable AEIOAudioUnitGetAudioUnit(__unsafe_unretained AEIOAudioUnit 
  *  from the input.
  *
  * @param unit The unit instance
- * @param audio The audio buffer list
+ * @param buffer The audio buffer list
  * @param frames Number of frames
  */
 OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull unit,

@@ -41,7 +41,7 @@ extern "C" {
  *  AEModule objects, which can perform a mix of pushing new buffers onto the stack, manipulating
  *  existing buffers, and popping buffers off the stack.
  *
- *  At the end of the render block, use @link AEBufferStackOutput @endlink to output buffers on the
+ *  At the end of the render block, use @link AERenderContextOutput @endlink to output buffers on the
  *  stack to the context's output bufferList.
  *
  * @param context The rendering context

@@ -238,7 +238,6 @@ void AEBufferStackSilence(AEBufferStack * stack);
  * @param stack The stack
  * @param bufferCount Number of buffers to process, or 0 for all
  * @param output The output buffer list
- * @param frames Number of frames
  */
 void AEBufferStackMixToBufferList(AEBufferStack * stack, int bufferCount, const AudioBufferList * output);
 
@@ -252,7 +251,6 @@ void AEBufferStackMixToBufferList(AEBufferStack * stack, int bufferCount, const 
  * @param channels The set of channels to output to. If stereo, any mono inputs will be doubled to stereo.
  *      If mono, any stereo inputs will be mixed down.
  * @param output The output buffer list
- * @param frames Number of frames
  */
 void AEBufferStackMixToBufferListChannels(AEBufferStack * stack,
                                           int bufferCount,

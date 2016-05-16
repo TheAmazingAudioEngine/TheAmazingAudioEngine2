@@ -40,22 +40,22 @@ static void AETimeInit() {
     });
 }
 
-uint64_t AECurrentTimeInHostTicks(void) {
+AEHostTicks AECurrentTimeInHostTicks(void) {
     return mach_absolute_time();
 }
 
-double AECurrentTimeInSeconds(void) {
+AESeconds AECurrentTimeInSeconds(void) {
     if ( !__hostTicksToSeconds ) AETimeInit();
     return mach_absolute_time() * __hostTicksToSeconds;
 }
 
-uint64_t AEHostTicksFromSeconds(double seconds) {
+AEHostTicks AEHostTicksFromSeconds(AESeconds seconds) {
     if ( !__secondsToHostTicks ) AETimeInit();
     assert(seconds >= 0);
     return seconds * __secondsToHostTicks;
 }
 
-double AESecondsFromHostTicks(uint64_t ticks) {
+AESeconds AESecondsFromHostTicks(AEHostTicks ticks) {
     if ( !__hostTicksToSeconds ) AETimeInit();
     return ticks * __hostTicksToSeconds;
 }

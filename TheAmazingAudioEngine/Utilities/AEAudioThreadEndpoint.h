@@ -67,7 +67,7 @@ void AEAudioThreadEndpointPoll(__unsafe_unretained AEAudioThreadEndpoint * _Nonn
  *  Use this on the main thread to send messages to the endpoint instance. It will be
  *  received and handled on the audio thread at the next poll interval.
  *
- * @param data Message data (or NULL) to copy
+ * @param bytes Message data (or NULL) to copy
  * @param length Length of message data
  * @return YES if message sent successfully, NO if there was insufficient buffer space
  */

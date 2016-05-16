@@ -56,14 +56,14 @@ extern "C" {
 /*!
  * Begin recording
  *
- * @param timestamp Time to begin recording, or 0 for "now"
+ * @param time Time to begin recording, or 0 for "now"
  */
 - (void)beginRecordingAtTime:(AEHostTicks)time;
 
 /*!
  * Stop recording
  *
- * @param timestamp Time to end recording, or 0 for "now"
+ * @param time Time to end recording, or 0 for "now"
  * @param block Block to perform once recording has completed
  */
 - (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(void(^ _Nullable)())block;
