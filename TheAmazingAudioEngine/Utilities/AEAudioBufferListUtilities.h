@@ -274,6 +274,33 @@ void AEAudioBufferListSilenceWithFormat(const AudioBufferList *bufferList,
                                         UInt32 length);
 
 /*!
+ * Copy the contents of one AudioBufferList to another, with the default audio format
+ *
+ * @param target Target buffer list, to copy to
+ * @param source Source buffer list, to copy from
+ * @param offset Offset into buffers
+ * @param length Number of frames to copy (0 for whole buffer)
+ */
+void AEAudioBufferListCopyContents(const AudioBufferList * target,
+                                   const AudioBufferList * source,
+                                   UInt32 offset,
+                                   UInt32 length);
+
+/*!
+ * Copy the contents of one AudioBufferList to another, with a custom audio format
+ *
+ * @param target Target buffer list, to copy to
+ * @param source Source buffer list, to copy from
+ * @param offset Offset into buffers
+ * @param length Number of frames to copy (0 for whole buffer)
+ */
+void AEAudioBufferListCopyContentsWithFormat(const AudioBufferList * target,
+                                             const AudioBufferList * source,
+                                             AudioStreamBasicDescription audioFormat,
+                                             UInt32 offset,
+                                             UInt32 length);
+
+/*!
  * Get the size of an AudioBufferList structure
  *
  *  Use this method when doing a memcpy of AudioBufferLists, for example.

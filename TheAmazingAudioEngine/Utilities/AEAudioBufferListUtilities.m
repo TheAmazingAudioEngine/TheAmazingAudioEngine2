@@ -135,7 +135,28 @@ void AEAudioBufferListSilenceWithFormat(const AudioBufferList *bufferList,
     for ( int i=0; i<bufferList->mNumberBuffers; i++ ) {
         memset((char*)bufferList->mBuffers[i].mData + offset * audioFormat.mBytesPerFrame,
                0,
-               length ? length * audioFormat.mBytesPerFrame
-                      : bufferList->mBuffers[i].mDataByteSize - offset * audioFormat.mBytesPerFrame);
+               length ? (length * audioFormat.mBytesPerFrame)
+                      : (bufferList->mBuffers[i].mDataByteSize - offset * audioFormat.mBytesPerFrame));
+    }
+}
+
+void AEAudioBufferListCopyContents(const AudioBufferList * target,
+                                   const AudioBufferList * source,
+                                   UInt32 offset,
+                                   UInt32 length) {
+    AEAudioBufferListCopyContentsWithFormat(target, source, AEAudioDescription, offset, length);
+}
+
+void AEAudioBufferListCopyContentsWithFormat(const AudioBufferList * target,
+                                             const AudioBufferList * source,
+                                             AudioStreamBasicDescription audioFormat,
+                                             UInt32 offset,
+                                             UInt32 length) {
+    for ( int i=0; i<MIN(target->mNumberBuffers, source->mNumberBuffers); i++ ) {
+        memcpy(target->mBuffers[i].mData + (offset * audioFormat.mBytesPerFrame),
+               source->mBuffers[i].mData + (offset * audioFormat.mBytesPerFrame),
+               length ? (length * audioFormat.mBytesPerFrame)
+                      : (MIN(target->mBuffers[i].mDataByteSize,
+                            source->mBuffers[i].mDataByteSize) - offset * audioFormat.mBytesPerFrame));
     }
 }
