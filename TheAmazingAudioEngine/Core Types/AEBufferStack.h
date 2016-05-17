@@ -140,6 +140,23 @@ const AudioBufferList * AEBufferStackPush(AEBufferStack * stack, int count);
 const AudioBufferList * AEBufferStackPushWithChannels(AEBufferStack * stack, int count, int channelCount);
 
 /*!
+ * Push an external audio buffer
+ *
+ *  This function allows you to push a buffer that was allocated elsewhere. Note while the
+ *  mData pointers within the pushed buffer will remain the same, and thus will point to the
+ *  same audio data memory, the AudioBufferList structure itself will be copied; later changes
+ *  to the original structure will not be reflected in the copy on the stack.
+ *
+ *  It is the responsibility of the caller to ensure that it does not modify the audio data until
+ *  the end of the current render cycle. Note that successive audio modules may modify the contents.
+ *
+ * @param stack The stack
+ * @param buffer The buffer list to copy onto the stack
+ * @return The new buffer
+ */
+const AudioBufferList * AEBufferStackPushExternal(AEBufferStack * stack, const AudioBufferList * buffer);
+    
+/*!
  * Duplicate the top buffer on the stack
  *
  *  Pushes a new buffer onto the stack which is a copy of the prior buffer.

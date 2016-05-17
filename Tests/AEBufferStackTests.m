@@ -124,8 +124,26 @@
     XCTAssertEqual(AEBufferStackGet(stack, 4), NULL);
     XCTAssertEqual(AEBufferStackCount(stack), 4);
     
-    // Pop 3 items at once
-    AEBufferStackPop(stack, 3);
+    // Push an external buffer
+    AudioBufferList * external
+        = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(2, 0), frames);
+    const AudioBufferList * externalPushed = AEBufferStackPushExternal(stack, external);
+    
+    // Verify
+    XCTAssertEqual(AEBufferStackGet(stack, 0)->mBuffers[0].mData, external->mBuffers[0].mData);
+    XCTAssertEqual(AEBufferStackGet(stack, 0)->mBuffers[1].mData, external->mBuffers[1].mData);
+    
+    // Swap
+    AEBufferStackSwap(stack);
+    
+    // Verify
+    XCTAssertEqual(AEBufferStackGet(stack, 0), item5);
+    XCTAssertEqual(AEBufferStackGet(stack, 1), externalPushed);
+    XCTAssertEqual(AEBufferStackGet(stack, 1)->mBuffers[0].mData, external->mBuffers[0].mData);
+    XCTAssertEqual(AEBufferStackGet(stack, 1)->mBuffers[1].mData, external->mBuffers[1].mData);
+    
+    // Pop 4 items at once
+    AEBufferStackPop(stack, 4);
     
     // Verify stack contents
     XCTAssertEqual(AEBufferStackCount(stack), 1);
@@ -133,6 +151,7 @@
     XCTAssertEqual(AEBufferStackGet(stack, 1), NULL);
     
     AEBufferStackFree(stack);
+    AEAudioBufferListFree(external);
 }
 
 static inline float valueForChannelOfBuffer(int channel, int buffer) {
@@ -145,12 +164,15 @@ static inline float valueForChannelOfBuffer(int channel, int buffer) {
     UInt32 frames = 128;
     AEBufferStackSetFrameCount(stack, frames);
     
+    AudioBufferList * external
+        = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(2, 0), frames);
+    
     // Push a bunch of buffers, with varying channel counts
     AEBufferStackPushWithChannels(stack, 1, 1);
     AEBufferStackPushWithChannels(stack, 1, 2);
     AEBufferStackPushWithChannels(stack, 1, 4);
     AEBufferStackPushWithChannels(stack, 1, 1);
-    AEBufferStackPushWithChannels(stack, 1, 2);
+    AEBufferStackPushExternal(stack, external);
     AEBufferStackPushWithChannels(stack, 1, 1);
     
     // Verify channel counts for each buffer
@@ -268,6 +290,7 @@ static inline float valueForChannelOfBuffer(int channel, int buffer) {
     }
     
     AEBufferStackFree(stack);
+    AEAudioBufferListFree(external);
 }
 
 - (void)testMixToOutput {
