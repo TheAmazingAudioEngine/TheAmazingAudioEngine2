@@ -107,6 +107,17 @@ static const UInt32 kNoValue = -1;
 }
 
 - (void)playAtTime:(AEHostTicks)time beginBlock:(void(^)())block {
+#ifdef DEBUG
+    if ( time ) {
+        AEHostTicks now = AECurrentTimeInHostTicks();
+        if ( time < now-AEHostTicksFromSeconds(0.5) ) {
+            NSLog(@"%@: Start time is %lf seconds in the past", self, AESecondsFromHostTicks(now-time));
+        } else if ( time > now+AEHostTicksFromSeconds(60*60) ) {
+            NSLog(@"%@: Start time is %lf seconds in the future", self, AESecondsFromHostTicks(time-now));
+        }
+    }
+#endif
+    
     _remainingMicrofadeOutFrames = kNoValue;
     
     _startTime = time;
