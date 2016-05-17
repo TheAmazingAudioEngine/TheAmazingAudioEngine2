@@ -283,7 +283,8 @@ void AEAudioBufferListSilenceWithFormat(const AudioBufferList *bufferList,
  */
 void AEAudioBufferListCopyContents(const AudioBufferList * target,
                                    const AudioBufferList * source,
-                                   UInt32 offset,
+                                   UInt32 targetOffset,
+                                   UInt32 sourceOffset,
                                    UInt32 length);
 
 /*!
@@ -297,7 +298,8 @@ void AEAudioBufferListCopyContents(const AudioBufferList * target,
 void AEAudioBufferListCopyContentsWithFormat(const AudioBufferList * target,
                                              const AudioBufferList * source,
                                              AudioStreamBasicDescription audioFormat,
-                                             UInt32 offset,
+                                             UInt32 targetOffset,
+                                             UInt32 sourceOffset,
                                              UInt32 length);
 
 /*!

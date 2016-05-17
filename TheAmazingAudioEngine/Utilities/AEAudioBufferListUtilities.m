@@ -142,21 +142,23 @@ void AEAudioBufferListSilenceWithFormat(const AudioBufferList *bufferList,
 
 void AEAudioBufferListCopyContents(const AudioBufferList * target,
                                    const AudioBufferList * source,
-                                   UInt32 offset,
+                                   UInt32 targetOffset,
+                                   UInt32 sourceOffset,
                                    UInt32 length) {
-    AEAudioBufferListCopyContentsWithFormat(target, source, AEAudioDescription, offset, length);
+    AEAudioBufferListCopyContentsWithFormat(target, source, AEAudioDescription, targetOffset, sourceOffset, length);
 }
 
 void AEAudioBufferListCopyContentsWithFormat(const AudioBufferList * target,
                                              const AudioBufferList * source,
                                              AudioStreamBasicDescription audioFormat,
-                                             UInt32 offset,
+                                             UInt32 targetOffset,
+                                             UInt32 sourceOffset,
                                              UInt32 length) {
     for ( int i=0; i<MIN(target->mNumberBuffers, source->mNumberBuffers); i++ ) {
-        memcpy(target->mBuffers[i].mData + (offset * audioFormat.mBytesPerFrame),
-               source->mBuffers[i].mData + (offset * audioFormat.mBytesPerFrame),
+        memcpy(target->mBuffers[i].mData + (targetOffset * audioFormat.mBytesPerFrame),
+               source->mBuffers[i].mData + (sourceOffset * audioFormat.mBytesPerFrame),
                length ? (length * audioFormat.mBytesPerFrame)
-                      : (MIN(target->mBuffers[i].mDataByteSize,
-                            source->mBuffers[i].mDataByteSize) - offset * audioFormat.mBytesPerFrame));
+                      : (MIN(target->mBuffers[i].mDataByteSize - targetOffset * audioFormat.mBytesPerFrame,
+                             source->mBuffers[i].mDataByteSize - sourceOffset * audioFormat.mBytesPerFrame)));
     }
 }
