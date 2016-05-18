@@ -28,7 +28,7 @@
 extern "C" {
 #endif
     
-@import Foundation;
+#import <Foundation/Foundation.h>
 #import "AEAudioUnitModule.h"
 
 @interface AEReverbModule : AEAudioUnitModule

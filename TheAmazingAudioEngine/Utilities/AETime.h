@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-@import Foundation;
+#import <Foundation/Foundation.h>
 
 typedef uint64_t AEHostTicks;
 typedef double AESeconds;

@@ -11,7 +11,7 @@
 #import "AETypes.h"
 #import "AEAudioBufferListUtilities.h"
 
-@import AudioToolbox;
+#import <AudioToolbox/AudioToolbox.h>
 
 @interface AEFileRecorderModule () {
     ExtAudioFileRef _audioFile;

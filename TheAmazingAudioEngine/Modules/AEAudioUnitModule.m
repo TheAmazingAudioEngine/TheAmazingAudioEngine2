@@ -30,7 +30,7 @@
 #import "AERenderer.h"
 #import "AEAudioBufferListUtilities.h"
 #import "AEManagedValue.h"
-@import AVFoundation;
+#import <AVFoundation/AVFoundation.h>
 
 @interface AEAudioUnitModule () {
     const AERenderContext * _currentContext;

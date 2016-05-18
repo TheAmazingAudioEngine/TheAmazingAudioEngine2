@@ -9,7 +9,7 @@
 // in any form other than as source code within the TAAE2 repository.
 
 #import "AEAudioController.h"
-@import AVFoundation;
+#import <AVFoundation/AVFoundation.h>
 
 static const AESeconds kCountInThreshold = 0.2;
 static const double kMicBandpassCenterFrequency = 2000.0;

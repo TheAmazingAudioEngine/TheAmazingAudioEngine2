@@ -28,8 +28,8 @@
 extern "C" {
 #endif
 
-@import Foundation;
-@import AudioToolbox;
+#import <Foundation/Foundation.h>
+#import <AudioToolbox/AudioToolbox.h>
 
 /*!
  * The audio description used throughout TAAE

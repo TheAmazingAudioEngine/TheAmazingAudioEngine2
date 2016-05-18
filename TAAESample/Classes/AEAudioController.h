@@ -8,7 +8,7 @@
 // Strictly for educational purposes only. No part of TAAESample is to be distributed
 // in any form other than as source code within the TAAE2 repository.
 
-@import Foundation;
+#import <Foundation/Foundation.h>
 #import <TheAmazingAudioEngine/TheAmazingAudioEngine.h>
 
 @interface AEAudioController : NSObject

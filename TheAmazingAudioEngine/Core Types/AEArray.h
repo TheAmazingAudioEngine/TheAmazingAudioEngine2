@@ -28,7 +28,7 @@
 extern "C" {
 #endif
     
-@import Foundation;
+#import <Foundation/Foundation.h>
 
 typedef const void * AEArrayToken; //!< Token for real-thread use
 

@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-@import Foundation;
+#import <Foundation/Foundation.h>
 #import "AETime.h"
 
 /*!

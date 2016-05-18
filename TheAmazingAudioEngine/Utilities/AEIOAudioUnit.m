@@ -30,7 +30,7 @@
 #import "AEBufferStack.h"
 #import "AETime.h"
 #import "AEAudioBufferListUtilities.h"
-@import AVFoundation;
+#import <AVFoundation/AVFoundation.h>
 
 NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUnitDidUpdateStreamFormatNotification";
 

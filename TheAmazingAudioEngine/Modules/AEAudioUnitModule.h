@@ -29,7 +29,7 @@ extern "C" {
 #endif
 
 #import "AEModule.h"
-@import AudioToolbox;
+#import <AudioToolbox/AudioToolbox.h>
 
 /*!
  * Audio unit module

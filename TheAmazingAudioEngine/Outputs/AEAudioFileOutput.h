@@ -28,8 +28,8 @@
 extern "C" {
 #endif
 
-@import Foundation;
-@import AudioToolbox;
+#import <Foundation/Foundation.h>
+#import <AudioToolbox/AudioToolbox.h>
 #import "AETime.h"
 #import "AETypes.h"
 

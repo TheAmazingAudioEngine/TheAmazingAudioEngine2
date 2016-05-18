@@ -34,7 +34,7 @@
 #import "AEManagedValue.h"
 #import "AEAudioBufferListUtilities.h"
 #import "AEAudioUnitInputModule.h"
-@import AVFoundation;
+#import <AVFoundation/AVFoundation.h>
 
 NSString * const AEAudioUnitOutputDidChangeSampleRateNotification = @"AEAudioUnitOutputDidChangeSampleRateNotification";
 NSString * const AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification = @"AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification";

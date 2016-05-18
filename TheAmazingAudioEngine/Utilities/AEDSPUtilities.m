@@ -7,7 +7,7 @@
 //
 
 #import "AEDSPUtilities.h"
-@import Accelerate;
+#import <Accelerate/Accelerate.h>
 
 static const UInt32 kMaxFramesPerSlice = 4096;
 static const UInt32 kGainSmoothingRampDuration = 128;

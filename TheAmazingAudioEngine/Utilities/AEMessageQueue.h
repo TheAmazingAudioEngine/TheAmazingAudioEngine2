@@ -28,7 +28,7 @@
 extern "C" {
 #endif
 
-@import Foundation;
+#import <Foundation/Foundation.h>
 #import "AETime.h"
 
 //! Argument to method call, for use with AEMessageQueuePerformSelectorOnMainThread

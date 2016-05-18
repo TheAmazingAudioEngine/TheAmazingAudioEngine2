@@ -30,7 +30,7 @@
 #import "AEUtilities.h"
 #import "AEBufferStack.h"
 #import "AEAudioBufferListUtilities.h"
-@import AVFoundation;
+#import <AVFoundation/AVFoundation.h>
 
 @interface AEAudioUnitInputModule ()
 @property (nonatomic, strong) AEIOAudioUnit * ioUnit;
