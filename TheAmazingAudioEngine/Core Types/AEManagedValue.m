@@ -100,7 +100,7 @@ static BOOL __atomicUpdateWaitingForCommit = NO;
  *    thread, and (2) that we then need a mechanism to release items in the list, which we can't
  *    do on the realtime thread.
  */
-+ (void)performAtomicBatchUpdate:(void(^)())block {
++ (void)performAtomicBatchUpdate:(AEManagedValueUpdateBlock)block {
     
     if ( !__atomicUpdateWaitingForCommit ) {
         // Perform deferred sync to _atomicBatchUpdateLastValue for previously-batch-updated values

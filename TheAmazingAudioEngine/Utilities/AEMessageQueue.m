@@ -146,11 +146,11 @@ typedef struct {
     [self.mainThreadEndpoint endPolling];
 }
 
-- (void)performBlockOnAudioThread:(void (^)())block {
+- (void)performBlockOnAudioThread:(AEMessageQueueBlock)block {
     [self performBlockOnAudioThread:block completionBlock:nil];
 }
 
-- (void)performBlockOnAudioThread:(void (^)())block completionBlock:(void (^)())completionBlock {
+- (void)performBlockOnAudioThread:(AEMessageQueueBlock)block completionBlock:(AEMessageQueueBlock)completionBlock {
     // Prepare message
     audio_thread_message_t message = {
         .type = AEMessageQueueAudioThreadMessage,

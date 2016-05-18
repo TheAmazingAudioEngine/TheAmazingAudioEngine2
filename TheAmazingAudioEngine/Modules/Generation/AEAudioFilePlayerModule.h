@@ -34,6 +34,9 @@ extern "C" {
 #import "AEAudioUnitModule.h"
 #import "AETime.h"
 
+//! Completion/begin block
+typedef void (^AEAudioFilePlayerModuleBlock)();
+
 /*!
  * Audio file player module
  *
@@ -80,7 +83,7 @@ extern "C" {
  * @param time The time, in host ticks, at which to begin playback
  * @param block Block to call on main thread when the time is reached and playback starts
  */
-- (void)playAtTime:(AEHostTicks)time beginBlock:(void(^ _Nullable)())block;
+- (void)playAtTime:(AEHostTicks)time beginBlock:(AEAudioFilePlayerModuleBlock _Nullable)block;
 
 /*!
  * Stop playback
@@ -107,17 +110,36 @@ AESeconds AEAudioFilePlayerModuleGetPlayhead(__unsafe_unretained AEAudioFilePlay
  */
 BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModule * _Nonnull filePlayer);
 
-@property (nonatomic, strong, readonly) NSURL * _Nullable url;     //!< Original media URL
-@property (nonatomic, readonly) AESeconds duration;     //!< Length of audio file, in seconds
-@property (nonatomic, assign) AESeconds regionStartTime;//!< Time offset within file to begin playback
-@property (nonatomic, assign) AESeconds regionDuration; //!< Duration of playback within the file
-@property (nonatomic, assign) AESeconds currentTime;    //!< Current playback position relative to the beginning of the file
-@property (nonatomic, readonly) BOOL playing;           //!< Whether playing (not KVO observable)
-@property (nonatomic, readwrite) BOOL loop;             //!< Whether to loop this track
-@property (nonatomic) UInt32 microfadeFrames;           //!< Number of frames to microfade at start and end (0 by default; increase to smooth out discontinuities - clicks - at start and end)
-@property (nonatomic, copy) void(^ _Nullable completionBlock)();  //!< A block to be called when non-looped playback finishes
-@end
+//! Original media URL
+@property (nonatomic, strong, readonly) NSURL * _Nullable url;
 
+//! Length of audio file, in seconds
+@property (nonatomic, readonly) AESeconds duration;
+
+//! Time offset within file to begin playback
+@property (nonatomic, assign) AESeconds regionStartTime;
+
+//! Duration of playback within the file
+@property (nonatomic, assign) AESeconds regionDuration;
+
+//! Current playback position relative to the beginning of the file
+@property (nonatomic, assign) AESeconds currentTime;
+
+//! Whether playing (not KVO observable)
+@property (nonatomic, readonly) BOOL playing;
+
+//! Whether to loop this track
+@property (nonatomic, readwrite) BOOL loop;
+
+//! Number of frames to microfade at start and end (0 by default; increase to smooth out
+//! discontinuities - clicks - at start and end)
+@property (nonatomic) UInt32 microfadeFrames;
+
+//! A block to be called when non-looped playback finishes
+@property (nonatomic, copy) AEAudioFilePlayerModuleBlock _Nullable completionBlock;
+
+@end
+    
 #ifdef __cplusplus
 }
 #endif

@@ -52,7 +52,7 @@
     _renderer.isOffline = YES;
 }
 
-- (void)runForDuration:(AESeconds)duration completionBlock:(void (^)())completionBlock {
+- (void)runForDuration:(AESeconds)duration completionBlock:(AEAudioFileOutputCompletionBlock)completionBlock {
     assert(_audioFile);
     
     // Perform render in background thread
@@ -88,7 +88,8 @@
     });
 }
 
-- (void)runUntilCondition:(BOOL (^)())conditionBlock completionBlock:(void (^)())completionBlock {
+- (void)runUntilCondition:(AEAudioFileOutputConditionBlock)conditionBlock
+          completionBlock:(AEAudioFileOutputCompletionBlock)completionBlock {
     assert(_audioFile);
     
     // Perform render in background thread

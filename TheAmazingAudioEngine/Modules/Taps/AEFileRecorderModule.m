@@ -61,7 +61,7 @@
     _startTime = time ? time : AECurrentTimeInHostTicks();
 }
 
-- (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(void(^)())block {
+- (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(AEFileRecorderModuleCompletionBlock)block {
     self.completionBlock = block;
     _stopTime = time ? time : AECurrentTimeInHostTicks();
     AEFileRecorderModuleWeakProxy * proxy = [AEFileRecorderModuleWeakProxy alloc];

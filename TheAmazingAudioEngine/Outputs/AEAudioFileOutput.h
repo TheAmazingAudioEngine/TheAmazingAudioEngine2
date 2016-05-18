@@ -35,6 +35,13 @@ extern "C" {
 
 @class AERenderer;
 
+//! Completion block
+typedef void (^AEAudioFileOutputCompletionBlock)();
+
+//! Condition block, for use with
+//! @link AEAudioFileOutput::runUntilCondition:completionBlock: runUntilCondition:completionBlock: @endlink
+typedef BOOL (^AEAudioFileOutputConditionBlock)();
+
 /*!
  * File output
  *
@@ -73,7 +80,7 @@ extern "C" {
  * @param duration Duration to run for, in seconds
  * @param completionBlock Block to perform on main thread when render has completed
  */
-- (void)runForDuration:(AESeconds)duration completionBlock:(void(^ _Nonnull)())completionBlock;
+- (void)runForDuration:(AESeconds)duration completionBlock:(AEAudioFileOutputCompletionBlock _Nonnull)completionBlock;
 
 /*!
  * Run offline rendering until a given condition
@@ -86,7 +93,8 @@ extern "C" {
  *  render cycle to determine whether recording should stop. Return YES to stop; NO to continue.
  * @param completionBlock Block to perform on main thread when render has completed
  */
-- (void)runUntilCondition:(BOOL(^ _Nonnull)())conditionBlock completionBlock:(void(^ _Nonnull)())completionBlock;
+- (void)runUntilCondition:(AEAudioFileOutputConditionBlock _Nonnull)conditionBlock
+          completionBlock:(AEAudioFileOutputCompletionBlock _Nonnull)completionBlock;
 
 /*!
  * Finish writing the file

@@ -32,6 +32,9 @@ extern "C" {
 #import "AETime.h"
 #import "AETypes.h"
 
+//! Completion block
+typedef void (^AEFileRecorderModuleCompletionBlock)();
+
 /*!
  * Audio file recorder
  *
@@ -66,7 +69,7 @@ extern "C" {
  * @param time Time to end recording, or 0 for "now"
  * @param block Block to perform once recording has completed
  */
-- (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(void(^ _Nullable)())block;
+- (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(AEFileRecorderModuleCompletionBlock _Nullable)block;
 
 @property (nonatomic, readonly) BOOL recording; //!< Whether recording is in progress
 @property (nonatomic, readonly) AESeconds recordedTime; //!< Current recording length, in seconds

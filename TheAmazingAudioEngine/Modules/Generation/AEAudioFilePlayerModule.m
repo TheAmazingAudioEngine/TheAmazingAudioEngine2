@@ -106,7 +106,7 @@ static const UInt32 kNoValue = -1;
     [self playAtTime:time beginBlock:nil];
 }
 
-- (void)playAtTime:(AEHostTicks)time beginBlock:(void(^)())block {
+- (void)playAtTime:(AEHostTicks)time beginBlock:(AEAudioFilePlayerModuleBlock)block {
 #ifdef DEBUG
     if ( time ) {
         AEHostTicks now = AECurrentTimeInHostTicks();

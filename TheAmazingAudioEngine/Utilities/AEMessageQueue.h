@@ -96,6 +96,9 @@ extern AEArgument AEArgumentNone;
 #define AEArgumentData(buffer, size) \
     (AEArgument) { NO, buffer, size }
 
+//! Block
+typedef void (^AEMessageQueueBlock)();
+
 /*!
  * Message Queue
  *
@@ -148,7 +151,7 @@ extern AEArgument AEArgumentNone;
  *
  * @param block A block to be performed on the realtime thread.
  */
-- (void)performBlockOnAudioThread:(void (^ _Nonnull)())block;
+- (void)performBlockOnAudioThread:(AEMessageQueueBlock _Nonnull)block;
 
 /*!
  * Send a message to the realtime thread, with a completion block
@@ -165,7 +168,8 @@ extern AEArgument AEArgumentNone;
  * @param block  A block to be performed on the realtime thread.
  * @param completionBlock A block to be performed on the main thread after the handler has been run, or nil.
  */
-- (void)performBlockOnAudioThread:(void (^ _Nonnull)())block completionBlock:(void (^ _Nullable)())completionBlock;
+- (void)performBlockOnAudioThread:(AEMessageQueueBlock _Nonnull)block
+                  completionBlock:(AEMessageQueueBlock _Nullable)completionBlock;
 
 /*!
  * Perform a selector on the main thread asynchronously

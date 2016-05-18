@@ -278,7 +278,8 @@ void AEAudioBufferListSilenceWithFormat(const AudioBufferList *bufferList,
  *
  * @param target Target buffer list, to copy to
  * @param source Source buffer list, to copy from
- * @param offset Offset into buffers
+ * @param targetOffset Offset into target buffer
+ * @param sourceOffset Offset into source buffer
  * @param length Number of frames to copy (0 for whole buffer)
  */
 void AEAudioBufferListCopyContents(const AudioBufferList * target,
@@ -292,7 +293,9 @@ void AEAudioBufferListCopyContents(const AudioBufferList * target,
  *
  * @param target Target buffer list, to copy to
  * @param source Source buffer list, to copy from
- * @param offset Offset into buffers
+ * @param audioFormat Audio format describing the audio in the buffer list
+ * @param targetOffset Offset into target buffer
+ * @param sourceOffset Offset into source buffer
  * @param length Number of frames to copy (0 for whole buffer)
  */
 void AEAudioBufferListCopyContentsWithFormat(const AudioBufferList * target,
