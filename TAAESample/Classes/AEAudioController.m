@@ -164,7 +164,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         } else {
             balanceLfo = 0.5;
         }
-        AEBufferStackApplyVolumeAndBalance(context->stack, 1, NULL, bal, &currentBalalance);
+        AEBufferStackApplyFaders(context->stack, 1, NULL, bal, &currentBalalance);
         
         if ( player ) {
             // If we're playing a recording, duck other output

@@ -234,9 +234,9 @@ const AudioBufferList * AEBufferStackMixWithGain(AEBufferStack * stack, int coun
  * @param currentBalance On input, the current balance; on output, the new balance. Store this and pass it
  *  back to this function on successive calls for a smooth ramp. If NULL, no smoothing will be applied.
  */
-void AEBufferStackApplyVolumeAndBalance(AEBufferStack * stack,
-                                        float targetVolume, float * currentVolume,
-                                        float targetBalance, float * currentBalance);
+void AEBufferStackApplyFaders(AEBufferStack * stack,
+                              float targetVolume, float * currentVolume,
+                              float targetBalance, float * currentBalance);
 
 /*!
  * Silence the top buffer

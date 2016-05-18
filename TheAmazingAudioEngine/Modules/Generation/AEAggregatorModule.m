@@ -135,9 +135,9 @@ static void AEAggregatorModuleProcess(__unsafe_unretained AEAggregatorModule * s
         }
         #endif
         
-        AEBufferStackApplyVolumeAndBalance(context->stack,
-                                           entry->targetVolume, &entry->currentVolume,
-                                           entry->targetBalance, &entry->currentBalance);
+        AEBufferStackApplyFaders(context->stack,
+                                 entry->targetVolume, &entry->currentVolume,
+                                 entry->targetBalance, &entry->currentBalance);
         AEBufferStackMix(context->stack, 2);
     });
 }

@@ -280,9 +280,9 @@ const AudioBufferList * AEBufferStackMixWithGain(AEBufferStack * stack, int coun
     return AEBufferStackGet(stack, 0);
 }
 
-void AEBufferStackApplyVolumeAndBalance(AEBufferStack * stack,
-                                        float targetVolume, float * currentVolume,
-                                        float targetBalance, float * currentBalance) {
+void AEBufferStackApplyFaders(AEBufferStack * stack,
+                              float targetVolume, float * currentVolume,
+                              float targetBalance, float * currentBalance) {
     const AudioBufferList * abl = AEBufferStackGet(stack, 0);
     if ( !abl ) return;
     
