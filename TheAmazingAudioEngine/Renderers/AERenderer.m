@@ -32,7 +32,9 @@
 NSString * const AERendererDidChangeSampleRateNotification = @"AERendererDidChangeSampleRateNotification";
 NSString * const AERendererDidChangeNumberOfOutputChannelsNotification = @"AERendererDidChangeNumberOfOutputChannelsNotification";
 
-@interface AERenderer ()
+@interface AERenderer () {
+    UInt32 _sampleTime;
+}
 @property (nonatomic, strong) AEManagedValue * blockValue;
 @property (nonatomic, readwrite) AEBufferStack * stack;
 @end
@@ -66,14 +68,24 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList 
     // Run the block
     __unsafe_unretained AERenderLoopBlock block = (__bridge AERenderLoopBlock)AEManagedValueGetValue(THIS->_blockValue);
     if ( block ) {
+        
+        // Set the timestamp's sample time, if it's not set
+        AudioTimeStamp time = *timestamp;
+        if ( !(time.mFlags & kAudioTimeStampSampleTimeValid) ) {
+            time.mFlags |= kAudioTimeStampSampleTimeValid;
+            time.mSampleTime = THIS->_sampleTime;
+            THIS->_sampleTime += frames;
+        }
+        
         AERenderContext context = {
             .output = bufferList,
             .frames = frames,
             .sampleRate = THIS->_sampleRate,
-            .timestamp = timestamp,
+            .timestamp = &time,
             .offlineRendering = THIS->_isOffline,
             .stack = THIS->_stack
         };
+        
         block(&context);
     }
 }
