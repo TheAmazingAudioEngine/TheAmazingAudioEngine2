@@ -187,8 +187,8 @@ const AudioBufferList * AEBufferStackPushExternal(AEBufferStack * stack, const A
     if ( buffer->mBuffers[0].mDataByteSize < stack->frameCount * AEAudioDescription.mBytesPerFrame ) {
         if ( AERateLimit() )
             printf("Warning: Pushed a buffer with %d frames < %d\n",
-                   buffer->mBuffers[0].mDataByteSize / AEAudioDescription.mBytesPerFrame,
-                   stack->frameCount);
+                   (int)(buffer->mBuffers[0].mDataByteSize / AEAudioDescription.mBytesPerFrame),
+                   (int)stack->frameCount);
     }
 #endif
     
