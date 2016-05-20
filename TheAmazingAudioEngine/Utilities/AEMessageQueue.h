@@ -107,8 +107,7 @@ typedef void (^AEMessageQueueBlock)();
  *  an easy lock-free synchronization method, which is important when working with audio.
  *
  *  To use it, create an instance and then begin calling AEMessageQueuePoll from your render loop,
- *  in order to poll for incoming messages on the render thread. Then call startPolling on the
- *  main thread to begin polling for incoming messages on the main thread.
+ *  in order to poll for incoming messages on the render thread.
  *
  *  Then, use AEMessageQueuePerformSelectorOnMainThread from the audio thread, or
  *  performBlockOnAudioThread: or performBlockOnAudioThread:completionBlock: from the main thread.
@@ -127,20 +126,6 @@ typedef void (^AEMessageQueueBlock)();
  *  due to the underlying implementation, actual capacity may be larger.
  */
 - (instancetype _Nullable)initWithBufferCapacity:(size_t)bufferCapacity;
-
-/*!
- * Begin polling for messages from the audio thread
- *
- *  Call this to begin listening for messages from the audio thread.
- *
- * @return YES if polling started successfully, NO if there was a buffer allocation problem
- */
-- (BOOL)startPolling;
-
-/*!
- * Stop polling for messages
- */
-- (void)endPolling;
 
 /*!
  * Send a message to the realtime thread from the main thread
@@ -207,9 +192,6 @@ BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueu
  *  Call this periodically from the realtime thread to process pending message blocks.
  */
 void AEMessageQueuePoll(__unsafe_unretained AEMessageQueue * _Nonnull THIS);
-
-//! The poll interval (default is 10ms)
-@property (nonatomic) AESeconds pollInterval;
 
 @end
 

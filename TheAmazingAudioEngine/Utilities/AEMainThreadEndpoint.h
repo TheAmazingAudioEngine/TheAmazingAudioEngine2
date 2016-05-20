@@ -45,10 +45,10 @@ typedef void (^AEMainThreadEndpointHandler)(const void * _Nullable data, size_t 
 /*!
  * Main thread message endpoint
  *
- *  This class implements a mechanism to poll for messages from the audio thread upon
- *  the main thread. Initialize an instance with a block to call to handle incoming
- *  messages, then call startPolling to start listening for incoming messages. Then
- *  use AEMainThreadEndpointSend from the audio thread to send a message to the main thread.
+ *  This class implements a mechanism to receive messages from the audio thread upon
+ *  the main thread. Initialize an instance, and pass in a block to call to handle incoming
+ *  messages. Then use AEMainThreadEndpointSend from the audio thread to send a message to 
+ *  the main thread.
  *
  *  Use this utility to perform synchronization across the audio and main threads.
  *
@@ -74,29 +74,15 @@ typedef void (^AEMainThreadEndpointHandler)(const void * _Nullable data, size_t 
 - (instancetype _Nullable)initWithHandler:(AEMainThreadEndpointHandler _Nonnull)handler bufferCapacity:(size_t)bufferCapacity;
 
 /*!
- * Begin polling for messages
- *
- *  Call this to begin listening for messages from the audio thread.
- *
- * @return YES if polling started successfully, NO if there was a buffer allocation problem
- */
-- (BOOL)startPolling;
-
-/*!
- * Stop polling for messages
- */
-- (void)endPolling;
-
-/*!
  * Send a message to the main thread endpoint
  *
  *  Use this on the audio thread to send messages to the endpoint instance. It will be
- *  received and handled on the main thread at the next poll interval.
+ *  received and handled on the main thread.
  *
  * @param endpoint The endpoint instance
  * @param data Message data (or NULL) to copy
  * @param length Length of message data
- * @return YES if message sent successfully, NO if there was insufficient buffer space or not polling
+ * @return YES if message sent successfully, NO if there was insufficient buffer space
  */
 BOOL AEMainThreadEndpointSend(__unsafe_unretained AEMainThreadEndpoint * _Nonnull endpoint,
                               const void * _Nullable data, size_t length);
@@ -110,7 +96,7 @@ BOOL AEMainThreadEndpointSend(__unsafe_unretained AEMainThreadEndpoint * _Nonnul
  *
  * @param endpoint The endpoint instance
  * @param length Length of message data
- * @return A pointer to message bytes ready for writing, or NULL if there was insufficient buffer space or not polling
+ * @return A pointer to message bytes ready for writing, or NULL if there was insufficient buffer space
  */
 void * _Nullable AEMainThreadEndpointCreateMessage(__unsafe_unretained AEMainThreadEndpoint * _Nonnull endpoint, size_t length);
 
@@ -120,13 +106,6 @@ void * _Nullable AEMainThreadEndpointCreateMessage(__unsafe_unretained AEMainThr
  * @param endpoint The endpoint instance
  */
 void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoint * _Nonnull endpoint);
-
-
-//! The poll interval (default is 10ms)
-@property (nonatomic) AESeconds pollInterval;
-
-//! Whether the endpoint is presently polling for messages
-@property (nonatomic, readonly) BOOL isPolling;
 
 @end
 

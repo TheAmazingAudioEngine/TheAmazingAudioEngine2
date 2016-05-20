@@ -31,10 +31,8 @@ typedef struct {
         [messages addObject:[NSData dataWithBytes:data length:length]];
     }];
     
-    [endpoint startPolling];
-    
     AEMainThreadEndpointSend(endpoint, NULL, 0);
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:endpoint.pollInterval]];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
     
     XCTAssertEqualObjects(messages, (@[[NSData dataWithBytes:NULL length:0]]));
     [messages removeAllObjects];
@@ -45,20 +43,16 @@ typedef struct {
     AEMainThreadEndpointSend(endpoint, &value1, sizeof(value1));
     AEMainThreadEndpointSend(endpoint, &value2, sizeof(value2));
     AEMainThreadEndpointSend(endpoint, &value3, sizeof(value3));
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:endpoint.pollInterval]];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
     
     XCTAssertEqualObjects(messages, (@[[NSData dataWithBytes:&value1 length:sizeof(value1)], [NSData dataWithBytes:&value2 length:sizeof(value2)], [NSData dataWithBytes:&value3 length:sizeof(value3)]]));
     [messages removeAllObjects];
     
     AEMainThreadEndpointSend(endpoint, &value1, sizeof(value1));
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:endpoint.pollInterval]];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
     
     XCTAssertEqualObjects(messages, (@[[NSData dataWithBytes:&value1 length:sizeof(value1)]]));
     [messages removeAllObjects];
-    
-    [endpoint endPolling];
-    
-    XCTAssertFalse(AEMainThreadEndpointSend(endpoint, NULL, 0));
     
     __weak AEMainThreadEndpoint * weakEndpoint = endpoint;
     endpoint = nil;
@@ -115,7 +109,6 @@ typedef struct {
 
 - (void)testMessageQueueAudioThreadMessaging {
     AEMessageQueue * queue = [AEMessageQueue new];
-    [queue startPolling];
     
     __block BOOL hitBlock = NO;
     __block BOOL hitCompletionBlock = NO;
@@ -135,7 +128,7 @@ typedef struct {
     XCTAssertNotNil(weakObject);
     
     AEMessageQueuePoll(queue);
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:queue.pollInterval]];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
     
     XCTAssertTrue(hitBlock);
     XCTAssertTrue(hitCompletionBlock);
@@ -150,10 +143,9 @@ typedef struct {
 
 - (void)testMessageQueueMainThreadMessaging {
     AEMessageQueue * queue = [AEMessageQueue new];
-    [queue startPolling];
     
     [self sendMainThreadMessage:queue];
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:queue.pollInterval]];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
     
     XCTAssertEqual(self.mainThreadMessageValue1, 1);
     XCTAssertEqual(self.mainThreadMessageValue2, self);
@@ -165,7 +157,7 @@ typedef struct {
     
     AEMessageQueuePerformSelectorOnMainThread(queue, self, @selector(mainThreadMessageTestWithNoArguments), AEArgumentNone);
     
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:queue.pollInterval]];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
     
     XCTAssertEqual(self.mainThreadMessageValue1, 3);
 }

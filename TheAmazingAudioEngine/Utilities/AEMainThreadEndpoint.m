@@ -26,20 +26,23 @@
 
 #import "AEMainThreadEndpoint.h"
 #import "TPCircularBuffer.h"
+#import <dispatch/semaphore.h>
+
+@class AEMainThreadEndpointThread;
 
 @interface AEMainThreadEndpoint () {
     TPCircularBuffer _buffer;
 }
 @property (nonatomic, copy) AEMainThreadEndpointHandler handler;
-@property (nonatomic, strong) NSTimer * timer;
+@property (nonatomic) dispatch_semaphore_t semaphore;
+@property (nonatomic, strong) AEMainThreadEndpointThread * thread;
 @end
 
-@interface AEMainThreadEndpointProxy : NSProxy
-@property (nonatomic, weak) AEMainThreadEndpoint * target;
+@interface AEMainThreadEndpointThread : NSThread
+@property (nonatomic, weak) AEMainThreadEndpoint * endpoint;
 @end
 
 @implementation AEMainThreadEndpoint
-@dynamic isPolling;
 
 - (instancetype)initWithHandler:(AEMainThreadEndpointHandler)handler {
     return [self initWithHandler:handler bufferCapacity:8192];
@@ -48,58 +51,28 @@
 - (instancetype)initWithHandler:(AEMainThreadEndpointHandler)handler bufferCapacity:(size_t)bufferCapacity {
     if ( !(self = [super init]) ) return nil;
     
-    _pollInterval = 0.01;
     self.handler = handler;
     
     if ( !TPCircularBufferInit(&_buffer, (int32_t)bufferCapacity) ) {
         return nil;
     }
     
+    self.semaphore = dispatch_semaphore_create(0);
+    
+    self.thread = [AEMainThreadEndpointThread new];
+    self.thread.endpoint = self;
+    [self.thread start];
+    
     return self;
 }
 
 - (void)dealloc {
-    if ( self.timer ) {
-        [self.timer invalidate];
-    }
+    [self.thread cancel];
+    dispatch_semaphore_signal(_semaphore);
     TPCircularBufferCleanup(&_buffer);
 }
 
-- (BOOL)startPolling {
-    if ( self.timer ) {
-        return YES;
-    }
-    
-    [self startTimer];
-    
-    return YES;
-}
-
-- (void)endPolling {
-    [self.timer invalidate];
-    self.timer = nil;
-}
-
-- (BOOL)isPolling {
-    return self.timer != nil;
-}
-
-- (void)setPollInterval:(AESeconds)pollInterval {
-    _pollInterval = pollInterval;
-    
-    if ( self.timer ) {
-        // Restart timer
-        [self.timer invalidate];
-        [self startTimer];
-    }
-}
-
 BOOL AEMainThreadEndpointSend(__unsafe_unretained AEMainThreadEndpoint * THIS, const void * data, size_t length) {
-    
-    if ( !THIS->_timer ) {
-        // Not polling
-        return NO;
-    }
     
     // Prepare message
     void * message = AEMainThreadEndpointCreateMessage(THIS, length);
@@ -144,13 +117,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
     
     // Mark as ready to read
     TPCircularBufferProduce(&THIS->_buffer, (int32_t)size);
-}
-
-- (void)startTimer {
-    AEMainThreadEndpointProxy * proxy = [AEMainThreadEndpointProxy alloc];
-    proxy.target = self;
-    self.timer = [NSTimer scheduledTimerWithTimeInterval:self.pollInterval target:proxy selector:@selector(poll)
-                                                userInfo:nil repeats:YES];
+    dispatch_semaphore_signal(THIS->_semaphore);
 }
 
 - (void)poll {
@@ -165,7 +132,9 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
         void * data = length > 0 ? (tail + sizeof(size_t)) : NULL;
         
         // Run handler
-        self.handler(data, length);
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            self.handler(data, length);
+        });
         
         // Mark as read
         TPCircularBufferConsume(&_buffer, (int32_t)(sizeof(size_t) + length));
@@ -174,12 +143,17 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 
 @end
 
-@implementation AEMainThreadEndpointProxy
-- (NSMethodSignature *)methodSignatureForSelector:(SEL)selector {
-    return [_target methodSignatureForSelector:selector];
+@implementation AEMainThreadEndpointThread
+
+- (void)main {
+    dispatch_semaphore_t semaphore = self.endpoint.semaphore;
+    
+    while ( !self.cancelled ) {
+        @autoreleasepool {
+            [self.endpoint poll];
+            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        }
+    }
 }
-- (void)forwardInvocation:(NSInvocation *)invocation {
-    [invocation setTarget:_target];
-    [invocation invoke];
-}
+
 @end

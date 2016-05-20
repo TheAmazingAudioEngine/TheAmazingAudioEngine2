@@ -133,17 +133,7 @@ typedef struct {
         AEMainThreadEndpointSend(mainThread, data, length);
     } bufferCapacity:bufferCapacity];
     
-    _pollInterval = self.mainThreadEndpoint.pollInterval;
-    
     return self;
-}
-
-- (BOOL)startPolling {
-    return [self.mainThreadEndpoint startPolling];
-}
-
-- (void)endPolling {
-    [self.mainThreadEndpoint endPolling];
 }
 
 - (void)performBlockOnAudioThread:(AEMessageQueueBlock)block {
@@ -239,11 +229,6 @@ BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueu
 
 void AEMessageQueuePoll(__unsafe_unretained AEMessageQueue * _Nonnull THIS) {
     AEAudioThreadEndpointPoll(THIS->_audioThreadEndpoint);
-}
-
-- (void)setPollInterval:(AESeconds)pollInterval {
-    _pollInterval = pollInterval;
-    self.mainThreadEndpoint.pollInterval = pollInterval;
 }
 
 @end
