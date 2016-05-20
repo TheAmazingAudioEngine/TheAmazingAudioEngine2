@@ -57,6 +57,8 @@ typedef struct {
     __weak AEMainThreadEndpoint * weakEndpoint = endpoint;
     endpoint = nil;
     
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    
     XCTAssertNil(weakEndpoint);
 }
 
