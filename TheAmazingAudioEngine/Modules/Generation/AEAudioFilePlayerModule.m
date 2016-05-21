@@ -485,15 +485,14 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
     UInt32 frames = context->frames;
     UInt32 silentFrames = startTime && startTime > context->timestamp->mHostTime
         ? round(AESecondsFromHostTicks(startTime - context->timestamp->mHostTime) * context->sampleRate) : 0;
-    AEAudioBufferListCopyOnStack(scratchAudioBufferList, abl, silentFrames);
+    AEAudioBufferListCopyOnStack(mutableAbl, abl, silentFrames);
     AudioTimeStamp adjustedTime = *context->timestamp;
     
     if ( silentFrames > 0 ) {
         // Start time is offset into this buffer - silence beginning of buffer
         AEAudioBufferListSilence(abl, 0, silentFrames);
-        
         // Point buffer list to remaining frames
-        abl = scratchAudioBufferList;
+        abl = mutableAbl;
         frames -= silentFrames;
         adjustedTime.mHostTime = startTime;
         adjustedTime.mSampleTime += silentFrames;
@@ -501,8 +500,7 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
     
     // Render
     AudioUnitRenderActionFlags flags = 0;
-    AEAudioBufferListCopyOnStack(mutableAbl, abl, 0);
-    OSStatus result = AudioUnitRender(audioUnit, &flags, context->timestamp, 0, frames, mutableAbl);
+    OSStatus result = AudioUnitRender(audioUnit, &flags, &adjustedTime, 0, frames, mutableAbl);
     if ( !AECheckOSStatus(result, "AudioUnitRender") ) {
         AEAudioBufferListSilence(abl, 0, context->frames);
         return;
