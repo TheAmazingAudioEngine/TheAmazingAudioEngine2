@@ -1,19 +1,19 @@
 //
-//  AEFileRecorderModule.m
+//  AEAudioFileRecorderModule.m
 //  TheAmazingAudioEngine
 //
 //  Created by Michael Tyson on 1/04/2016.
 //  Copyright © 2016 A Tasty Pixel. All rights reserved.
 //
 
-#import "AEFileRecorderModule.h"
+#import "AEAudioFileRecorderModule.h"
 #import "AEUtilities.h"
 #import "AETypes.h"
 #import "AEAudioBufferListUtilities.h"
 
 #import <AudioToolbox/AudioToolbox.h>
 
-@interface AEFileRecorderModule () {
+@interface AEAudioFileRecorderModule () {
     ExtAudioFileRef _audioFile;
     AEHostTicks    _startTime;
     AEHostTicks    _stopTime;
@@ -25,11 +25,11 @@
 @property (nonatomic, strong) NSTimer * pollTimer;
 @end
 
-@interface AEFileRecorderModuleWeakProxy : NSProxy
+@interface AEAudioFileRecorderModuleWeakProxy : NSProxy
 @property (nonatomic, weak) id target;
 @end
 
-@implementation AEFileRecorderModule
+@implementation AEAudioFileRecorderModule
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer URL:(NSURL *)url
                             type:(AEAudioFileType)type error:(NSError **)error {
@@ -40,7 +40,7 @@
     // Prime async recording
     ExtAudioFileWriteAsync(_audioFile, 0, NULL);
     
-    self.processFunction = AEFileRecorderModuleProcess;
+    self.processFunction = AEAudioFileRecorderModuleProcess;
     
     return self;
 }
@@ -61,16 +61,16 @@
     _startTime = time ? time : AECurrentTimeInHostTicks();
 }
 
-- (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(AEFileRecorderModuleCompletionBlock)block {
+- (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(AEAudioFileRecorderModuleCompletionBlock)block {
     self.completionBlock = block;
     _stopTime = time ? time : AECurrentTimeInHostTicks();
-    AEFileRecorderModuleWeakProxy * proxy = [AEFileRecorderModuleWeakProxy alloc];
+    AEAudioFileRecorderModuleWeakProxy * proxy = [AEAudioFileRecorderModuleWeakProxy alloc];
     proxy.target = self;
     self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:proxy selector:@selector(pollForCompletion)
                                                     userInfo:nil repeats:YES];
 }
 
-static void AEFileRecorderModuleProcess(__unsafe_unretained AEFileRecorderModule * THIS,
+static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileRecorderModule * THIS,
                                         const AERenderContext * _Nonnull context) {
     
     if ( !THIS->_recording || THIS->_complete ) return;
@@ -146,7 +146,7 @@ static void AEFileRecorderModuleProcess(__unsafe_unretained AEFileRecorderModule
 
 @end
 
-@implementation AEFileRecorderModuleWeakProxy
+@implementation AEAudioFileRecorderModuleWeakProxy
 - (NSMethodSignature *)methodSignatureForSelector:(SEL)selector {
     return [_target methodSignatureForSelector:selector];
 }

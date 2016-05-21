@@ -50,7 +50,7 @@ extern "C" {
 #import <TheAmazingAudioEngine/AEParametricEqModule.h>
 #import <TheAmazingAudioEngine/AEPeakLimiterModule.h>
 #import <TheAmazingAudioEngine/AEVarispeedModule.h>
-#import <TheAmazingAudioEngine/AEFileRecorderModule.h>
+#import <TheAmazingAudioEngine/AEAudioFileRecorderModule.h>
 #if TARGET_OS_IPHONE
 #import <TheAmazingAudioEngine/AEReverbModule.h>
 #endif
@@ -116,7 +116,7 @@ extern "C" {
         analyze, etc. Modules are driven by calling AEModuleProcess(). Some important modules:
  - AEAudioFilePlayerModule: Play files.
  - AEAudioUnitInputModule: Get system input.
- - AEFileRecorderModule: Record files.
+ - AEAudioFileRecorderModule: Record files.
  - AESubrendererModule: Drive a sub-renderer.
  - AEAggregatorModule: Drive multiple generators.
     </td>
@@ -273,7 +273,7 @@ extern "C" {
  AEBandpassModule * filter2 = [[AEDelayModule alloc] initWithRenderer:renderer];
  
  // Create the recorder
- AEFileRecorderModule * recorder = [[AEFileRecorderModule alloc] initWithRenderer:renderer URL:outputUrl error:NULL];
+ AEAudioFileRecorderModule * recorder = [[AEAudioFileRecorderModule alloc] initWithRenderer:renderer URL:outputUrl error:NULL];
  @endcode
  
  Now, we can provide a render block, which contains the implementation for the audio pipeline. We run each module

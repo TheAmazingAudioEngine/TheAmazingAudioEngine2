@@ -144,8 +144,8 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     renderer.block = ^(const AERenderContext * _Nonnull context) {
         
         // See if we have an active recorder
-        __unsafe_unretained AEFileRecorderModule * recorder
-            = (__bridge AEFileRecorderModule *)AEManagedValueGetValue(recorderValue);
+        __unsafe_unretained AEAudioFileRecorderModule * recorder
+            = (__bridge AEAudioFileRecorderModule *)AEManagedValueGetValue(recorderValue);
         
         // See if we have an active player
         __unsafe_unretained AEAudioFilePlayerModule * player
@@ -260,7 +260,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     if ( self.recording ) return NO;
     
     // Create recorder
-    AEFileRecorderModule * recorder = [[AEFileRecorderModule alloc] initWithRenderer:self.output.renderer
+    AEAudioFileRecorderModule * recorder = [[AEAudioFileRecorderModule alloc] initWithRenderer:self.output.renderer
         URL:self.recordingPath type:AEAudioFileTypeM4A error:error];
     if ( !recorder ) {
         return NO;
@@ -279,7 +279,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     if ( !self.recording ) return;
     
     // End recording
-    AEFileRecorderModule * recorder = self.recorderValue.objectValue;
+    AEAudioFileRecorderModule * recorder = self.recorderValue.objectValue;
     __weak AEAudioController * weakSelf = self;
     [recorder stopRecordingAtTime:time completionBlock:^{
         weakSelf.recording = NO;
