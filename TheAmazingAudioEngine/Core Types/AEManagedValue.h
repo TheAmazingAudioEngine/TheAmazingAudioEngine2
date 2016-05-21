@@ -78,9 +78,12 @@ typedef void (^AEManagedValueReleaseNotificationBlock)();
 + (void)performAtomicBatchUpdate:(AEManagedValueUpdateBlock _Nonnull)block;
 
 /*!
- * Get access to the value on the realtime thread
+ * Get access to the value on the realtime audio thread
  *
  *  The object or buffer returned is guaranteed to remain valid until the next call to this function.
+ *
+ *  Important: Only call this function on the audio thread. If you call this on the main thread, you
+ *  will see sporadic crashes on the audio thread.
  *
  * @param managedValue The instance
  * @return The value
@@ -96,6 +99,9 @@ void * _Nullable AEManagedValueGetValue(__unsafe_unretained AEManagedValue * _No
  *
  *  After you call this function, any updates made within the loop bassed to performAtomicBatchUpdate:
  *  become available on the render thread.
+ *
+ *  Important: Only call this function on the audio thread. If you call this on the main thread, you
+ *  will see sporadic crashes on the audio thread.
  */
 void AEManagedValueCommitPendingAtomicUpdates();
 

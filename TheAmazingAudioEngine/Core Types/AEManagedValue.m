@@ -27,6 +27,7 @@
 #import "AEManagedValue.h"
 #import <libkern/OSAtomic.h>
 #import <pthread.h>
+#import "AEUtilities.h"
 
 typedef struct __linkedlistitem_t {
     void * data;
@@ -214,6 +215,12 @@ void AEManagedValueCommitPendingAtomicUpdates() {
 
 void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     if ( !THIS ) return NULL;
+    
+#ifdef DEBUG
+    if ( pthread_main_np() ) {
+        if ( AERateLimit() ) NSLog(@"Warning: %s called from main thread!", __FUNCTION__);
+    }
+#endif
     
     if ( __atomicUpdateWaitingForCommit || pthread_mutex_trylock(&__atomicUpdateMutex) != 0 ) {
         // Atomic update in progress - return previous value
