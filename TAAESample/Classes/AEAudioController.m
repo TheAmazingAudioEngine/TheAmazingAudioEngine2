@@ -236,7 +236,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     [self updatePlayingThroughSpeaker];
     
     // Watch for route changes, so we can keep track of whether we're playing through the speaker
-    [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionRouteChangeNotification
+    self.routeChangeObserverToken = [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionRouteChangeNotification
         object:session queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
         [self updatePlayingThroughSpeaker];
     }];
