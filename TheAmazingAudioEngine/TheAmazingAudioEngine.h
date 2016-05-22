@@ -72,6 +72,7 @@ extern "C" {
 #import <TheAmazingAudioEngine/AEArray.h>
 #import <TheAmazingAudioEngine/AEManagedValue.h>
 #import <TheAmazingAudioEngine/AEIOAudioUnit.h>
+#import <TheAmazingAudioEngine/AEAudioFileReader.h>
 
 
 /*!
