@@ -70,7 +70,7 @@ static const NSTimeInterval kTestFileLength = 0.5;
             double sample = AEDSPGenerateOscillator(440.0/44100.0, &position) - 0.5;
             if ( fabs(sample - ((float*)buffer->mBuffers[0].mData)[frame]) > 1.0e-3 ) {
                 error = [NSString stringWithFormat:@"frame %d, %f != %f",
-                         frame, ((float*)buffer->mBuffers[0].mData)[frame], sample];
+                         (int)frame, ((float*)buffer->mBuffers[0].mData)[frame], sample];
                 match = NO;
                 break;
             }
@@ -97,7 +97,7 @@ static const NSTimeInterval kTestFileLength = 0.5;
                                    double sample = AEDSPGenerateOscillator(440.0/44100.0, &position) - 0.5;
                                    if ( fabs(sample - ((float*)buffer->mBuffers[0].mData)[frame]) > 1.0e-3 ) {
                                        error = [NSString stringWithFormat:@"frame %d, %f != %f",
-                                                frame, ((float*)buffer->mBuffers[0].mData)[frame], sample];
+                                                (int)frame, ((float*)buffer->mBuffers[0].mData)[frame], sample];
                                        match = NO;
                                        break;
                                    }
