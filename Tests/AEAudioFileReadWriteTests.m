@@ -24,6 +24,14 @@ static const NSTimeInterval kTestFileLength = 0.5;
 @implementation AEAudioFileReaderTests
 @dynamic fileURL;
 
++ (void)setUp {
+    NSString * documentsFolder = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+    if ( ![[NSFileManager defaultManager] fileExistsAtPath:documentsFolder] ) {
+        [[NSFileManager defaultManager] createDirectoryAtPath:documentsFolder
+                                  withIntermediateDirectories:YES attributes:nil error:NULL];
+    }
+}
+
 - (void)tearDown {
     [[NSFileManager defaultManager] removeItemAtURL:[self fileURL] error:NULL];
 }
@@ -127,7 +135,13 @@ static const NSTimeInterval kTestFileLength = 0.5;
 
 - (NSError *)createTestFile {
     AERenderer * renderer = [AERenderer new];
-    AEAudioFileOutput * output = [[AEAudioFileOutput alloc] initWithRenderer:renderer URL:self.fileURL type:AEAudioFileTypeAIFFInt16 sampleRate:44100.0 channelCount:1 error:NULL];
+    
+    __block NSError * error = nil;
+    AEAudioFileOutput * output = [[AEAudioFileOutput alloc] initWithRenderer:renderer URL:self.fileURL type:AEAudioFileTypeAIFFInt16 sampleRate:44100.0 channelCount:1 error:&error];
+    if ( !output ) {
+        return error;
+    }
+    
     AEOscillatorModule * osc = [[AEOscillatorModule alloc] initWithRenderer:renderer];
     osc.frequency = 440.0;
     renderer.block = ^(const AERenderContext * context) {
@@ -136,7 +150,6 @@ static const NSTimeInterval kTestFileLength = 0.5;
     };
     
     __block BOOL done = NO;
-    __block NSError * error = nil;
     [output runForDuration:kTestFileLength completionBlock:^(NSError * e){
         done = YES;
         error = e;
