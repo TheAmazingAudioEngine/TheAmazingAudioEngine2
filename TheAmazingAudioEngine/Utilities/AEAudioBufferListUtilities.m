@@ -123,6 +123,20 @@ void AEAudioBufferListOffsetWithFormat(AudioBufferList *bufferList,
     }
 }
 
+void AEAudioBufferListAssign(AudioBufferList * target, const AudioBufferList * source, UInt32 offset, UInt32 length) {
+    AEAudioBufferListAssignWithFormat(target, source, AEAudioDescription, offset, length);
+}
+
+void AEAudioBufferListAssignWithFormat(AudioBufferList * target, const AudioBufferList * source,
+                                       AudioStreamBasicDescription audioFormat, UInt32 offset, UInt32 length) {
+    target->mNumberBuffers = source->mNumberBuffers;
+    for ( int i=0; i<source->mNumberBuffers; i++ ) {
+        target->mBuffers[i].mNumberChannels = source->mBuffers[i].mNumberChannels;
+        target->mBuffers[i].mData = source->mBuffers[i].mData + (offset * audioFormat.mBytesPerFrame);
+        target->mBuffers[i].mDataByteSize = length * audioFormat.mBytesPerFrame;
+    }
+}
+
 void AEAudioBufferListSilence(const AudioBufferList *bufferList, UInt32 offset, UInt32 length) {
     return AEAudioBufferListSilenceWithFormat(bufferList, AEAudioDescription, offset, length);
 }

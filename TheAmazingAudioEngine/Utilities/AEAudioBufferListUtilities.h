@@ -252,6 +252,34 @@ void AEAudioBufferListOffsetWithFormat(AudioBufferList *bufferList,
                                        UInt32 frames);
 
 /*!
+ * Assign values of one buffer list to another, with the default audio format
+ *
+ *  Note that this simply assigns the buffer list values; if you wish to copy
+ *  the contents, use AEAudioBufferListCopy or AEAudioBufferListCopyContents
+ *
+ * @param target Target buffer list, to assign values to
+ * @param source Source buffer list, to assign values from
+ * @param offset Offset into target buffer
+ * @param length Length to assign, in frames
+ */
+void AEAudioBufferListAssign(AudioBufferList * target, const AudioBufferList * source, UInt32 offset, UInt32 length);
+    
+/*!
+ * Assign values of one buffer list to another, with the default audio format
+ *
+ *  Note that this simply assigns the buffer list values; if you wish to copy
+ *  the contents, use AEAudioBufferListCopy or AEAudioBufferListCopyContents
+ *
+ * @param target Target buffer list, to assign values to
+ * @param source Source buffer list, to assign values from
+ * @param audioFormat Audio format describing the audio in the buffer list
+ * @param offset Offset into target buffer
+ * @param length Length to assign, in frames
+ */
+void AEAudioBufferListAssignWithFormat(AudioBufferList * target, const AudioBufferList * source,
+                                       AudioStreamBasicDescription audioFormat, UInt32 offset, UInt32 length);
+
+/*!
  * Silence an audio buffer list (zero out frames), with the default audio format
  *
  * @param bufferList Pointer to an AudioBufferList containing audio
