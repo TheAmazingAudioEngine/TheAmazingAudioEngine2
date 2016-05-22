@@ -66,14 +66,19 @@
         
         // Run for frame count
         UInt32 remainingFrames = round(duration * self.sampleRate);
+        OSStatus status = noErr;
         while ( remainingFrames > 0 ) {
             UInt32 frames = MIN(remainingFrames, AEBufferStackMaxFramesPerSlice);
+            AEAudioBufferListSetLength(abl, frames);
             
             // Run renderer
-            AERendererRun(_renderer, abl, AEBufferStackMaxFramesPerSlice, &timestamp);
+            AERendererRun(_renderer, abl, frames, &timestamp);
             
             // Write to file
-            ExtAudioFileWrite(_audioFile, AEBufferStackMaxFramesPerSlice, abl);
+            status = ExtAudioFileWrite(_audioFile, frames, abl);
+            if ( !AECheckOSStatus(status, "ExtAudioFileWrite") ) {
+                break;
+            }
             
             remainingFrames -= frames;
             timestamp.mSampleTime += frames;
@@ -83,7 +88,12 @@
         AEAudioBufferListFree(abl);
         
         dispatch_async(dispatch_get_main_queue(), ^{
-            completionBlock();
+            NSError * error = nil;
+            if ( status != noErr ) {
+                error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status
+                                        userInfo:@{ NSLocalizedDescriptionKey: @"Couldn't write to file" }];
+            }
+            completionBlock(error);
         });
     });
 }
@@ -102,6 +112,7 @@
         AudioTimeStamp timestamp = { .mFlags = kAudioTimeStampSampleTimeValid, .mSampleTime = 0 };
         
         // Run while not stopped by condition
+        OSStatus status = noErr;
         while ( !conditionBlock() ) {
             UInt32 frames = AEBufferStackMaxFramesPerSlice;
             
@@ -109,7 +120,10 @@
             AERendererRun(_renderer, abl, AEBufferStackMaxFramesPerSlice, &timestamp);
             
             // Write to file
-            ExtAudioFileWrite(_audioFile, AEBufferStackMaxFramesPerSlice, abl);
+            status = ExtAudioFileWrite(_audioFile, AEBufferStackMaxFramesPerSlice, abl);
+            if ( !AECheckOSStatus(status, "ExtAudioFileWrite") ) {
+                break;
+            }
             
             timestamp.mSampleTime += frames;
             _numberOfFramesRecorded += frames;
@@ -118,7 +132,12 @@
         AEAudioBufferListFree(abl);
         
         dispatch_async(dispatch_get_main_queue(), ^{
-            completionBlock();
+            NSError * error = nil;
+            if ( status != noErr ) {
+                error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status
+                                        userInfo:@{ NSLocalizedDescriptionKey: @"Couldn't write to file" }];
+            }
+            completionBlock(error);
         });
     });
 }

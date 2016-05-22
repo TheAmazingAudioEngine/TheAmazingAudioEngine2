@@ -35,11 +35,20 @@ extern "C" {
 
 @class AERenderer;
 
-//! Completion block
-typedef void (^AEAudioFileOutputCompletionBlock)();
+/*!
+ * Completion block
+ *
+ * @param error The error, if one occurred while writing
+ */
+typedef void (^AEAudioFileOutputCompletionBlock)(NSError * _Nullable error);
 
-//! Condition block, for use with
-//! @link AEAudioFileOutput::runUntilCondition:completionBlock: runUntilCondition:completionBlock: @endlink
+/*
+ * Condition block
+ *
+ *  For use with @link AEAudioFileOutput::runUntilCondition:completionBlock: runUntilCondition:completionBlock: @endlink
+ *
+ * @returns Whether to stop (YES) or continue (NO)
+ */
 typedef BOOL (^AEAudioFileOutputConditionBlock)();
 
 /*!
