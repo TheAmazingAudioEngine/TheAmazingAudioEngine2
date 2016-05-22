@@ -116,7 +116,7 @@ typedef void (^AEAudioFileReaderCompletionBlock)(NSError * _Nullable error);
  */
 + (instancetype _Nonnull)readFileAtURL:(NSURL * _Nonnull)url
                 targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
-                             readBlock:(AEAudioFileReaderIncrementalReadBlock _Nullable)readblock
+                             readBlock:(AEAudioFileReaderIncrementalReadBlock _Nullable)readBlock
                        completionBlock:(AEAudioFileReaderCompletionBlock _Nonnull)completionBlock;
 
 /*!
@@ -133,7 +133,7 @@ typedef void (^AEAudioFileReaderCompletionBlock)(NSError * _Nullable error);
  */
 + (instancetype _Nonnull)readFileAtURL:(NSURL * _Nonnull)url
                 targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
-                             readBlock:(AEAudioFileReaderIncrementalReadBlock _Nullable)readblock
+                             readBlock:(AEAudioFileReaderIncrementalReadBlock _Nullable)readBlock
                        completionBlock:(AEAudioFileReaderCompletionBlock _Nonnull)completionBlock
                              blockSize:(UInt32)blockSize;
 

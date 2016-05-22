@@ -102,22 +102,22 @@ static const UInt32 kMaxAudioFileReadSize = 16384;
 
 + (instancetype)readFileAtURL:(NSURL *)url
        targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
-                    readBlock:(AEAudioFileReaderIncrementalReadBlock)readblock
+                    readBlock:(AEAudioFileReaderIncrementalReadBlock)readBlock
               completionBlock:(AEAudioFileReaderCompletionBlock)completionBlock {
 
-    return [self readFileAtURL:url targetAudioDescription:targetAudioDescription readBlock:readblock
+    return [self readFileAtURL:url targetAudioDescription:targetAudioDescription readBlock:readBlock
                completionBlock:completionBlock blockSize:kDefaultReadSize];
 }
 
 + (instancetype)readFileAtURL:(NSURL *)url
        targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
-                    readBlock:(AEAudioFileReaderIncrementalReadBlock)readblock
+                    readBlock:(AEAudioFileReaderIncrementalReadBlock)readBlock
               completionBlock:(AEAudioFileReaderCompletionBlock)completionBlock
                     blockSize:(UInt32)blockSize {
     AEAudioFileReader * reader = [AEAudioFileReader new];
     reader.url = url;
     reader.targetAudioDescription = targetAudioDescription;
-    reader.readBlock = readblock;
+    reader.readBlock = readBlock;
     reader.readCompletionBlock = completionBlock;
     reader.readBlockSize = blockSize;
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
