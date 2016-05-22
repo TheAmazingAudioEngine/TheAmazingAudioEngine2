@@ -113,10 +113,11 @@ ExtAudioFileRef AEExtAudioFileRefCreate(NSURL * url, AEAudioFileType fileType, d
     }
     
     // Set the client format
+    asbd = AEAudioDescriptionWithChannelsAndRate(channelCount, sampleRate);
     status = ExtAudioFileSetProperty(audioFile,
                                      kExtAudioFileProperty_ClientDataFormat,
-                                     sizeof(AudioStreamBasicDescription),
-                                     &AEAudioDescription);
+                                     sizeof(asbd),
+                                     &asbd);
     if ( !AECheckOSStatus(status, "ExtAudioFileSetProperty") ) {
         ExtAudioFileDispose(audioFile);
         if ( error )
