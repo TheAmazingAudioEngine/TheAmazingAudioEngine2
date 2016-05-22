@@ -39,7 +39,7 @@
 @end
 
 @interface AEMainThreadEndpointThread : NSThread
-@property (nonatomic, weak) AEMainThreadEndpoint * endpoint;
+@property (nonatomic, unsafe_unretained) AEMainThreadEndpoint * endpoint;
 @end
 
 @implementation AEMainThreadEndpoint
@@ -67,8 +67,10 @@
 }
 
 - (void)dealloc {
-    [self.thread cancel];
-    dispatch_semaphore_signal(_semaphore);
+    @synchronized ( self.thread ) {
+        [self.thread cancel];
+        dispatch_semaphore_signal(_semaphore);
+    }
     TPCircularBufferCleanup(&_buffer);
 }
 
@@ -148,11 +150,16 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 - (void)main {
     dispatch_semaphore_t semaphore = self.endpoint.semaphore;
     
-    while ( !self.cancelled ) {
-        @autoreleasepool {
-            [self.endpoint poll];
-            dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+    while ( 1 ) {
+        @synchronized ( self ) {
+            if ( self.cancelled ) {
+                break;
+            }
+            @autoreleasepool {
+                [self.endpoint poll];
+            }
         }
+        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
     }
 }
 
