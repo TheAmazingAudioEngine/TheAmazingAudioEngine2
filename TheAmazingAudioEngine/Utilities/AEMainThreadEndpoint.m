@@ -26,20 +26,16 @@
 
 #import "AEMainThreadEndpoint.h"
 #import "TPCircularBuffer.h"
-#import <dispatch/semaphore.h>
-
-@class AEMainThreadEndpointThread;
 
 @interface AEMainThreadEndpoint () {
     TPCircularBuffer _buffer;
 }
 @property (nonatomic, copy) AEMainThreadEndpointHandler handler;
-@property (nonatomic) dispatch_semaphore_t semaphore;
-@property (nonatomic, strong) AEMainThreadEndpointThread * thread;
+@property (nonatomic, strong) NSTimer * timer;
 @end
 
-@interface AEMainThreadEndpointThread : NSThread
-@property (nonatomic, unsafe_unretained) AEMainThreadEndpoint * endpoint;
+@interface AEMainThreadEndpointProxy : NSProxy
+@property (nonatomic, weak) AEMainThreadEndpoint * target;
 @end
 
 @implementation AEMainThreadEndpoint
@@ -51,27 +47,29 @@
 - (instancetype)initWithHandler:(AEMainThreadEndpointHandler)handler bufferCapacity:(size_t)bufferCapacity {
     if ( !(self = [super init]) ) return nil;
     
+    _pollInterval = 0.01;
     self.handler = handler;
     
     if ( !TPCircularBufferInit(&_buffer, (int32_t)bufferCapacity) ) {
         return nil;
     }
     
-    self.semaphore = dispatch_semaphore_create(0);
-    
-    self.thread = [AEMainThreadEndpointThread new];
-    self.thread.endpoint = self;
-    [self.thread start];
+    [self startTimer];
     
     return self;
 }
 
 - (void)dealloc {
-    @synchronized ( self.thread ) {
-        [self.thread cancel];
-        dispatch_semaphore_signal(_semaphore);
-    }
+    [self.timer invalidate];
     TPCircularBufferCleanup(&_buffer);
+}
+
+- (void)setPollInterval:(AESeconds)pollInterval {
+    _pollInterval = pollInterval;
+    
+    // Restart timer
+    [self.timer invalidate];
+    [self startTimer];
 }
 
 BOOL AEMainThreadEndpointSend(__unsafe_unretained AEMainThreadEndpoint * THIS, const void * data, size_t length) {
@@ -119,7 +117,13 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
     
     // Mark as ready to read
     TPCircularBufferProduce(&THIS->_buffer, (int32_t)size);
-    dispatch_semaphore_signal(THIS->_semaphore);
+}
+
+- (void)startTimer {
+    AEMainThreadEndpointProxy * proxy = [AEMainThreadEndpointProxy alloc];
+    proxy.target = self;
+    self.timer = [NSTimer scheduledTimerWithTimeInterval:self.pollInterval target:proxy selector:@selector(poll)
+                                                userInfo:nil repeats:YES];
 }
 
 - (void)poll {
@@ -134,9 +138,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
         void * data = length > 0 ? (tail + sizeof(size_t)) : NULL;
         
         // Run handler
-        dispatch_sync(dispatch_get_main_queue(), ^{
-            self.handler(data, length);
-        });
+        self.handler(data, length);
         
         // Mark as read
         TPCircularBufferConsume(&_buffer, (int32_t)(sizeof(size_t) + length));
@@ -145,22 +147,12 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 
 @end
 
-@implementation AEMainThreadEndpointThread
-
-- (void)main {
-    dispatch_semaphore_t semaphore = self.endpoint.semaphore;
-    
-    while ( 1 ) {
-        @synchronized ( self ) {
-            if ( self.cancelled ) {
-                break;
-            }
-            @autoreleasepool {
-                [self.endpoint poll];
-            }
-        }
-        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
-    }
+@implementation AEMainThreadEndpointProxy
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)selector {
+    return [_target methodSignatureForSelector:selector];
 }
-
+- (void)forwardInvocation:(NSInvocation *)invocation {
+    [invocation setTarget:_target];
+    [invocation invoke];
+}
 @end

@@ -32,7 +32,7 @@ typedef struct {
     }];
     
     AEMainThreadEndpointSend(endpoint, NULL, 0);
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:endpoint.pollInterval]];
     
     XCTAssertEqualObjects(messages, (@[[NSData dataWithBytes:NULL length:0]]));
     [messages removeAllObjects];
@@ -43,13 +43,13 @@ typedef struct {
     AEMainThreadEndpointSend(endpoint, &value1, sizeof(value1));
     AEMainThreadEndpointSend(endpoint, &value2, sizeof(value2));
     AEMainThreadEndpointSend(endpoint, &value3, sizeof(value3));
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:endpoint.pollInterval]];
     
     XCTAssertEqualObjects(messages, (@[[NSData dataWithBytes:&value1 length:sizeof(value1)], [NSData dataWithBytes:&value2 length:sizeof(value2)], [NSData dataWithBytes:&value3 length:sizeof(value3)]]));
     [messages removeAllObjects];
     
     AEMainThreadEndpointSend(endpoint, &value1, sizeof(value1));
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:endpoint.pollInterval]];
     
     XCTAssertEqualObjects(messages, (@[[NSData dataWithBytes:&value1 length:sizeof(value1)]]));
     [messages removeAllObjects];
@@ -130,7 +130,7 @@ typedef struct {
     XCTAssertNotNil(weakObject);
     
     AEMessageQueuePoll(queue);
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:queue.pollInterval]];
     
     XCTAssertTrue(hitBlock);
     XCTAssertTrue(hitCompletionBlock);
@@ -147,7 +147,7 @@ typedef struct {
     AEMessageQueue * queue = [AEMessageQueue new];
     
     [self sendMainThreadMessage:queue];
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:queue.pollInterval]];
     
     XCTAssertEqual(self.mainThreadMessageValue1, 1);
     XCTAssertEqual(self.mainThreadMessageValue2, self);
@@ -159,7 +159,7 @@ typedef struct {
     
     AEMessageQueuePerformSelectorOnMainThread(queue, self, @selector(mainThreadMessageTestWithNoArguments), AEArgumentNone);
     
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:queue.pollInterval]];
     
     XCTAssertEqual(self.mainThreadMessageValue1, 3);
 }
