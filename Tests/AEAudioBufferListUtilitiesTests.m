@@ -35,7 +35,7 @@
     XCTAssertTrue([self verifyBufferValues:newAbl]);
     
     AEAudioBufferListSilence(newAbl, 0, 256);
-    AEAudioBufferListCopyContents(newAbl, initialAbl, 128, 0, 0);
+    AEAudioBufferListCopyContents(newAbl, initialAbl, 128, 0, 128);
     
     XCTAssertTrue(([self verifyBufferValues:newAbl comparisonBlock:^float (int index) {
         return index < 128 ? 0.0 : ((float*)initialAbl->mBuffers[0].mData)[index-128];
