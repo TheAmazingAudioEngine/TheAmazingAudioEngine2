@@ -69,13 +69,11 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList 
     __unsafe_unretained AERenderLoopBlock block = (__bridge AERenderLoopBlock)AEManagedValueGetValue(THIS->_blockValue);
     if ( block ) {
         
-        // Set the timestamp's sample time, if it's not set
+        // Set our own sample time, to ensure continuity
         AudioTimeStamp time = *timestamp;
-        if ( !(time.mFlags & kAudioTimeStampSampleTimeValid) ) {
-            time.mFlags |= kAudioTimeStampSampleTimeValid;
-            time.mSampleTime = THIS->_sampleTime;
-            THIS->_sampleTime += frames;
-        }
+        time.mFlags |= kAudioTimeStampSampleTimeValid;
+        time.mSampleTime = THIS->_sampleTime;
+        THIS->_sampleTime += frames;
         
         AERenderContext context = {
             .output = bufferList,
