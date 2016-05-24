@@ -27,9 +27,9 @@
 		4C31831D1CDEC6560085634F /* AEAudioFileOutput.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3183171CDEC6560085634F /* AEAudioFileOutput.m */; };
 		4C3183471CE8307A0085634F /* AEDSPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3183461CE8307A0085634F /* AEDSPUtilitiesTests.m */; };
 		4C3183601CEAE6830085634F /* AEAudioBufferListUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C31835F1CEAE6830085634F /* AEAudioBufferListUtilitiesTests.m */; };
-		4C43E5A11CF066B20000DB62 /* AETime.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C43E59F1CF066B20000DB62 /* AETime.h */; };
-		4C43E5A21CF066B20000DB62 /* AETime.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C43E59F1CF066B20000DB62 /* AETime.h */; };
-		4C43E5A31CF066B20000DB62 /* AETime.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C43E59F1CF066B20000DB62 /* AETime.h */; };
+		4C43E5A11CF066B20000DB62 /* AETime.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C43E59F1CF066B20000DB62 /* AETime.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4C43E5A21CF066B20000DB62 /* AETime.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C43E59F1CF066B20000DB62 /* AETime.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4C43E5A31CF066B20000DB62 /* AETime.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C43E59F1CF066B20000DB62 /* AETime.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C43E5A41CF066B20000DB62 /* AETime.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C43E5A01CF066B20000DB62 /* AETime.m */; };
 		4C43E5A51CF066B20000DB62 /* AETime.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C43E5A01CF066B20000DB62 /* AETime.m */; };
 		4C43E5A61CF066B20000DB62 /* AETime.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C43E5A01CF066B20000DB62 /* AETime.m */; };
