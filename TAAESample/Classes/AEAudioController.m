@@ -34,9 +34,12 @@ static const double kMicBandpassCenterFrequency = 2000.0;
 @property (nonatomic, strong) AEManagedValue * playerValue;
 @property (nonatomic) BOOL playingThroughSpeaker;
 @property (nonatomic, strong) id routeChangeObserverToken;
+@property (nonatomic, strong) id audioInterruptionObserverToken;
 @end
 
 @implementation AEAudioController
+
+#pragma mark - Life-cycle
 
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
@@ -223,6 +226,11 @@ static const double kMicBandpassCenterFrequency = 2000.0;
 }
 
 - (BOOL)start:(NSError *__autoreleasing *)error {
+    return [self start:error registerObservers:YES];
+}
+
+- (BOOL)start:(NSError *__autoreleasing *)error registerObservers:(BOOL)registerObservers {
+
     // Request a 128 frame hardware duration, for minimal latency
     AVAudioSession * session = [AVAudioSession sharedInstance];
     [session setPreferredIOBufferDuration:128.0/session.sampleRate error:NULL];
@@ -235,26 +243,32 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     // Work out if we're playing through the speaker (which affects whether we do input monitoring, to avoid feedback)
     [self updatePlayingThroughSpeaker];
     
-    // Watch for route changes, so we can keep track of whether we're playing through the speaker
-    self.routeChangeObserverToken = [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionRouteChangeNotification
-        object:session queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
-        [self updatePlayingThroughSpeaker];
-    }];
+    if ( registerObservers ) {
+        // Watch for some important notifications
+        [self registerObservers];
+    }
     
     // Start the output and input (note, starting the input actually a no-op on iOS)
     return [self.output start:error] && (!self.inputEnabled || [self.input start:error]);
 }
 
 - (void)stop {
+    [self stopAndRemoveObservers:YES];
+}
+
+- (void)stopAndRemoveObservers:(BOOL)removeObservers {
     // Stop, and deactivate the audio session
     [self.output stop];
     [self.input stop]; // (this is a no-op on iOS)
     [[AVAudioSession sharedInstance] setActive:NO error:NULL];
     
-    // Stop observing route changes
-    [[NSNotificationCenter defaultCenter] removeObserver:self.routeChangeObserverToken];
-    self.routeChangeObserverToken = nil;
+    if ( removeObservers ) {
+        // Remove our notification handlers
+        [self unregisterObservers];
+    }
 }
+
+#pragma mark - Recording
 
 - (BOOL)beginRecordingAtTime:(AEHostTicks)time error:(NSError**)error {
     if ( self.recording ) return NO;
@@ -316,6 +330,8 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     self.playingRecording = NO;
     self.playerValue.objectValue = nil;
 }
+
+#pragma mark - Timing
 
 - (AEHostTicks)nextSyncTimeForPlayer:(AEAudioFilePlayerModule *)player {
     AEHostTicks now = AECurrentTimeInHostTicks();
@@ -380,6 +396,8 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     return 0;
 }
 
+#pragma mark - Accessors
+
 - (void)setInputEnabled:(BOOL)inputEnabled {
     if ( inputEnabled == _inputEnabled ) return;
     
@@ -420,6 +438,8 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     return [docs URLByAppendingPathComponent:@"Recording.m4a"];
 }
 
+#pragma mark - Helpers
+
 - (void)updatePlayingThroughSpeaker {
     AVAudioSession * session = [AVAudioSession sharedInstance];
     AVAudioSessionRouteDescription *currentRoute = session.currentRoute;
@@ -440,6 +460,47 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         return NO;
     }
     return YES;
+}
+
+- (void)registerObservers {
+    AVAudioSession * session = [AVAudioSession sharedInstance];
+    __weak AEAudioController * weakSelf = self;
+    
+    // Watch for route changes, so we can keep track of whether we're playing through the speaker
+    self.routeChangeObserverToken =
+        [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionRouteChangeNotification
+            object:session queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
+        
+        // Determine if we're playing through the speaker now
+        [weakSelf updatePlayingThroughSpeaker];
+    }];
+    
+    // Watch for audio session interruptions. Test this by setting a timer
+    self.audioInterruptionObserverToken =
+        [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionInterruptionNotification
+            object:session queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
+                
+        // Stop at the beginning of the interruption, resume after
+        if ( [note.userInfo[AVAudioSessionInterruptionTypeKey] intValue] == AVAudioSessionInterruptionTypeBegan ) {
+            [weakSelf stopAndRemoveObservers:NO];
+        } else {
+            NSError * error = nil;
+            if ( ![weakSelf start:&error registerObservers:NO] ) {
+                NSLog(@"Couldn't restart after interruption: %@", error);
+            }
+        }
+    }];
+}
+
+- (void)unregisterObservers {
+    if ( self.routeChangeObserverToken ) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self.routeChangeObserverToken];
+        self.routeChangeObserverToken = nil;
+    }
+    if( self.audioInterruptionObserverToken ) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self.audioInterruptionObserverToken];
+        self.audioInterruptionObserverToken = nil;
+    }
 }
 
 @end
