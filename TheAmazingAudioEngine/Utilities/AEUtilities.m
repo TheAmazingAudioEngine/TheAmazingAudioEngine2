@@ -91,12 +91,18 @@ ExtAudioFileRef AEExtAudioFileRefCreate(NSURL * url, AEAudioFileType fileType, d
     } else {
         // 16-bit signed integer
         asbd.mFormatID = kAudioFormatLinearPCM;
-        asbd.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagIsBigEndian;
+        asbd.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked |
+                            (fileType == AEAudioFileTypeAIFFInt16 ? kAudioFormatFlagIsBigEndian : 0);
         asbd.mBitsPerChannel = 16;
         asbd.mBytesPerPacket = asbd.mChannelsPerFrame * 2;
         asbd.mBytesPerFrame = asbd.mBytesPerPacket;
         asbd.mFramesPerPacket = 1;
-        fileTypeID = kAudioFileAIFFType;
+        
+        if ( fileType == AEAudioFileTypeAIFFInt16 ) {
+            fileTypeID = kAudioFileAIFFType;
+        } else {
+            fileTypeID = kAudioFileWAVEType;
+        }
     }
     
     // Open the file
