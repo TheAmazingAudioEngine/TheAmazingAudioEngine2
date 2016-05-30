@@ -60,13 +60,14 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
 }
 @property (nonatomic, strong) AEIOAudioUnit * ioUnit;
 @property (nonatomic, strong) AEManagedValue * rendererValue;
+@property (nonatomic, strong, readwrite) AEAudioUnitInputModule * inputModule;
 @property (nonatomic, strong) id ioUnitStreamChangeObserverToken;
 @end
 
 @implementation AEAudioUnitOutput
 @dynamic renderer, audioUnit, sampleRate, currentSampleRate, running, numberOfOutputChannels;
 #if TARGET_OS_IPHONE
-@dynamic latencyCompensation, inputModule;
+@dynamic latencyCompensation;
 #endif
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
@@ -179,11 +180,15 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
 }
 
 - (AEAudioUnitInputModule *)inputModule {
+    if ( !_inputModule ) {
 #if TARGET_OS_IPHONE
-    return [[AEAudioUnitInputModule alloc] initWithRenderer:self.renderer audioUnit:self.ioUnit];
+        _inputModule = [[AEAudioUnitInputModule alloc] initWithRenderer:self.renderer audioUnit:self.ioUnit];
 #else
-    return [[AEAudioUnitInputModule alloc] initWithRenderer:self.renderer];
+        _inputModule = [[AEAudioUnitInputModule alloc] initWithRenderer:self.renderer];
 #endif
+    }
+    
+    return _inputModule;
 }
 
 #if TARGET_OS_IPHONE
