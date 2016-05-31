@@ -178,7 +178,7 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 //! Whether output is enabled
 @property (nonatomic) BOOL outputEnabled;
 
-//! The block to call when rendering output
+//! The block to call when rendering output. May be changed at any time.
 @property (nonatomic, copy) AEIOAudioUnitRenderBlock _Nullable renderBlock;
 
 //! The current number of output channels

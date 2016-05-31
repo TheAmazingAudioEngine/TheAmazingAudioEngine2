@@ -29,12 +29,14 @@
 #import "AEUtilities.h"
 #import "AEBufferStack.h"
 #import "AETime.h"
+#import "AEManagedValue.h"
 #import "AEAudioBufferListUtilities.h"
 #import <AVFoundation/AVFoundation.h>
 
 NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUnitDidUpdateStreamFormatNotification";
 
 @interface AEIOAudioUnit ()
+@property (nonatomic, strong) AEManagedValue * renderBlockValue;
 @property (nonatomic, readwrite) double currentSampleRate;
 @property (nonatomic, readwrite) int numberOfOutputChannels;
 @property (nonatomic, readwrite) int numberOfInputChannels;
@@ -49,7 +51,7 @@ NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
 @end
 
 @implementation AEIOAudioUnit
-@dynamic running;
+@dynamic running, renderBlock;
 
 - (instancetype)initWithInput:(BOOL)inputEnabled output:(BOOL)outputEnabled {
     if ( !(self = [super init]) ) return nil;
@@ -57,6 +59,8 @@ NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
 #if TARGET_OS_IPHONE
     self.latencyCompensation = YES;
 #endif
+    
+    self.renderBlockValue = [AEManagedValue new];
     
     return self;
 }
@@ -353,24 +357,17 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 - (void)setOutputEnabled:(BOOL)outputEnabled {
     if ( _outputEnabled == outputEnabled ) return;
     _outputEnabled = outputEnabled;
-    if ( _renderBlock && _audioUnit ) {
+    if ( self.renderBlock && _audioUnit ) {
         [self reload];
     }
 }
 
+- (AEIOAudioUnitRenderBlock)renderBlock {
+    return self.renderBlockValue.objectValue;
+}
+
 - (void)setRenderBlock:(AEIOAudioUnitRenderBlock)renderBlock {
-    BOOL wasSetup = _audioUnit != NULL;
-    BOOL wasRunning = wasSetup && self.running;
-    if ( _audioUnit && _outputEnabled ) [self teardown];
-    
-    _renderBlock = renderBlock;
-    
-    if ( wasSetup && _outputEnabled ) {
-        [self setup:NULL];
-        if ( wasRunning ) {
-            [self start:NULL];
-        }
-    }
+    self.renderBlockValue.objectValue = [renderBlock copy];
 }
 
 - (void)setInputEnabled:(BOOL)inputEnabled {
@@ -405,7 +402,12 @@ static OSStatus AEIOAudioUnitRenderCallback(void *inRefCon, AudioUnitRenderActio
     }
 #endif
     
-    THIS->_renderBlock(ioData, inNumberFrames, &timestamp);
+    __unsafe_unretained AEIOAudioUnitRenderBlock renderBlock
+        = (__bridge AEIOAudioUnitRenderBlock)AEManagedValueGetValue(THIS->_renderBlockValue);
+    if ( renderBlock ) {
+        renderBlock(ioData, inNumberFrames, &timestamp);
+    }
+    
     return noErr;
 }
 
