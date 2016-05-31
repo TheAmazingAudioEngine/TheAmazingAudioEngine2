@@ -134,30 +134,26 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
         return NO;
     }
     
-    if ( self.outputEnabled ) {
-        // Set the render callback
-        AURenderCallbackStruct rcbs = { .inputProc = AEIOAudioUnitRenderCallback, .inputProcRefCon = (__bridge void *)(self) };
-        result = AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Global, 0,
-                                      &rcbs, sizeof(rcbs));
-        if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioUnitProperty_SetRenderCallback)") ) {
-            if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
-                                                  userInfo:@{ NSLocalizedDescriptionKey: @"Unable to configure output render" }];
-            return NO;
-        }
+    // Set the render callback
+    AURenderCallbackStruct rcbs = { .inputProc = AEIOAudioUnitRenderCallback, .inputProcRefCon = (__bridge void *)(self) };
+    result = AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Global, 0,
+                                  &rcbs, sizeof(rcbs));
+    if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioUnitProperty_SetRenderCallback)") ) {
+        if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
+                                              userInfo:@{ NSLocalizedDescriptionKey: @"Unable to configure output render" }];
+        return NO;
     }
-    
-    if ( self.inputEnabled ) {
-        // Set the input callback
-        AURenderCallbackStruct inRenderProc;
-        inRenderProc.inputProc = &AEIOAudioUnitInputCallback;
-        inRenderProc.inputProcRefCon = (__bridge void *)self;
-        result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_SetInputCallback, kAudioUnitScope_Global,
-                                      0, &inRenderProc, sizeof(inRenderProc));
-        if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_SetInputCallback)") ) {
-            if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
-                                                  userInfo:@{ NSLocalizedDescriptionKey: @"Unable to configure input process" }];
-            return NO;
-        }
+
+    // Set the input callback
+    AURenderCallbackStruct inRenderProc;
+    inRenderProc.inputProc = &AEIOAudioUnitInputCallback;
+    inRenderProc.inputProcRefCon = (__bridge void *)self;
+    result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_SetInputCallback, kAudioUnitScope_Global,
+                                  0, &inRenderProc, sizeof(inRenderProc));
+    if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_SetInputCallback)") ) {
+        if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
+                                              userInfo:@{ NSLocalizedDescriptionKey: @"Unable to configure input process" }];
+        return NO;
     }
     
     // Initialize
@@ -340,7 +336,17 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     if ( _outputEnabled == outputEnabled ) return;
     _outputEnabled = outputEnabled;
     if ( self.renderBlock && _audioUnit ) {
-        [self reload];
+        BOOL wasRunning = self.running;
+        AECheckOSStatus(AudioUnitUninitialize(_audioUnit), "AudioUnitUninitialize");
+        UInt32 flag = _outputEnabled ? 1 : 0;
+        OSStatus result =
+            AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, 0, &flag, sizeof(flag));
+        if ( AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_EnableIO)") ) {
+            [self updateStreamFormat];
+            if ( AECheckOSStatus(AudioUnitInitialize(_audioUnit), "AudioUnitInitialize") && wasRunning ) {
+                [self start:NULL];
+            }
+        }
     }
 }
 
@@ -367,7 +373,17 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     if ( _inputEnabled == inputEnabled ) return;
     _inputEnabled = inputEnabled;
     if ( _audioUnit ) {
-        [self reload];
+        BOOL wasRunning = self.running;
+        AECheckOSStatus(AudioUnitUninitialize(_audioUnit), "AudioUnitUninitialize");
+        UInt32 flag = _inputEnabled ? 1 : 0;
+        OSStatus result =
+            AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input, 1, &flag, sizeof(flag));
+        if ( AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_EnableIO)") ) {
+            [self updateStreamFormat];
+            if ( AECheckOSStatus(AudioUnitInitialize(_audioUnit), "AudioUnitInitialize") && wasRunning ) {
+                [self start:NULL];
+            }
+        }
     }
 }
 
