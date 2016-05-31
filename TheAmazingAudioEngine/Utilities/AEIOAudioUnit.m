@@ -53,7 +53,7 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
 @end
 
 @implementation AEIOAudioUnit
-@dynamic running, renderBlock;
+@dynamic running, renderBlock, IOBufferDuration;
 
 - (instancetype)initWithInput:(BOOL)inputEnabled output:(BOOL)outputEnabled {
     if ( !(self = [super init]) ) return nil;
@@ -387,6 +387,51 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     if ( _audioUnit && _inputEnabled && _numberOfInputChannels > _maximumInputChannels ) {
         [self updateStreamFormat];
     }
+}
+
+- (AESeconds)IOBufferDuration {
+#if TARGET_OS_IPHONE
+    return [[AVAudioSession sharedInstance] IOBufferDuration];
+#else
+    // Get the default device
+    AudioDeviceID deviceId =
+        [self defaultDeviceForScope:self.outputEnabled ? kAudioDevicePropertyScopeOutput : kAudioDevicePropertyScopeInput];
+    if ( deviceId == kAudioDeviceUnknown ) return 0.0;
+    
+    // Get the buffer duration
+    UInt32 duration;
+    UInt32 size = sizeof(duration);
+    AudioObjectPropertyAddress addr = {
+        kAudioDevicePropertyBufferFrameSize,
+        self.outputEnabled ? kAudioDevicePropertyScopeOutput : kAudioDevicePropertyScopeInput, 0 };
+    if ( !AECheckOSStatus(AudioObjectGetPropertyData(deviceId, &addr, 0, NULL, &size, &duration),
+                          "AudioObjectSetPropertyData") ) return 0.0;
+    
+    return (double)duration / self.currentSampleRate;
+#endif
+}
+
+- (void)setIOBufferDuration:(AESeconds)IOBufferDuration {
+#if TARGET_OS_IPHONE
+    NSError * error = nil;
+    if ( ![[AVAudioSession sharedInstance] setPreferredIOBufferDuration:IOBufferDuration error:&error] ) {
+        NSLog(@"Unable to set IO Buffer duration: %@", error.localizedDescription);
+    }
+#else
+    // Get the default device
+    AudioDeviceID deviceId =
+    [self defaultDeviceForScope:self.outputEnabled ? kAudioDevicePropertyScopeOutput : kAudioDevicePropertyScopeInput];
+    if ( deviceId == kAudioDeviceUnknown ) return;
+    
+    // Set the buffer duration
+    UInt32 duration = (double)IOBufferDuration * self.currentSampleRate;
+    UInt32 size = sizeof(duration);
+    AudioObjectPropertyAddress addr = {
+        kAudioDevicePropertyBufferFrameSize,
+        self.outputEnabled ? kAudioDevicePropertyScopeOutput : kAudioDevicePropertyScopeInput, 0 };
+    AECheckOSStatus(AudioObjectSetPropertyData(deviceId, &addr, 0, NULL, size, &duration),
+                    "AudioObjectSetPropertyData");
+#endif
 }
 
 #pragma mark -

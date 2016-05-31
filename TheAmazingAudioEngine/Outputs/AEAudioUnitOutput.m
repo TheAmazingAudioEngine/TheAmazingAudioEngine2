@@ -235,7 +235,7 @@ static void AEAudioUnitOutputReportRenderTime(__unsafe_unretained AEAudioUnitOut
             AESeconds maximum = self->_maximumRenderDuration;
             
             dispatch_async(dispatch_get_main_queue(), ^{
-                AESeconds bufferDuration = [AVAudioSession sharedInstance].IOBufferDuration;
+                AESeconds bufferDuration = self.ioUnit.IOBufferDuration;
                 NSLog(@"Render time report: %lfs/%0.4lf%% average,\t%lfs/%0.4lf%% maximum",
                       average, (average/bufferDuration)*100.0, maximum, (maximum/bufferDuration)*100.0);
             });

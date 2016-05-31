@@ -204,6 +204,10 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 //! The current number of input channels in use
 @property (nonatomic, readonly) int numberOfInputChannels;
 
+//! The IO buffer duration.
+//! On iOS, this is fetched from AVAudioSession; on the Mac, this is taken from HAL
+@property (nonatomic) AESeconds IOBufferDuration;
+
 #if TARGET_OS_IPHONE
 
 //! Whether to automatically perform latency compensation (default YES)
