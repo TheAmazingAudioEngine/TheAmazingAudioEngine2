@@ -184,7 +184,8 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 //! Whether unit is currently active
 @property (nonatomic, readonly) BOOL running;
 
-//! Whether output is enabled
+//! Whether output is enabled. Note that changing this value will cause the audio unit to be recreated.
+//! If your app is currently hosted within Inter-App Audio or Audiobus when this occurs, bad things will happen.
 @property (nonatomic) BOOL outputEnabled;
 
 //! The block to call when rendering output. May be changed at any time.
@@ -193,8 +194,8 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 //! The current number of output channels
 @property (nonatomic, readonly) int numberOfOutputChannels;
 
-
-//! Whether input is enabled
+//! Whether input is enabled. Note that changing this value will cause the audio unit to be recreated.
+//! If your app is currently hosted within Inter-App Audio or Audiobus when this occurs, bad things will happen.
 @property (nonatomic) BOOL inputEnabled;
 
 //! The maximum number of input channels to support, or zero for unlimited

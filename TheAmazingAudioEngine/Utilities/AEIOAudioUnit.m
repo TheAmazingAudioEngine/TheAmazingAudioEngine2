@@ -321,12 +321,37 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     }
 }
 
+- (double)currentSampleRate {
+    if ( _audioUnit ) return _currentSampleRate;
+    
+    if ( self.sampleRate != 0 ) return self.sampleRate;
+    
+    // If not setup yet, take the sample rate from the audio session
+#if TARGET_OS_IPHONE
+    return [[AVAudioSession sharedInstance] sampleRate];
+#else
+    return [self streamFormatForDefaultDeviceScope:
+            self.outputEnabled ? kAudioDevicePropertyScopeOutput : kAudioDevicePropertyScopeInput].mSampleRate;
+#endif
+}
+
 - (void)setOutputEnabled:(BOOL)outputEnabled {
     if ( _outputEnabled == outputEnabled ) return;
     _outputEnabled = outputEnabled;
     if ( self.renderBlock && _audioUnit ) {
         [self reload];
     }
+}
+
+- (int)numberOfOutputChannels {
+    if ( _audioUnit && _numberOfOutputChannels ) return _numberOfOutputChannels;
+    
+    // If not setup, take the channel count from the session
+#if TARGET_OS_IPHONE
+    return (int)[[AVAudioSession sharedInstance] outputNumberOfChannels];
+#else
+    return [self streamFormatForDefaultDeviceScope:kAudioDevicePropertyScopeOutput].mChannelsPerFrame;
+#endif
 }
 
 - (AEIOAudioUnitRenderBlock)renderBlock {
@@ -343,6 +368,17 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     if ( _audioUnit ) {
         [self reload];
     }
+}
+
+- (int)numberOfInputChannels {
+    if ( _audioUnit && _numberOfInputChannels ) return _numberOfInputChannels;
+    
+    // If not setup, take the channel count from the session
+#if TARGET_OS_IPHONE
+    return (int)[[AVAudioSession sharedInstance] inputNumberOfChannels];
+#else
+    return [self streamFormatForDefaultDeviceScope:kAudioDevicePropertyScopeInput].mChannelsPerFrame;
+#endif
 }
 
 - (void)setMaximumInputChannels:(int)maximumInputChannels {
@@ -432,6 +468,8 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
         if ( self.numberOfOutputChannels != (int)asbd.mChannelsPerFrame ) {
             hasChanges = YES;
             self.numberOfOutputChannels = asbd.mChannelsPerFrame;
+        } else {
+            _numberOfOutputChannels = (int)asbd.mChannelsPerFrame; // (Report change quietly)
         }
         
         // Update the stream format
@@ -455,6 +493,8 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
         if ( self.numberOfInputChannels != (int)channels ) {
             hasChanges = YES;
             self.numberOfInputChannels = channels;
+        } else {
+            _numberOfInputChannels = channels; // (Report change quietly)
         }
         
         if ( !self.outputEnabled ) {
@@ -491,5 +531,40 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
         [self start:NULL];
     }
 }
+
+#if !TARGET_OS_IPHONE
+- (AudioDeviceID)defaultDeviceForScope:(AudioObjectPropertyScope)scope {
+    AudioDeviceID deviceId;
+    UInt32 size = sizeof(deviceId);
+    AudioObjectPropertyAddress addr = {
+        scope == kAudioDevicePropertyScopeInput ? kAudioHardwarePropertyDefaultInputDevice : kAudioHardwarePropertyDefaultOutputDevice,
+        .mScope = kAudioObjectPropertyScopeGlobal,
+        .mElement = 0
+    };
+    if ( !AECheckOSStatus(AudioObjectGetPropertyData(kAudioObjectSystemObject, &addr, 0, NULL, &size, &deviceId),
+                          "AudioObjectGetPropertyData") ) {
+        return kAudioDeviceUnknown;
+    }
+    
+    return deviceId;
+}
+
+- (AudioStreamBasicDescription)streamFormatForDefaultDeviceScope:(AudioObjectPropertyScope)scope {
+    // Get the default device
+    AudioDeviceID deviceId = [self defaultDeviceForScope:scope];
+    if ( deviceId == kAudioDeviceUnknown ) return (AudioStreamBasicDescription){};
+    
+    // Get stream format
+    AudioStreamBasicDescription asbd;
+    UInt32 size = sizeof(asbd);
+    AudioObjectPropertyAddress addr = { kAudioDevicePropertyStreamFormat, scope, 0 };
+    if ( !AECheckOSStatus(AudioObjectGetPropertyData(deviceId, &addr, 0, NULL, &size, &deviceId),
+                          "AudioObjectGetPropertyData") ) {
+        return (AudioStreamBasicDescription){};
+    }
+    
+    return asbd;
+}
+#endif
 
 @end
