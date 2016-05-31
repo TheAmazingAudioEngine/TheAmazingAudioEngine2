@@ -55,13 +55,14 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
 @implementation AEIOAudioUnit
 @dynamic running, renderBlock, IOBufferDuration;
 
-- (instancetype)initWithInput:(BOOL)inputEnabled output:(BOOL)outputEnabled {
+- (instancetype)init {
     if ( !(self = [super init]) ) return nil;
     
 #if TARGET_OS_IPHONE
     self.latencyCompensation = YES;
 #endif
     
+    _outputEnabled = YES;
     self.renderBlockValue = [AEManagedValue new];
     
     return self;
