@@ -47,6 +47,15 @@ typedef void (^AEIOAudioUnitRenderBlock)(AudioBufferList * _Nonnull ioData,
                                          const AudioTimeStamp * _Nonnull timestamp);
 
 /*!
+ * Setup notification
+ *
+ *  This is broadcast when the unit is setup, or re-setup after changing parameters
+ *  or after a media services reset. After this notification is sent, the audioUnit
+ *  property will be non-NULL.
+ */
+extern NSString * const _Nonnull AEIOAudioUnitDidSetupNotification;
+
+/*!
  * Stream update notification
  *
  *  This is broadcast when the stream format updates (sample rate/channel count).
@@ -163,7 +172,7 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 
 #endif
 
-//! The audio unit
+//! The audio unit. Will be NULL until setup: is called.
 @property (nonatomic, readonly) AudioUnit _Nullable audioUnit;
 
 //! The sample rate at which to run, or zero to track the hardware sample rate

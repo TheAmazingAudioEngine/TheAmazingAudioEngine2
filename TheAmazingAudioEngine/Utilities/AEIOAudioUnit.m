@@ -34,6 +34,8 @@
 #import <AVFoundation/AVFoundation.h>
 
 NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUnitDidUpdateStreamFormatNotification";
+NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNotification";
+
 
 @interface AEIOAudioUnit ()
 @property (nonatomic, strong) AEManagedValue * renderBlockValue;
@@ -211,6 +213,9 @@ NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
     }];
 #endif
     
+    // Notify
+    [[NSNotificationCenter defaultCenter] postNotificationName:AEIOAudioUnitDidSetupNotification object:self];
+    
     return YES;
 }
 
@@ -229,6 +234,8 @@ NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
 }
 
 - (BOOL)start:(NSError *__autoreleasing *)error {
+    NSAssert(_audioUnit, @"You must call setup: on this instance before starting it");
+    
 #if TARGET_OS_IPHONE
     // Activate audio session
     NSError * e;
@@ -256,6 +263,8 @@ NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
 }
 
 - (void)stop {
+    NSAssert(_audioUnit, @"You must call setup: on this instance before starting or stopping it");
+    
     // Stop unit
     AECheckOSStatus(AudioOutputUnitStop(_audioUnit), "AudioOutputUnitStop");
 }
