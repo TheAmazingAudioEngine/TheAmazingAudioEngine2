@@ -165,50 +165,8 @@ NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUni
         return NO;
     }
     
-    if ( self.outputEnabled ) {
-        // Get the current sample rate and number of output channels
-        AudioStreamBasicDescription asbd;
-        UInt32 size = sizeof(asbd);
-        AECheckOSStatus(AudioUnitGetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0,
-                                             &asbd, &size),
-                        "AudioUnitGetProperty(kAudioUnitProperty_StreamFormat)");
-        self.currentSampleRate = self.sampleRate == 0 ? asbd.mSampleRate : self.sampleRate;
-        self.numberOfOutputChannels = asbd.mChannelsPerFrame;
-        
-        // Set the stream format
-        asbd = AEAudioDescription;
-        asbd.mSampleRate = self.currentSampleRate;
-        asbd.mChannelsPerFrame = self.numberOfOutputChannels;
-        AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0,
-                                             &asbd, sizeof(asbd)),
-                        "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
-    }
-    
-    if ( self.inputEnabled ) {
-        // Get the current number of input channels and sample rate
-        AudioStreamBasicDescription asbd;
-        UInt32 size = sizeof(asbd);
-        AECheckOSStatus(AudioUnitGetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 1,
-                                             &asbd, &size),
-                        "AudioUnitGetProperty(kAudioUnitProperty_StreamFormat)");
-        self.numberOfInputChannels = MIN(asbd.mChannelsPerFrame, self.maximumInputChannels);
-        
-        if ( !self.outputEnabled ) {
-            self.currentSampleRate = self.sampleRate;
-        }
-        
-        if ( self.numberOfInputChannels > 0 ) {
-            // Set the stream format
-            asbd = AEAudioDescription;
-            asbd.mSampleRate = self.currentSampleRate;
-            asbd.mChannelsPerFrame = self.numberOfInputChannels;
-            AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1,
-                                                 &asbd, sizeof(asbd)),
-                            "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
-        } else {
-            memset(&_inputTimestamp, 0, sizeof(_inputTimestamp));
-        }
-    }
+    // Update stream formats
+    [self updateStreamFormat];
     
     // Register a callback to watch for stream format changes
     AECheckOSStatus(AudioUnitAddPropertyListener(_audioUnit, kAudioUnitProperty_StreamFormat, AEIOAudioUnitStreamFormatChanged,
@@ -491,7 +449,7 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
         }
         
         if ( !self.outputEnabled ) {
-            self.currentSampleRate = self.sampleRate;
+            self.currentSampleRate = self.sampleRate == 0 ? asbd.mSampleRate : self.sampleRate;
         }
         
         if ( self.numberOfInputChannels > 0 ) {
