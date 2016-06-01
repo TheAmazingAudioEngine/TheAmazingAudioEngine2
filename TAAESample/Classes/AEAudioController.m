@@ -11,6 +11,9 @@
 #import "AEAudioController.h"
 #import <AVFoundation/AVFoundation.h>
 
+NSString * const AEAudioControllerInputEnabledChangedNotification = @"AEAudioControllerInputEnabledChangedNotification";
+NSString * const AEAudioControllerInputPermissionErrorNotification = @"AEAudioControllerInputPermissionErrorNotification";
+
 static const AESeconds kCountInThreshold = 0.2;
 static const double kMicBandpassCenterFrequency = 2000.0;
 
@@ -403,6 +406,23 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     
     _inputEnabled = inputEnabled;
     
+    if ( _inputEnabled ) {
+        // See if we have record permissions
+        __weak AEAudioController * weakSelf = self;
+        [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if ( granted ) {
+                    // All set!
+                } else {
+                    // We haven't been granted record permission. Send out a notification and disable input.
+                    [[NSNotificationCenter defaultCenter]
+                     postNotificationName:AEAudioControllerInputPermissionErrorNotification object:self];
+                    weakSelf.inputEnabled = NO;
+                }
+            });
+        }];
+    }
+    
     // Update audio session category
     if ( ![self setAudioSessionCategory:nil] ) {
         return;
@@ -417,6 +437,9 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     } else {
         [self.input stop];
     }
+    
+    // Tell observers our input enabled status has changed
+    [[NSNotificationCenter defaultCenter] postNotificationName:AEAudioControllerInputEnabledChangedNotification object:self];
 }
 
 - (void)setBandpassWetDry:(double)bandpassWetDry {

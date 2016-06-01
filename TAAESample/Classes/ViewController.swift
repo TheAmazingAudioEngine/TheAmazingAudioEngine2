@@ -78,6 +78,14 @@ class ViewController: UIViewController {
         
         // Enable/disable actions requiring prior recording
         updateFileActionsEnabled()
+        
+        // Monitor for some events
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(inputEnabledChanged), name: AEAudioControllerInputEnabledChangedNotification, object: nil);
+        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(inputPermissionsError), name: AEAudioControllerInputPermissionErrorNotification, object: nil);
+    }
+    
+    deinit {
+        NSNotificationCenter.defaultCenter().removeObserver(self)
     }
     
     override func prefersStatusBarHidden() -> Bool {
@@ -331,11 +339,32 @@ class ViewController: UIViewController {
     @objc private func stereoSweepTouch(sender: TriggerGestureRecognizer) {
         if let audio = audio {
             if sender.state == UIGestureRecognizerState.Began || sender.state == UIGestureRecognizerState.Changed {
-                audio.balanceSweepRate = (sender.pressure >= 1.0 ? 0.5 : 2.0);
+                audio.balanceSweepRate = (sender.pressure >= 1.0 ? 0.5 : 2.0)
             } else {
                 audio.balanceSweepRate = 0.0
             }
         }
+    }
+}
+
+// Mark: - Events
+
+private extension ViewController {
+    @objc private func inputEnabledChanged() {
+        micButton.selected = audio!.inputEnabled
+    }
+    
+    @objc private func inputPermissionsError() {
+        let displayName = NSBundle.mainBundle().infoDictionary!["CFBundleDisplayName"]!
+        let alert = UIAlertController(title: "Microphone permissions required", message: "In order to record, you need to enable microphone permissions for \(displayName). To fix this, open the Settings app, then under Privacy and Microphone, turn on the switch beside \(displayName)", preferredStyle: UIAlertControllerStyle.ActionSheet)
+        alert.addAction(UIAlertAction.init(title: "Open Settings", style: UIAlertActionStyle.Default, handler: { action in
+            UIApplication.sharedApplication().openURL(NSURL(string: UIApplicationOpenSettingsURLString)!)
+        }));
+        alert.addAction(UIAlertAction.init(title: "OK", style: UIAlertActionStyle.Default, handler: nil))
+        alert.popoverPresentationController?.sourceView = micButton
+        alert.popoverPresentationController?.sourceRect = micButton.bounds
+        alert.modalPresentationStyle = UIModalPresentationStyle.Popover
+        self.presentViewController(alert, animated: true, completion: nil)
     }
 }
 

@@ -11,6 +11,9 @@
 #import <Foundation/Foundation.h>
 #import <TheAmazingAudioEngine/TheAmazingAudioEngine.h>
 
+extern NSString * _Nonnull const AEAudioControllerInputEnabledChangedNotification;
+extern NSString * _Nonnull const AEAudioControllerInputPermissionErrorNotification;
+
 @interface AEAudioController : NSObject
 - (BOOL)start:(NSError * _Nullable * _Nullable)error;
 - (void)stop;
