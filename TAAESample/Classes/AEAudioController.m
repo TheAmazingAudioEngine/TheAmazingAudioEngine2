@@ -248,7 +248,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         [self registerObservers];
     }
     
-    // Start the output and input (note, starting the input actually a no-op on iOS)
+    // Start the output and input
     return [self.output start:error] && (!self.inputEnabled || [self.input start:error]);
 }
 
@@ -259,7 +259,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
 - (void)stopAndRemoveObservers:(BOOL)removeObservers {
     // Stop, and deactivate the audio session
     [self.output stop];
-    [self.input stop]; // (this is a no-op on iOS)
+    [self.input stop];
     [[AVAudioSession sharedInstance] setActive:NO error:NULL];
     
     if ( removeObservers ) {
@@ -408,7 +408,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         return;
     }
     
-    // Start or stop the input module (actually a no-op on iOS)
+    // Start or stop the input module
     if ( _inputEnabled ) {
         NSError * error;
         if ( ![self.input start:&error] ) {

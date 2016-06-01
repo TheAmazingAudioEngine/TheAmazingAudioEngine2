@@ -47,6 +47,20 @@ extern "C" {
 @interface AEAudioUnitInputModule : AEModule
 
 /*!
+ * Setup (optional)
+ *
+ *  You may call this method prior to @link start: @endlink to set up the rendering resources. Once this is
+ *  called, the audioUnit property will yield a valid audio unit instance. If you do not use
+ *  this method, it will be called automatically the first time @link start: @endlink is called.
+ *
+ *  Note that if this module was retrieved from AEAudioUnitOutput, this will do nothing.
+ *
+ * @param error If an error occured and this is not nil, it will be set to the error on output
+ * @return YES on success, NO on failure
+ */
+- (BOOL)setup:(NSError * __autoreleasing _Nullable * _Nullable)error;
+
+/*!
  * Start the audio unit
  *
  *  You need to start the audio unit to be able to begin getting audio input.

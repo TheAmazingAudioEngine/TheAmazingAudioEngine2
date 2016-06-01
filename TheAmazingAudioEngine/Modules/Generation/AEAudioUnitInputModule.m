@@ -54,7 +54,6 @@
     
     if ( audioUnit ) {
         self.ioUnit = audioUnit;
-        self.ioUnit.inputEnabled = YES;
     } else {
         self.ioUnit = [AEIOAudioUnit new];
         self.ioUnit.inputEnabled = YES;
@@ -71,10 +70,6 @@
         weakSelf.numberOfInputChannels = weakSelf.ioUnit.numberOfInputChannels;
     }];
     
-    if ( self.ownsIOUnit ) {
-        if ( ![self.ioUnit setup:NULL] ) return nil;
-    }
-    
     self.numberOfInputChannels = self.ioUnit.numberOfInputChannels;
     self.processFunction = AEAudioUnitInputModuleProcess;
     
@@ -90,17 +85,35 @@
 }
 
 - (BOOL)running {
-    return self.ioUnit.running;
+    return self.ioUnit.running && self.ioUnit.inputEnabled;
+}
+
+- (BOOL)setup:(NSError * _Nullable __autoreleasing *)error {
+    if ( !self.ownsIOUnit ) return YES;
+    return [self.ioUnit setup:error];
 }
 
 - (BOOL)start:(NSError *__autoreleasing *)error {
-    if ( !self.ownsIOUnit ) return YES;
-    return [self.ioUnit start:error];
+    if ( self.ownsIOUnit ) {
+        if ( !self.ioUnit.audioUnit ) {
+            if ( ![self.ioUnit setup:error] ) {
+                return NO;
+            }
+        }
+        return [self.ioUnit start:error];
+        
+    } else {
+        self.ioUnit.inputEnabled = YES;
+        return YES;
+    }
 }
 
 - (void)stop {
-    if ( !self.ownsIOUnit ) return;
-    [self.ioUnit stop];
+    if ( self.ownsIOUnit ) {
+        [self.ioUnit stop];
+    } else {
+        self.ioUnit.inputEnabled = NO;
+    }
 }
 
 #if TARGET_OS_IPHONE

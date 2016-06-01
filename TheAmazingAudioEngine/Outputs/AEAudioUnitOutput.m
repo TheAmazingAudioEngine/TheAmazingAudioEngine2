@@ -119,8 +119,6 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
         }
     }];
     
-    if ( ![self.ioUnit setup:NULL] ) return nil;
-    
 #if TARGET_OS_IPHONE
     self.latencyCompensation = YES;
 #endif
@@ -135,11 +133,20 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     self.ioUnit = nil;
 }
 
+- (BOOL)setup:(NSError * __autoreleasing *)error {
+    return [self.ioUnit setup:error];
+}
+
 - (BOOL)start:(NSError *__autoreleasing *)error {
+    if ( !self.ioUnit.audioUnit ) {
+        if ( ![self.ioUnit setup:error] ) return NO;
+    }
+    
     return [self.ioUnit start:error];
 }
 
 - (void)stop {
+    if ( !self.ioUnit.audioUnit ) return;
     [self.ioUnit stop];
 }
 
