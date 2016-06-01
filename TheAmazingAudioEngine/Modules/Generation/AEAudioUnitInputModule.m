@@ -150,7 +150,7 @@ static void AEAudioUnitInputModuleProcess(__unsafe_unretained AEAudioUnitInputMo
         if ( status == -1 || status == kAudioToolboxErr_CannotDoInCurrentContext ) {
             // Ignore these errors silently
         } else {
-            AECheckOSStatus(status, "AudioUnitRender");
+            AECheckOSStatus(status, "AEIOAudioUnitRenderInput");
         }
         AEAudioBufferListSilence(abl, 0, context->frames);
     }

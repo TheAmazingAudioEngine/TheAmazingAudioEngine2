@@ -272,11 +272,10 @@ AudioUnit _Nonnull AEIOAudioUnitGetAudioUnit(__unsafe_unretained AEIOAudioUnit *
 
 OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull self,
                                   const AudioBufferList * _Nonnull buffer, UInt32 frames) {
-    assert(self->_inputEnabled);
     
-    if ( self->_numberOfInputChannels == 0 ) {
+    if ( !self->_inputEnabled || self->_numberOfInputChannels == 0 ) {
         AEAudioBufferListSilence(buffer, 0, frames);
-        return kAudio_ParamError;
+        return 0;
     }
     
     AudioUnitRenderActionFlags flags = 0;
