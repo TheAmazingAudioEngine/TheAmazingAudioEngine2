@@ -237,7 +237,7 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
             = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void * data, size_t length) {
         AEAudioFilePlayerModule * self = weakSelf;
         
-        if ( self.beginBlock && _anchorTime != 0 ) {
+        if ( self.beginBlock && self->_anchorTime != 0 ) {
             self.beginBlock();
             self.beginBlock = nil;
             if ( !self.completionBlock || self.loop ) {
@@ -245,11 +245,11 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
             }
         }
         
-        if ( _stopEventScheduled ) {
-            _stopEventScheduled = NO;
+        if ( self->_stopEventScheduled ) {
+            self->_stopEventScheduled = NO;
             AECheckOSStatus(AudioUnitReset(self.audioUnit, kAudioUnitScope_Global, 0), "AudioUnitReset");
-            _sequenceScheduled = NO;
-            _playing = NO;
+            self->_sequenceScheduled = NO;
+            self->_playing = NO;
             if ( self.completionBlock ) self.completionBlock();
             self.mainThreadEndpointValue.objectValue = nil;
         }
