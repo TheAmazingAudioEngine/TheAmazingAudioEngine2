@@ -49,7 +49,6 @@ static const UInt32 kNoValue = -1;
     BOOL        _sequenceScheduled;
     AEHostTicks _startTime;
     AEHostTicks _anchorTime;
-    UInt32      _playheadOffset;
     double      _playhead;
     UInt32      _remainingMicrofadeInFrames;
     UInt32      _remainingMicrofadeOutFrames;
@@ -165,9 +164,7 @@ static const UInt32 kNoValue = -1;
 }
 
 - (void)setCurrentTime:(AESeconds)currentTime {
-    [self schedulePlayRegionFromPosition:
-        (UInt32)(self.regionStartTime * _fileSampleRate)
-        + ((UInt32)((currentTime - self.regionStartTime) * _fileSampleRate) % (UInt32)(self.regionDuration * _fileSampleRate))];
+    [self schedulePlayRegionFromPosition:currentTime * _fileSampleRate];
 }
 
 - (void)setRegionDuration:(NSTimeInterval)regionDuration {
@@ -218,13 +215,15 @@ AESeconds AEAudioFilePlayerModuleGetPlayhead(__unsafe_unretained AEAudioFilePlay
         return THIS->_playhead / THIS->_fileSampleRate;
     }
     
-    AESeconds offset = THIS->_playhead / THIS->_fileSampleRate;
-    AESeconds timeline = (time > THIS->_anchorTime ? AESecondsFromHostTicks(time - THIS->_anchorTime) :
-                          -AESecondsFromHostTicks(THIS->_anchorTime - time)) + offset;
+    AESeconds playhead = THIS->_playhead / THIS->_fileSampleRate;
+    AESeconds offset = time > THIS->_anchorTime ? AESecondsFromHostTicks(time - THIS->_anchorTime)
+                                                : -AESecondsFromHostTicks(THIS->_anchorTime - time);
+    AESeconds timeline = playhead + offset;
+    
     if ( !THIS->_loop ) {
-        return MIN(timeline, THIS->_regionDuration);
+        return MIN(timeline, THIS->_regionStartTime + THIS->_regionDuration);
     } else {
-        return fmod(timeline, THIS->_regionDuration);
+        return THIS->_regionStartTime + fmod(timeline - THIS->_regionStartTime, THIS->_regionDuration);
     }
 }
 
@@ -384,7 +383,7 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
     Float64 mainRegionStartTime = 0;
     if ( position > start ) {
         // Schedule the remaining part of the audio
-        UInt32 framesToPlay = (self.regionDuration * _fileSampleRate) - position - (self.regionStartTime * _fileSampleRate);
+        UInt32 framesToPlay = ((self.regionStartTime + self.regionDuration) * _fileSampleRate) - position;
         ScheduledAudioFileRegion region = {
             .mAudioFile = _audioFile,
             .mStartFrame = position,
@@ -423,7 +422,6 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
     AECheckOSStatus(result, "AudioUnitSetProperty(kAudioUnitProperty_ScheduleStartTimeStamp)");
     
     _playhead = position;
-    _playheadOffset = position - start;
     _anchorTime = 0;
     _sequenceScheduled = YES;
 }
@@ -582,10 +580,10 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
         // Update the playhead
         double regionStartTimeAtFileRate = THIS->_regionStartTime * THIS->_fileSampleRate;
         double regionLengthAtFileRate = THIS->_regionDuration * THIS->_fileSampleRate;
-        THIS->_playhead = regionStartTimeAtFileRate +
-            fmod(THIS->_playheadOffset + (playheadInRegionAtBufferEnd * (THIS->_fileSampleRate / context->sampleRate)),
-                 regionLengthAtFileRate);
         BOOL wasStarted = THIS->_anchorTime != 0;
+        
+        THIS->_playhead = regionStartTimeAtFileRate +
+            fmod(playheadInRegionAtBufferEnd * (THIS->_fileSampleRate / context->sampleRate), regionLengthAtFileRate);
         THIS->_anchorTime = hostTimeAtBufferEnd;
         
         if ( !wasStarted ) {
