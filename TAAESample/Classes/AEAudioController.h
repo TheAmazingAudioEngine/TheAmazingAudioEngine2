@@ -41,5 +41,6 @@ extern NSString * _Nonnull const AEAudioControllerInputPermissionErrorNotificati
 @property (nonatomic, readonly) BOOL recording;
 @property (nonatomic, readonly) NSURL * _Nonnull recordingPath;
 @property (nonatomic, readonly) BOOL playingRecording;
+@property (nonatomic) double recordingPlaybackPosition;
 @property (nonatomic) BOOL inputEnabled;
 @end

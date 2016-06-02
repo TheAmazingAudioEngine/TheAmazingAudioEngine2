@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10116" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="10117" systemVersion="15E65" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" initialViewController="BYZ-38-t0r">
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="10085"/>
@@ -190,18 +190,6 @@
                                             <action selector="exportTap" destination="BYZ-38-t0r" eventType="touchUpInside" id="trW-CK-xsa"/>
                                         </connections>
                                     </button>
-                                    <button opaque="NO" contentMode="scaleToFill" enabled="NO" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="dKe-dT-0b3">
-                                        <rect key="frame" x="514" y="8" width="35" height="35"/>
-                                        <constraints>
-                                            <constraint firstAttribute="height" constant="35" id="6O6-Fi-yuH"/>
-                                            <constraint firstAttribute="width" constant="35" id="df7-w8-iJw"/>
-                                        </constraints>
-                                        <state key="normal" image="Play"/>
-                                        <state key="selected" image="Stop"/>
-                                        <connections>
-                                            <action selector="playTap" destination="BYZ-38-t0r" eventType="touchUpInside" id="UXi-o2-aCr"/>
-                                        </connections>
-                                    </button>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="tyg-k0-s00">
                                         <rect key="frame" x="459" y="8" width="35" height="35"/>
                                         <constraints>
@@ -225,6 +213,27 @@
                                             <action selector="speedSliderEnd" destination="BYZ-38-t0r" eventType="touchUpInside" id="I2t-yR-npJ"/>
                                         </connections>
                                     </slider>
+                                    <slider hidden="YES" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="0.5" minValue="0.0" maxValue="1" translatesAutoresizingMaskIntoConstraints="NO" id="afO-lu-sJ2">
+                                        <rect key="frame" x="547" y="11" width="4" height="31"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" id="BrA-es-A8T"/>
+                                        </constraints>
+                                        <connections>
+                                            <action selector="playSliderChanged:" destination="BYZ-38-t0r" eventType="valueChanged" id="O8g-JU-rnv"/>
+                                        </connections>
+                                    </slider>
+                                    <button opaque="NO" contentMode="scaleToFill" enabled="NO" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="dKe-dT-0b3">
+                                        <rect key="frame" x="514" y="8" width="35" height="35"/>
+                                        <constraints>
+                                            <constraint firstAttribute="height" constant="35" id="6O6-Fi-yuH"/>
+                                            <constraint firstAttribute="width" constant="35" id="df7-w8-iJw"/>
+                                        </constraints>
+                                        <state key="normal" image="Play"/>
+                                        <state key="selected" image="Stop"/>
+                                        <connections>
+                                            <action selector="playTap" destination="BYZ-38-t0r" eventType="touchUpInside" id="UXi-o2-aCr"/>
+                                        </connections>
+                                    </button>
                                 </subviews>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <constraints>
@@ -240,33 +249,37 @@
                                     </constraint>
                                     <constraint firstItem="CwF-eV-qf0" firstAttribute="top" secondItem="MQa-8X-Pr6" secondAttribute="top" constant="8" id="Jqi-5L-ie8"/>
                                     <constraint firstItem="CwF-eV-qf0" firstAttribute="leading" secondItem="1bs-fT-J90" secondAttribute="trailing" constant="20" id="ODM-ke-3Qu"/>
+                                    <constraint firstItem="afO-lu-sJ2" firstAttribute="centerY" secondItem="1bs-fT-J90" secondAttribute="centerY" id="RRt-uA-hkv"/>
                                     <constraint firstItem="mZz-hK-7RL" firstAttribute="leading" secondItem="MQa-8X-Pr6" secondAttribute="leading" constant="8" id="UsQ-ON-8AP">
                                         <variation key="widthClass=compact" constant="10"/>
                                     </constraint>
                                     <constraint firstItem="mZz-hK-7RL" firstAttribute="centerY" secondItem="CwF-eV-qf0" secondAttribute="centerY" id="VJn-UO-4qT"/>
                                     <constraint firstItem="1bs-fT-J90" firstAttribute="leading" secondItem="dKe-dT-0b3" secondAttribute="trailing" constant="20" id="Y7f-PH-4Jk"/>
+                                    <constraint firstItem="1bs-fT-J90" firstAttribute="leading" secondItem="afO-lu-sJ2" secondAttribute="trailing" constant="20" id="Zja-CV-I1J"/>
                                     <constraint firstItem="mZz-hK-7RL" firstAttribute="leading" secondItem="TO0-CN-42J" secondAttribute="trailing" constant="-25" id="bfC-aZ-52q"/>
                                     <constraint firstItem="TO0-CN-42J" firstAttribute="centerX" secondItem="MQa-8X-Pr6" secondAttribute="centerX" id="jOg-wW-4u4"/>
                                     <constraint firstItem="dKe-dT-0b3" firstAttribute="centerY" secondItem="1bs-fT-J90" secondAttribute="centerY" id="jhK-Oq-8Lg"/>
                                     <constraint firstAttribute="trailing" secondItem="CwF-eV-qf0" secondAttribute="trailing" constant="8" id="nfd-Ml-Zzn"/>
                                     <constraint firstItem="dKe-dT-0b3" firstAttribute="leading" secondItem="tyg-k0-s00" secondAttribute="trailing" constant="20" id="oJA-kz-Bsp"/>
+                                    <constraint firstItem="afO-lu-sJ2" firstAttribute="leading" secondItem="dKe-dT-0b3" secondAttribute="trailing" id="tKM-sA-Bfu"/>
                                     <constraint firstItem="1bs-fT-J90" firstAttribute="centerY" secondItem="CwF-eV-qf0" secondAttribute="centerY" id="yWN-7r-aml"/>
                                 </constraints>
                                 <variation key="default">
                                     <mask key="constraints">
+                                        <exclude reference="7C4-c6-zSA"/>
                                         <exclude reference="UsQ-ON-8AP"/>
                                         <exclude reference="VJn-UO-4qT"/>
                                         <exclude reference="bfC-aZ-52q"/>
-                                        <exclude reference="7C4-c6-zSA"/>
+                                        <exclude reference="Y7f-PH-4Jk"/>
                                     </mask>
                                 </variation>
                                 <variation key="widthClass=compact">
                                     <mask key="constraints">
+                                        <exclude reference="1ZM-He-jn0"/>
+                                        <exclude reference="7C4-c6-zSA"/>
                                         <exclude reference="39n-2L-tUM"/>
                                         <include reference="UsQ-ON-8AP"/>
                                         <include reference="VJn-UO-4qT"/>
-                                        <exclude reference="1ZM-He-jn0"/>
-                                        <exclude reference="7C4-c6-zSA"/>
                                     </mask>
                                 </variation>
                             </view>
@@ -295,6 +308,8 @@
                         <outlet property="pad" destination="bu3-6Q-MsA" id="sBz-gO-gCp"/>
                         <outlet property="pianoButton" destination="COa-XF-8pQ" id="SKZ-nY-Bft"/>
                         <outlet property="playButton" destination="dKe-dT-0b3" id="Agx-o5-CKu"/>
+                        <outlet property="playSlider" destination="afO-lu-sJ2" id="fQX-lb-AVI"/>
+                        <outlet property="playSliderWidthConstraint" destination="BrA-es-A8T" id="18K-iB-HGu"/>
                         <outlet property="recordButton" destination="CwF-eV-qf0" id="Toa-le-cgd"/>
                         <outlet property="sample1Button" destination="cgM-fK-QOd" id="Eet-sT-iEm"/>
                         <outlet property="sample2Button" destination="UC0-it-EEv" id="cvK-ph-2kL"/>

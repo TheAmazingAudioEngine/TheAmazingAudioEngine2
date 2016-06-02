@@ -41,6 +41,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
 @end
 
 @implementation AEAudioController
+@dynamic recordingPlaybackPosition;
 
 #pragma mark - Life-cycle
 
@@ -459,6 +460,20 @@ static const double kMicBandpassCenterFrequency = 2000.0;
 - (NSURL *)recordingPath {
     NSURL * docs = [[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask].firstObject;
     return [docs URLByAppendingPathComponent:@"Recording.m4a"];
+}
+
+- (double)recordingPlaybackPosition {
+    AEAudioFilePlayerModule * player = self.playerValue.objectValue;
+    if ( !player ) return 0.0;
+    
+    return player.currentTime / player.duration;
+}
+
+- (void)setRecordingPlaybackPosition:(double)recordingPlaybackPosition {
+    AEAudioFilePlayerModule * player = self.playerValue.objectValue;
+    if ( !player ) return;
+    
+    player.currentTime = recordingPlaybackPosition * player.duration;
 }
 
 #pragma mark - Helpers

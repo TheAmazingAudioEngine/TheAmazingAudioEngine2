@@ -35,6 +35,8 @@ class ViewController: UIViewController {
     @IBOutlet var stereoSweepButton: UIButton!
     @IBOutlet var recordButton: UIButton!
     @IBOutlet var playButton: UIButton!
+    @IBOutlet var playSlider: UISlider!
+    @IBOutlet var playSliderWidthConstraint: NSLayoutConstraint!
     @IBOutlet var exportButton: UIButton!
     @IBOutlet var micButton: UIButton!
     
@@ -44,6 +46,7 @@ class ViewController: UIViewController {
     private var padWetDryTarget = 0.0
     private var padWetDryValue = 0.0
     private var speedRestoreTimer: NSTimer?
+    private var playSliderUpdateTimer: NSTimer?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -55,18 +58,23 @@ class ViewController: UIViewController {
         bassButton.image = UIImage(named: "Bass")
         pianoButton.image = UIImage(named: "Piano")
         
-        let trackImage = UIImage(named: "Speed Track")?
+        let speedTrackImage = UIImage(named: "Speed Track")?
             .resizableImageWithCapInsets(UIEdgeInsets(top: 0.0, left: 2.0, bottom: 0.0, right: 2.0))
-        speedSlider.setMaximumTrackImage(trackImage, forState: UIControlState.Normal)
-        speedSlider.setMinimumTrackImage(trackImage, forState: UIControlState.Normal)
+        speedSlider.setMaximumTrackImage(speedTrackImage, forState: UIControlState.Normal)
+        speedSlider.setMinimumTrackImage(speedTrackImage, forState: UIControlState.Normal)
         speedSlider.setThumbImage(UIImage(named: "Speed Handle"), forState: UIControlState.Normal)
         speedSlider.maximumValue = 2.0
         speedSlider.minimumValue = 0.0
         speedSlider.value = 1.0
         
-        if self.traitCollection.horizontalSizeClass != UIUserInterfaceSizeClass.Compact {
+        if traitCollection.horizontalSizeClass != UIUserInterfaceSizeClass.Compact {
             speedSlider.transform = CGAffineTransformMakeRotation(CGFloat(-M_PI_2))
         }
+        
+        let playTrackImage = UIImage(named: "Play Slider Track")?.resizableImageWithCapInsets(UIEdgeInsetsMake(0, 1, 0, 1))
+        playSlider.setMaximumTrackImage(playTrackImage, forState: UIControlState.Normal)
+        playSlider.setMinimumTrackImage(playTrackImage, forState: UIControlState.Normal)
+        playSlider.setThumbImage(UIImage(named: "Play Slider Thumb"), forState: UIControlState.Normal)
         
         pad.image = UIImage(named: "Effect Bar")?
             .resizableImageWithCapInsets(UIEdgeInsets(top: 0, left: 63.0, bottom: 0, right: 62.0))
@@ -219,8 +227,8 @@ class ViewController: UIViewController {
                     recordButton.layer.addAnimation(animation, forKey: nil)
                 } catch _ {
                     // D'oh, something went wrong. Guess we can't record.
-                    self.recordButton.enabled = false
-                    self.recordButton.layer.removeAllAnimations()
+                    recordButton.enabled = false
+                    recordButton.layer.removeAllAnimations()
                 }
             }
         }
@@ -231,15 +239,43 @@ class ViewController: UIViewController {
             if audio.playingRecording {
                 // Stop the playback
                 audio.stopPlayingRecording()
-                self.playButton.selected = false
+                playButton.selected = false
+                UIView.animateWithDuration(0.3, animations: { 
+                    self.playSliderWidthConstraint.constant = 0
+                    self.view.layoutIfNeeded()
+                }, completion: { _ in
+                    self.playSlider.hidden = true
+                })
+                playSliderUpdateTimer?.invalidate()
+                playSliderUpdateTimer = nil
             } else {
                 // Start playback
-                self.playButton.selected = true
+                playButton.selected = true
+                self.playSlider.hidden = false
+                UIView.animateWithDuration(0.3, animations: {
+                    self.playSliderWidthConstraint.constant = 150
+                    self.view.layoutIfNeeded()
+                })
+                playSliderUpdateTimer = NSTimer.scheduledTimerWithTimeInterval(1.0/60.0, target: self,
+                                                                               selector: #selector(updatePlaySlider),
+                                                                               userInfo: nil, repeats: true)
                 audio.playRecordingWithCompletionBlock({ 
                     self.playButton.selected = false
+                    UIView.animateWithDuration(0.3, animations: {
+                        self.playSliderWidthConstraint.constant = 0
+                        self.view.layoutIfNeeded()
+                    }, completion: { _ in
+                        self.playSlider.hidden = true
+                    })
+                    self.playSliderUpdateTimer?.invalidate()
+                    self.playSliderUpdateTimer = nil
                 })
             }
         }
+    }
+    
+    @IBAction func playSliderChanged(sender: UISlider) {
+        audio!.recordingPlaybackPosition = Double(sender.value)
     }
     
     @IBAction func exportTap() {
@@ -255,7 +291,7 @@ class ViewController: UIViewController {
                 controller.popoverPresentationController?.sourceView = exportButton
             }
             
-            self.presentViewController(controller, animated: true, completion: nil)
+            presentViewController(controller, animated: true, completion: nil)
         }
     }
     
@@ -364,7 +400,7 @@ private extension ViewController {
         alert.popoverPresentationController?.sourceView = micButton
         alert.popoverPresentationController?.sourceRect = micButton.bounds
         alert.modalPresentationStyle = UIModalPresentationStyle.Popover
-        self.presentViewController(alert, animated: true, completion: nil)
+        presentViewController(alert, animated: true, completion: nil)
     }
 }
 
@@ -392,7 +428,7 @@ private extension ViewController {
     private func updatePlaybackRate(rate: Double) {
         if let audio = audio {
             audio.varispeed.playbackRate = rate
-            let rotateSpeed = self.currentRotateSpeed()
+            let rotateSpeed = currentRotateSpeed()
             if audio.bass.playing {
                 bassButton.rotateSpeed = rotateSpeed
             }
@@ -449,6 +485,10 @@ private extension ViewController {
                 speedRestoreTimer = nil
             }
         }
+    }
+    
+    @objc private func updatePlaySlider() {
+        playSlider.value = Float(audio!.recordingPlaybackPosition)
     }
 }
 
