@@ -273,7 +273,7 @@ extern "C" {
  
  // Create the filters
  AEBandpassModule * filter1 = [[AEBandpassModule alloc] initWithRenderer:renderer];
- AEBandpassModule * filter2 = [[AEDelayModule alloc] initWithRenderer:renderer];
+ AEDelayModule * filter2 = [[AEDelayModule alloc] initWithRenderer:renderer];
  
  // Create the recorder
  AEAudioFileRecorderModule * recorder = [[AEAudioFileRecorderModule alloc] initWithRenderer:renderer URL:outputUrl error:NULL];
