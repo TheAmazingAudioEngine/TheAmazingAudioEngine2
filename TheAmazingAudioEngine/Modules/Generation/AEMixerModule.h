@@ -1,5 +1,5 @@
 //
-//  AEAggregatorModule.h
+//  AEMixerModule.h
 //  TheAmazingAudioEngine
 //
 //  Created by Michael Tyson on 7/05/2016.
@@ -31,7 +31,7 @@ extern "C" {
 #import "AEModule.h"
 
 /*!
- * Aggregator module
+ * Mixer module
  *
  *  This module provides a convenient way to aggregate multiple generator modules
  *  together, with facilities for applying volume and balance per-generator module.
@@ -39,7 +39,7 @@ extern "C" {
  *  You should use this with generator modules only - that is, modules that push
  *  a buffer onto the stack when they are processed.
  */
-@interface AEAggregatorModule : AEModule
+@interface AEMixerModule : AEModule
 
 /*!
  * Initializer
@@ -95,6 +95,9 @@ extern "C" {
 @property (nonatomic) int numberOfChannels;
 
 @end
+
+//! Temporary alias from AEAggregatorModule to AEMixerModule
+typedef AEMixerModule AEAggregatorModule __deprecated_msg("use AEMixerModule");
 
 #ifdef __cplusplus
 }

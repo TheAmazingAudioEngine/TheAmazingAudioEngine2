@@ -37,7 +37,7 @@ extern "C" {
 #import <TheAmazingAudioEngine/AEAudioUnitInputModule.h>
 #import <TheAmazingAudioEngine/AEAudioFilePlayerModule.h>
 #import <TheAmazingAudioEngine/AEOscillatorModule.h>
-#import <TheAmazingAudioEngine/AEAggregatorModule.h>
+#import <TheAmazingAudioEngine/AEMixerModule.h>
 #import <TheAmazingAudioEngine/AESplitterModule.h>
 #import <TheAmazingAudioEngine/AEBandpassModule.h>
 #import <TheAmazingAudioEngine/AEDelayModule.h>
@@ -121,7 +121,7 @@ extern "C" {
  - AEAudioUnitInputModule: Get system input.
  - AEAudioFileRecorderModule: Record files.
  - AESubrendererModule: Drive a sub-renderer.
- - AEAggregatorModule: Drive multiple generators.
+ - AEMixerModule: Drive multiple generators.
     </td>
  </tr>
  <tr>

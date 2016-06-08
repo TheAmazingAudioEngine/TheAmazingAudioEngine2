@@ -1,5 +1,5 @@
 //
-//  AEAggregatorModule.m
+//  AEMixerModule.m
 //  TheAmazingAudioEngine
 //
 //  Created by Michael Tyson on 7/05/2016.
@@ -25,7 +25,7 @@
 //
 
 
-#import "AEAggregatorModule.h"
+#import "AEMixerModule.h"
 #import "AEArray.h"
 #import "AEBufferStack.h"
 #import "AEUtilities.h"
@@ -37,13 +37,13 @@ typedef struct {
     float targetVolume;
     float currentBalance;
     float targetBalance;
-} AEAggregatorModuleSubModuleEntry;
+} AEMixerModuleSubModuleEntry;
 
-@interface AEAggregatorModule ()
+@interface AEMixerModule ()
 @property (nonatomic, strong) AEArray * array;
 @end
 
-@implementation AEAggregatorModule
+@implementation AEMixerModule
 @dynamic modules;
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
@@ -56,7 +56,7 @@ typedef struct {
     
     self.numberOfChannels = 2;
     
-    self.processFunction = AEAggregatorModuleProcess;
+    self.processFunction = AEMixerModuleProcess;
     
     return self;
 }
@@ -88,7 +88,7 @@ typedef struct {
 }
 
 - (void)setVolume:(float)volume balance:(float)balance forModule:(AEModule *)module {
-    AEAggregatorModuleSubModuleEntry * entry = [self.array pointerValueForObject:module];
+    AEMixerModuleSubModuleEntry * entry = [self.array pointerValueForObject:module];
     if ( entry ) {
         entry->targetVolume = volume;
         entry->targetBalance = balance;
@@ -96,14 +96,14 @@ typedef struct {
 }
 
 - (void)getVolume:(float *)volume balance:(float *)balance forModule:(AEModule *)module {
-    AEAggregatorModuleSubModuleEntry * entry = [self.array pointerValueForObject:module];
+    AEMixerModuleSubModuleEntry * entry = [self.array pointerValueForObject:module];
     if ( entry ) {
         *volume = entry->targetVolume;
         *balance = entry->targetBalance;
     }
 }
 
-static void AEAggregatorModuleProcess(__unsafe_unretained AEAggregatorModule * self, const AERenderContext * _Nonnull context) {
+static void AEMixerModuleProcess(__unsafe_unretained AEMixerModule * self, const AERenderContext * _Nonnull context) {
     const AudioBufferList * abl = AEBufferStackPushWithChannels(context->stack, 1, self->_numberOfChannels);
     if ( !abl ) return;
     
@@ -111,7 +111,7 @@ static void AEAggregatorModuleProcess(__unsafe_unretained AEAggregatorModule * s
     AEAudioBufferListSilence(abl, 0, context->frames);
     
     // Run each module, applying volume/balance then mixing into our output buffer
-    AEArrayEnumeratePointers(self->_array, AEAggregatorModuleSubModuleEntry *, entry, {
+    AEArrayEnumeratePointers(self->_array, AEMixerModuleSubModuleEntry *, entry, {
         
         if ( !AEModuleIsActive(entry->module) ) {
             // Module is idle; skip (and skip the volume/balance ramp, too)
@@ -129,7 +129,7 @@ static void AEAggregatorModuleProcess(__unsafe_unretained AEAggregatorModule * s
         #ifdef DEBUG
         if ( AEBufferStackCount(context->stack) != priorStackDepth+1 ) {
             if ( AERateLimit() ) {
-                printf("A module within AEAggregatorModule didn't push a buffer! Sure it's a generator?\n");
+                printf("A module within AEMixerModule didn't push a buffer! Sure it's a generator?\n");
             }
             continue;
         }
@@ -142,8 +142,8 @@ static void AEAggregatorModuleProcess(__unsafe_unretained AEAggregatorModule * s
     });
 }
 
-- (AEAggregatorModuleSubModuleEntry *)newEntryForModule:(AEModule *)module volume:(float)volume balance:(float)balance {
-    AEAggregatorModuleSubModuleEntry * entry = malloc(sizeof(AEAggregatorModuleSubModuleEntry));
+- (AEMixerModuleSubModuleEntry *)newEntryForModule:(AEModule *)module volume:(float)volume balance:(float)balance {
+    AEMixerModuleSubModuleEntry * entry = malloc(sizeof(AEMixerModuleSubModuleEntry));
     entry->module = module;
     entry->currentVolume = volume;
     entry->targetVolume = volume;

@@ -105,9 +105,9 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     self.hit = oneshot;
     [players addObject:oneshot];
     
-    // Create an aggregator module to run the players
-    AEAggregatorModule * aggregator = [[AEAggregatorModule alloc] initWithRenderer:subrenderer];
-    aggregator.modules = players;
+    // Create a mixer module to run the players
+    AEMixerModule * mixer = [[AEMixerModule alloc] initWithRenderer:subrenderer];
+    mixer.modules = players;
     
     // Setup mic input (we'll draw from the output's IO audio unit, on iOS; on the Mac, this has its own IO unit).
     AEAudioUnitInputModule * input = self.output.inputModule;
@@ -130,8 +130,8 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     // rules apply: No holding locks, no memory allocation, no Objective-C/Swift code.
     AEVarispeedModule * varispeed = [[AEVarispeedModule alloc] initWithRenderer:renderer subrenderer:subrenderer];
     subrenderer.block = ^(const AERenderContext * _Nonnull context) {
-        // Run all the players, though the aggregator
-        AEModuleProcess(aggregator, context);
+        // Run all the players, though the mixer
+        AEModuleProcess(mixer, context);
         
         // Put the resulting buffer on the output
         AERenderContextOutput(context, 1);
