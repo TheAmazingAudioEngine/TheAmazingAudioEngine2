@@ -58,10 +58,6 @@ static const UInt32 kNoValue = -1;
 @property (nonatomic, copy) void(^beginBlock)();
 @end
 
-@interface AEAudioFilePlayerModuleWeakProxy : NSProxy
-@property (nonatomic, weak) id target;
-@end
-
 @implementation AEAudioFilePlayerModule
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer URL:(NSURL *)url error:(NSError *__autoreleasing *)error {
@@ -596,14 +592,4 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
     }
 }
 
-@end
-
-@implementation AEAudioFilePlayerModuleWeakProxy
-- (NSMethodSignature *)methodSignatureForSelector:(SEL)selector {
-    return [_target methodSignatureForSelector:selector];
-}
-- (void)forwardInvocation:(NSInvocation *)invocation {
-    [invocation setTarget:_target];
-    [invocation invoke];
-}
 @end

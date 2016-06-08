@@ -10,7 +10,7 @@
 #import "AEUtilities.h"
 #import "AETypes.h"
 #import "AEAudioBufferListUtilities.h"
-
+#import "AEWeakRetainingProxy.h"
 #import <AudioToolbox/AudioToolbox.h>
 
 @interface AEAudioFileRecorderModule () {
@@ -23,10 +23,6 @@
 @property (nonatomic, readwrite) BOOL recording;
 @property (nonatomic, copy) void (^completionBlock)();
 @property (nonatomic, strong) NSTimer * pollTimer;
-@end
-
-@interface AEAudioFileRecorderModuleWeakProxy : NSProxy
-@property (nonatomic, weak) id target;
 @end
 
 @implementation AEAudioFileRecorderModule
@@ -64,10 +60,8 @@
 - (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(AEAudioFileRecorderModuleCompletionBlock)block {
     self.completionBlock = block;
     _stopTime = time ? time : AECurrentTimeInHostTicks();
-    AEAudioFileRecorderModuleWeakProxy * proxy = [AEAudioFileRecorderModuleWeakProxy alloc];
-    proxy.target = self;
-    self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:proxy selector:@selector(pollForCompletion)
-                                                    userInfo:nil repeats:YES];
+    self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:[AEWeakRetainingProxy proxyWithTarget:self]
+                                                    selector:@selector(pollForCompletion) userInfo:nil repeats:YES];
 }
 
 static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileRecorderModule * THIS,
@@ -144,14 +138,4 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
     _audioFile = NULL;
 }
 
-@end
-
-@implementation AEAudioFileRecorderModuleWeakProxy
-- (NSMethodSignature *)methodSignatureForSelector:(SEL)selector {
-    return [_target methodSignatureForSelector:selector];
-}
-- (void)forwardInvocation:(NSInvocation *)invocation {
-    [invocation setTarget:_target];
-    [invocation invoke];
-}
 @end

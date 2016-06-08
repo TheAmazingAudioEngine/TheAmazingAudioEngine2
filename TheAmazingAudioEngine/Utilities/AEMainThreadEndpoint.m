@@ -26,16 +26,13 @@
 
 #import "AEMainThreadEndpoint.h"
 #import "TPCircularBuffer.h"
+#import "AEWeakRetainingProxy.h"
 
 @interface AEMainThreadEndpoint () {
     TPCircularBuffer _buffer;
 }
 @property (nonatomic, copy) AEMainThreadEndpointHandler handler;
 @property (nonatomic, strong) NSTimer * timer;
-@end
-
-@interface AEMainThreadEndpointProxy : NSProxy
-@property (nonatomic, weak) AEMainThreadEndpoint * target;
 @end
 
 @implementation AEMainThreadEndpoint
@@ -120,10 +117,8 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 }
 
 - (void)startTimer {
-    AEMainThreadEndpointProxy * proxy = [AEMainThreadEndpointProxy alloc];
-    proxy.target = self;
-    self.timer = [NSTimer scheduledTimerWithTimeInterval:self.pollInterval target:proxy selector:@selector(poll)
-                                                userInfo:nil repeats:YES];
+    self.timer = [NSTimer scheduledTimerWithTimeInterval:self.pollInterval target:[AEWeakRetainingProxy proxyWithTarget:self]
+                                                selector:@selector(poll) userInfo:nil repeats:YES];
 }
 
 - (void)poll {
@@ -145,14 +140,4 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
     }
 }
 
-@end
-
-@implementation AEMainThreadEndpointProxy
-- (NSMethodSignature *)methodSignatureForSelector:(SEL)selector {
-    return [_target methodSignatureForSelector:selector];
-}
-- (void)forwardInvocation:(NSInvocation *)invocation {
-    [invocation setTarget:_target];
-    [invocation invoke];
-}
 @end

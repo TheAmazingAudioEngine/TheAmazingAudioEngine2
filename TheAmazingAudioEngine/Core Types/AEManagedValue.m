@@ -28,6 +28,7 @@
 #import <libkern/OSAtomic.h>
 #import <pthread.h>
 #import "AEUtilities.h"
+#import "AEWeakRetainingProxy.h"
 
 typedef struct __linkedlistitem_t {
     void * data;
@@ -50,10 +51,6 @@ static BOOL __atomicUpdateWaitingForCommit = NO;
     OSQueueHead _releaseQueue;
 }
 @property (nonatomic, strong) NSTimer * pollTimer;
-@end
-
-@interface AEManagedValueProxy : NSProxy
-@property (nonatomic, weak) AEManagedValue * target;
 @end
 
 @implementation AEManagedValue
@@ -196,9 +193,7 @@ static BOOL __atomicUpdateWaitingForCommit = NO;
         
         if ( !self.pollTimer ) {
             // Start polling for pending releases
-            AEManagedValueProxy * proxy = [AEManagedValueProxy alloc];
-            proxy.target = self;
-            self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:proxy
+            self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:[AEWeakRetainingProxy proxyWithTarget:self]
                                                             selector:@selector(pollReleaseList) userInfo:nil repeats:YES];
         }
     }
@@ -267,14 +262,4 @@ void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     }
 }
 
-@end
-
-@implementation AEManagedValueProxy
-- (NSMethodSignature *)methodSignatureForSelector:(SEL)selector {
-    return [_target methodSignatureForSelector:selector];
-}
-- (void)forwardInvocation:(NSInvocation *)invocation {
-    [invocation setTarget:_target];
-    [invocation invoke];
-}
 @end
