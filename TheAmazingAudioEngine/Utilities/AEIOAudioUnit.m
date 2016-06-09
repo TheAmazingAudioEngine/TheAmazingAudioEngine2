@@ -487,6 +487,8 @@ static OSStatus AEIOAudioUnitRenderCallback(void *inRefCon, AudioUnitRenderActio
         = (__bridge AEIOAudioUnitRenderBlock)AEManagedValueGetValue(THIS->_renderBlockValue);
     if ( renderBlock ) {
         renderBlock(ioData, inNumberFrames, &timestamp);
+    } else {
+        *ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
     }
     
     return noErr;
