@@ -30,7 +30,7 @@
 static double __hostTicksToSeconds = 0.0;
 static double __secondsToHostTicks = 0.0;
 
-static void AETimeInit() {
+void AETimeInit() {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         mach_timebase_info_data_t tinfo;

@@ -32,6 +32,11 @@ extern "C" {
 
 typedef uint64_t AEHostTicks;
 typedef double AESeconds;
+    
+/*!
+ * Initialize
+ */
+void AETimeInit();
 
 /*!
  * Get current global timestamp, in host ticks

@@ -65,6 +65,8 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
     _outputEnabled = YES;
     self.renderBlockValue = [AEManagedValue new];
     
+    AETimeInit();
+    
     return self;
 }
 
