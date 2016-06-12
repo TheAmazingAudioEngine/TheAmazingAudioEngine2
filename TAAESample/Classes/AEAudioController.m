@@ -148,6 +148,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     
     // Setup top-level renderer. This is all performed on the audio thread, so the usual
     // rules apply: No holding locks, no memory allocation, no Objective-C/Swift code.
+    __unsafe_unretained AEAudioController * THIS = self;
     renderer.block = ^(const AERenderContext * _Nonnull context) {
         
         // See if we have an active recorder
@@ -166,8 +167,9 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         
         // Sweep balance
         float bal = 0.0;
-        if ( _balanceSweepRate > 0 ) {
-            bal = AEDSPGenerateOscillator((1.0/_balanceSweepRate) / (context->sampleRate/context->frames), &balanceLfo) * 2 - 1;
+        if ( THIS->_balanceSweepRate > 0 ) {
+            bal = AEDSPGenerateOscillator((1.0/THIS->_balanceSweepRate)
+                                          / (context->sampleRate/context->frames), &balanceLfo) * 2 - 1;
         } else {
             balanceLfo = 0.5;
         }
@@ -181,7 +183,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         // Put on output
         AERenderContextOutput(context, 1);
         
-        if ( _inputEnabled ) {
+        if ( THIS->_inputEnabled ) {
             // Add audio input
             AEModuleProcess(input, context);
             
@@ -191,7 +193,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
             AEDSPApplyGain(AEBufferStackGet(context->stack, 0), 2.0, context->frames);
             
             // If it's safe to do so, put this on the output
-            if ( !_playingThroughSpeaker ) {
+            if ( !THIS->_playingThroughSpeaker ) {
                 if ( player ) {
                     // If we're playing a recording, duck first
                     AEDSPApplyGain(AEBufferStackGet(context->stack, 0), 0.1, context->frames);
@@ -203,7 +205,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         
         // Run through recorder, if it's there
         if ( recorder && !player ) {
-            if ( _inputEnabled ) {
+            if ( THIS->_inputEnabled ) {
                 // We have a buffer from input to mix in
                 AEBufferStackMix(context->stack, 2);
             }
