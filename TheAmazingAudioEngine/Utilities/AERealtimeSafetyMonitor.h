@@ -26,12 +26,17 @@
 //
 
 #ifdef DEBUG
+// Uncomment the following to enable the realtime safety monitor
 // #define REALTIME_SAFETY_MONITOR_ENABLED 1
 #endif
 
 #ifdef __OBJC__
 
 #import <pthread.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*!
  * Initialize realtime safety monitor
@@ -51,5 +56,9 @@ void AERealtimeSafetyMonitorInit(pthread_t audioThread);
  *  Put a breakpoint here to debug.
  */
 void AERealtimeSafetyMonitorUnsafeActivityWarning();
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
