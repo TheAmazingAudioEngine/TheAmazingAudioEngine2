@@ -26,27 +26,8 @@
 //
 
 #ifdef DEBUG
+
 // Uncomment the following to enable the realtime watchdog
 // #define REALTIME_WATCHDOG_ENABLED 1
-#endif
-
-#ifdef __OBJC__
-
-#import <pthread.h>
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/*!
- * Function called when unsafe activity is noticed on the audio thread
- *
- *  Put a breakpoint here to debug.
- */
-void AERealtimeWatchdogUnsafeActivityWarning();
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif
