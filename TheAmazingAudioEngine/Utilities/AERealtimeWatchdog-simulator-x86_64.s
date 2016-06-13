@@ -1,5 +1,5 @@
 //
-//  AERealtimeSafetyMonitor-simulator-x86_64.s
+//  AERealtimeWatchdog-simulator-x86_64.s
 //  TheAmazingAudioEngine
 //
 //  Created by Michael Tyson on 12/06/2016.
@@ -45,8 +45,8 @@
 
 
 #include <TargetConditionals.h>
-#include "AERealtimeSafetyMonitor.h"
-#if __x86_64__ && TARGET_IPHONE_SIMULATOR && REALTIME_SAFETY_MONITOR_ENABLED
+#include "AERealtimeWatchdog.h"
+#if __x86_64__ && TARGET_IPHONE_SIMULATOR && REALTIME_WATCHDOG_ENABLED
 
 
 /********************************************************************
@@ -170,7 +170,7 @@ _objc_msgSend:
 	SaveRegisters
 
     // Look up the real objc_msgSend
-	call	_AERealtimeSafetyMonitorLookupMsgSendAndWarn
+	call	_AERealtimeWatchdogLookupMsgSendAndWarn
 
 	// imp is now in %rax
 	movq	%rax, %r11

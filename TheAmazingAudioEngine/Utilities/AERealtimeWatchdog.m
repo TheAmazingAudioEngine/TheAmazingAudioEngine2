@@ -1,5 +1,5 @@
 //
-//  AERealtimeSafetyMonitor.m
+//  AERealtimeWatchdog.m
 //  TheAmazingAudioEngine
 //
 //  Created by Michael Tyson on 12/06/2016.
@@ -25,15 +25,59 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-#import "AERealtimeSafetyMonitor.h"
+#import "AERealtimeWatchdog.h"
+#ifdef REALTIME_WATCHDOG_ENABLED
+
 #import <dlfcn.h>
 #import <stdio.h>
 #import <objc/runtime.h>
 #import <pthread.h>
+#import <string.h>
 
-// #define REPORT_EVERY_INFRACTION // Uncomment to report every time we spot something bad, not just the first time
+// Uncomment the following to report every time we spot something bad, not just the first time
+// #define REPORT_EVERY_INFRACTION
 
-static pthread_t __audioThread = NULL;
+
+
+
+void AERealtimeWatchdogUnsafeActivityWarning(const char * activity) {
+#ifndef REPORT_EVERY_INFRACTION
+    static BOOL once = NO;
+    if ( !once ) {
+        once = YES;
+#endif
+        
+        printf("AERealtimeWatchdog: Caught unsafe %s on realtime thread. Put a breakpoint on %s to debug\n",
+               activity, __FUNCTION__);
+        
+#ifndef REPORT_EVERY_INFRACTION
+    }
+#endif
+}
+
+BOOL AERealtimeWatchdogIsOnRealtimeThread() {
+    pthread_t thread = pthread_self();
+    
+    static pthread_t __audioThread = NULL;
+    
+    if ( __audioThread ) {
+        return thread == __audioThread;
+    }
+    
+    char name[21] = {0};
+    if ( pthread_getname_np(thread, name, sizeof(name)) == 0 && !strcmp(name, "AURemoteIO::IOThread") ) {
+        __audioThread = thread;
+        return YES;
+    }
+    
+    return NO;
+}
+
+
+
+
+
+#pragma mark - Overrides
 
 // Signatures for the functions we'll override
 typedef void * (*malloc_t)(size_t);
@@ -43,48 +87,13 @@ typedef id (*objc_msgSend_t)(void);
 typedef int (*pthread_mutex_lock_t)(pthread_mutex_t *);
 typedef int (*objc_sync_enter_t)(id obj);
 
-void AERealtimeSafetyMonitorInit(pthread_t audioThread) {
-    __audioThread = audioThread;
-}
-
-void AERealtimeSafetyMonitorUnsafeActivityWarning(const char * activity) {
-#ifndef REPORT_EVERY_INFRACTION
-    static BOOL once = NO;
-    if ( !once ) {
-        once = YES;
-#endif
-        
-        printf("AERealtimeSafetyMonitor: Caught unsafe %s on realtime thread. "
-               "Put a breakpoint on AERealtimeSafetyMonitorUnsafeActivityWarning to debug\n", activity);
-        
-#ifndef REPORT_EVERY_INFRACTION
-    }
-#endif
-}
-
-#ifdef REALTIME_SAFETY_MONITOR_ENABLED
-
-objc_msgSend_t AERealtimeSafetyMonitorLookupMsgSendAndWarn() {
-    // This method is called by our objc_msgSend implementation
-    static objc_msgSend_t funcptr = NULL;
-    if ( !funcptr ) {
-        funcptr = (objc_msgSend_t) dlsym(RTLD_NEXT, "objc_msgSend");
-    };
-    if ( __audioThread && pthread_self() == __audioThread ) {
-        AERealtimeSafetyMonitorUnsafeActivityWarning("message send");
-    }
-    return funcptr;
-}
-
-#pragma mark - Overrides
-
 void * malloc(size_t sz) {
     static malloc_t funcptr = NULL;
     if ( !funcptr ) {
         funcptr = (malloc_t) dlsym(RTLD_NEXT, "malloc");
     }
-    if ( __audioThread && pthread_self() == __audioThread ) {
-        AERealtimeSafetyMonitorUnsafeActivityWarning("malloc");
+    if ( AERealtimeWatchdogIsOnRealtimeThread() ) {
+        AERealtimeWatchdogUnsafeActivityWarning("malloc");
     }
     return funcptr(sz);
 }
@@ -94,8 +103,8 @@ void free(void *p) {
     if ( !funcptr ) {
         funcptr = (free_t) dlsym(RTLD_NEXT, "free");
     };
-    if ( __audioThread && pthread_self() == __audioThread ) {
-        AERealtimeSafetyMonitorUnsafeActivityWarning("free");
+    if ( AERealtimeWatchdogIsOnRealtimeThread() ) {
+        AERealtimeWatchdogUnsafeActivityWarning("free");
     }
     funcptr(p);
 }
@@ -105,8 +114,8 @@ int pthread_mutex_lock(pthread_mutex_t * mutex) {
     if ( !funcptr ) {
         funcptr = (pthread_mutex_lock_t) dlsym(RTLD_NEXT, "pthread_mutex_lock");
     };
-    if ( __audioThread && pthread_self() == __audioThread ) {
-        AERealtimeSafetyMonitorUnsafeActivityWarning("pthread_mutex_lock");
+    if ( AERealtimeWatchdogIsOnRealtimeThread() ) {
+        AERealtimeWatchdogUnsafeActivityWarning("pthread_mutex_lock");
     }
     return funcptr(mutex);
 }
@@ -116,8 +125,8 @@ int objc_sync_enter(id obj) {
     if ( !funcptr ) {
         funcptr = (objc_sync_enter_t) dlsym(RTLD_NEXT, "objc_sync_enter");
     };
-    if ( __audioThread && pthread_self() == __audioThread ) {
-        AERealtimeSafetyMonitorUnsafeActivityWarning("@synchronized block");
+    if ( AERealtimeWatchdogIsOnRealtimeThread() ) {
+        AERealtimeWatchdogUnsafeActivityWarning("@synchronized block");
     }
     return funcptr(obj);
 }
@@ -127,10 +136,22 @@ id objc_storeStrong(id * object, id value) {
     if ( !funcptr ) {
         funcptr = (objc_storeStrong_t) dlsym(RTLD_NEXT, "objc_storeStrong");
     };
-    if ( __audioThread && pthread_self() == __audioThread ) {
-        AERealtimeSafetyMonitorUnsafeActivityWarning("object retain");
+    if ( AERealtimeWatchdogIsOnRealtimeThread() ) {
+        AERealtimeWatchdogUnsafeActivityWarning("object retain");
     }
     return funcptr(object,value);
+}
+
+objc_msgSend_t AERealtimeWatchdogLookupMsgSendAndWarn() {
+    // This method is called by our objc_msgSend implementation
+    static objc_msgSend_t funcptr = NULL;
+    if ( !funcptr ) {
+        funcptr = (objc_msgSend_t) dlsym(RTLD_NEXT, "objc_msgSend");
+    };
+    if ( AERealtimeWatchdogIsOnRealtimeThread() ) {
+        AERealtimeWatchdogUnsafeActivityWarning("message send");
+    }
+    return funcptr;
 }
 
 #endif

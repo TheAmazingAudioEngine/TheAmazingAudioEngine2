@@ -31,7 +31,6 @@
 #import "AETime.h"
 #import "AEManagedValue.h"
 #import "AEAudioBufferListUtilities.h"
-#import "AERealtimeSafetyMonitor.h"
 #import <AVFoundation/AVFoundation.h>
 
 NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUnitDidUpdateStreamFormatNotification";
@@ -475,9 +474,6 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 static OSStatus AEIOAudioUnitRenderCallback(void *inRefCon, AudioUnitRenderActionFlags *ioActionFlags,
                                             const AudioTimeStamp *inTimeStamp, UInt32 inBusNumber,
                                             UInt32 inNumberFrames, AudioBufferList *ioData) {
-#ifdef REALTIME_SAFETY_MONITOR_ENABLED
-    AERealtimeSafetyMonitorInit(pthread_self());
-#endif
     
     // Render
     __unsafe_unretained AEIOAudioUnit * THIS = (__bridge AEIOAudioUnit *)inRefCon;

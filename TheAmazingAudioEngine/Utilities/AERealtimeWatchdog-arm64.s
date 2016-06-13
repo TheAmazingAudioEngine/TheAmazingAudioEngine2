@@ -1,5 +1,5 @@
 //
-//  AERealtimeSafetyMonitor-arm64.c
+//  AERealtimeWatchdog-arm64.c
 //  TheAmazingAudioEngine
 //
 //  Created by Michael Tyson on 12/06/2016.
@@ -43,8 +43,8 @@
  * limitations under the License.
  */
 
-#include "AERealtimeSafetyMonitor.h"
-#if __arm64__ && REALTIME_SAFETY_MONITOR_ENABLED
+#include "AERealtimeWatchdog.h"
+#if __arm64__ && REALTIME_WATCHDOG_ENABLED
 
 #include <arm/arch.h>
 
@@ -69,7 +69,7 @@ _objc_msgSend:
     str	x8,     [sp, #(8*16+8*8)]
 
     // Look up the real objc_msgSend
-    bl	_AERealtimeSafetyMonitorLookupMsgSendAndWarn
+    bl	_AERealtimeWatchdogLookupMsgSendAndWarn
 
     // imp in x0
     mov	x17, x0
