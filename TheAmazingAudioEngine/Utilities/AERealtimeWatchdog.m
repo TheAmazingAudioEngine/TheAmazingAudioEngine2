@@ -41,7 +41,7 @@
 
 
 
-void AERealtimeWatchdogUnsafeActivityWarning(const char * activity) {
+static void AERealtimeWatchdogUnsafeActivityWarning(const char * activity) {
 #ifndef REPORT_EVERY_INFRACTION
     static BOOL once = NO;
     if ( !once ) {
@@ -56,7 +56,8 @@ void AERealtimeWatchdogUnsafeActivityWarning(const char * activity) {
 #endif
 }
 
-BOOL AERealtimeWatchdogIsOnRealtimeThread() {
+BOOL AERealtimeWatchdogIsOnRealtimeThread(void);
+BOOL AERealtimeWatchdogIsOnRealtimeThread(void) {
     pthread_t thread = pthread_self();
     
     static pthread_t __audioThread = NULL;
@@ -82,6 +83,8 @@ BOOL AERealtimeWatchdogIsOnRealtimeThread() {
 
 // Signatures for the functions we'll override
 typedef void * (*malloc_t)(size_t);
+typedef void * (*calloc_t)(size_t, size_t);
+typedef void * (*realloc_t)(void *, size_t);
 typedef void (*free_t)(void*);
 typedef int (*pthread_mutex_lock_t)(pthread_mutex_t *);
 typedef int (*objc_sync_enter_t)(id obj);
@@ -112,6 +115,20 @@ void * malloc(size_t sz) {
     return funcptr(sz);
 }
 
+void * calloc(size_t count, size_t size) {
+    static calloc_t funcptr = NULL;
+    if ( !funcptr ) funcptr = (calloc_t) dlsym(RTLD_NEXT, "calloc");
+    if ( AERealtimeWatchdogIsOnRealtimeThread() ) AERealtimeWatchdogUnsafeActivityWarning("calloc");
+    return funcptr(count, size);
+}
+
+void * realloc(void * ptr, size_t size) {
+    static realloc_t funcptr = NULL;
+    if ( !funcptr ) funcptr = (realloc_t) dlsym(RTLD_NEXT, "realloc");
+    if ( AERealtimeWatchdogIsOnRealtimeThread() ) AERealtimeWatchdogUnsafeActivityWarning("realloc");
+    return funcptr(ptr, size);
+}
+
 void free(void *p) {
     static free_t funcptr = NULL;
     if ( !funcptr ) funcptr = (free_t) dlsym(RTLD_NEXT, "free");
@@ -133,6 +150,7 @@ int objc_sync_enter(id obj) {
     return funcptr(obj);
 }
 
+id objc_storeStrong(id * object, id value);
 id objc_storeStrong(id * object, id value) {
     static objc_storeStrong_t funcptr = NULL;
     if ( !funcptr ) funcptr = (objc_storeStrong_t) dlsym(RTLD_NEXT, "objc_storeStrong");
@@ -140,7 +158,8 @@ id objc_storeStrong(id * object, id value) {
     return funcptr(object,value);
 }
 
-objc_msgSend_t AERealtimeWatchdogLookupMsgSendAndWarn() {
+objc_msgSend_t AERealtimeWatchdogLookupMsgSendAndWarn(void);
+objc_msgSend_t AERealtimeWatchdogLookupMsgSendAndWarn(void) {
     // This method is called by our objc_msgSend implementation
     static objc_msgSend_t funcptr = NULL;
     if ( !funcptr ) funcptr = (objc_msgSend_t) dlsym(RTLD_NEXT, "objc_msgSend");
