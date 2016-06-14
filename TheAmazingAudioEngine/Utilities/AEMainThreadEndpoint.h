@@ -107,10 +107,6 @@ void * _Nullable AEMainThreadEndpointCreateMessage(__unsafe_unretained AEMainThr
  */
 void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoint * _Nonnull endpoint);
 
-
-//! The poll interval (default is 10ms)
-@property (nonatomic) AESeconds pollInterval;
-
 @end
 
 #ifdef __cplusplus

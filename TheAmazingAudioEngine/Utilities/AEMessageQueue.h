@@ -193,9 +193,6 @@ BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueu
  */
 void AEMessageQueuePoll(__unsafe_unretained AEMessageQueue * _Nonnull THIS);
 
-//! The poll interval (default is 10ms)
-@property (nonatomic) AESeconds pollInterval;
-
 @end
 
 #ifdef __cplusplus
