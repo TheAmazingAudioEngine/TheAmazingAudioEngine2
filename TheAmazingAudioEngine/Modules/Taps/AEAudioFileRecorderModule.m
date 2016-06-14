@@ -11,6 +11,7 @@
 #import "AETypes.h"
 #import "AEAudioBufferListUtilities.h"
 #import "AEWeakRetainingProxy.h"
+#import "AEDSPUtilities.h"
 #import <AudioToolbox/AudioToolbox.h>
 
 @interface AEAudioFileRecorderModule () {
@@ -20,6 +21,7 @@
     BOOL           _complete;
     UInt32         _recordedFrames;
 }
+@property (nonatomic, readwrite) int numberOfChannels;
 @property (nonatomic, readwrite) BOOL recording;
 @property (nonatomic, copy) void (^completionBlock)();
 @property (nonatomic, strong) NSTimer * pollTimer;
@@ -29,14 +31,21 @@
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer URL:(NSURL *)url
                             type:(AEAudioFileType)type error:(NSError **)error {
+    return [self initWithRenderer:renderer URL:url type:type numberOfChannels:2 error:error];
+}
+
+- (instancetype)initWithRenderer:(AERenderer *)renderer URL:(NSURL *)url type:(AEAudioFileType)type
+                numberOfChannels:(int)numberOfChannels error:(NSError **)error {
+    
     if ( !(self = [super initWithRenderer:renderer]) ) return nil;
     
-    if ( !(_audioFile = AEExtAudioFileRefCreate(url, type, self.renderer.sampleRate, 2, error)) ) return nil;
+    if ( !(_audioFile = AEExtAudioFileRefCreate(url, type, self.renderer.sampleRate, numberOfChannels, error)) ) return nil;
     
     // Prime async recording
     ExtAudioFileWriteAsync(_audioFile, 0, NULL);
     
     self.processFunction = AEAudioFileRecorderModuleProcess;
+    self.numberOfChannels = numberOfChannels;
     
     return self;
 }
@@ -88,19 +97,25 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
     const AudioBufferList * abl = AEBufferStackGet(context->stack, 0);
     if ( !abl ) return;
     
-    // Prepare stereo buffer
-    AEAudioBufferListCreateOnStack(stereoBuffer);
-    for ( int i=0; i<stereoBuffer->mNumberBuffers; i++ ) {
-        stereoBuffer->mBuffers[i] = abl->mBuffers[MIN(abl->mNumberBuffers-1, i)];
+    // Prepare buffer with the right number of channels
+    AEAudioBufferListCreateOnStackWithFormat(buffer, AEAudioDescriptionWithChannelsAndRate(THIS->_numberOfChannels, 0));
+    for ( int i=0; i<buffer->mNumberBuffers; i++ ) {
+        buffer->mBuffers[i] = abl->mBuffers[MIN(abl->mNumberBuffers-1, i)];
+    }
+    if ( buffer->mBuffers == 1 && abl->mNumberBuffers > 1 ) {
+        // Mix down to mono
+        for ( int i=1; i<abl->mNumberBuffers; i++ ) {
+            AEDSPMixMono(abl->mBuffers[i].mData, buffer->mBuffers[0].mData, 1.0, 1.0, context->frames, buffer->mBuffers[0].mData);
+        }
     }
     
     // Advance frames, if we have a start time mid-buffer
     UInt32 frames = context->frames;
     if ( startTime && startTime > context->timestamp->mHostTime ) {
         UInt32 advanceFrames = round(AESecondsFromHostTicks(startTime - context->timestamp->mHostTime) * context->sampleRate);
-        for ( int i=0; i<stereoBuffer->mNumberBuffers; i++ ) {
-            stereoBuffer->mBuffers[i].mData += AEAudioDescription.mBytesPerFrame * advanceFrames;
-            stereoBuffer->mBuffers[i].mDataByteSize -= AEAudioDescription.mBytesPerFrame * advanceFrames;
+        for ( int i=0; i<buffer->mNumberBuffers; i++ ) {
+            buffer->mBuffers[i].mData += AEAudioDescription.mBytesPerFrame * advanceFrames;
+            buffer->mBuffers[i].mDataByteSize -= AEAudioDescription.mBytesPerFrame * advanceFrames;
         }
         frames -= advanceFrames;
     }
@@ -108,13 +123,13 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
     // Truncate if we have a stop time mid-buffer
     if ( stopTime && stopTime < hostTimeAtBufferEnd ) {
         UInt32 truncateFrames = round(AESecondsFromHostTicks(hostTimeAtBufferEnd - stopTime) * context->sampleRate);
-        for ( int i=0; i<stereoBuffer->mNumberBuffers; i++ ) {
-            stereoBuffer->mBuffers[i].mDataByteSize -= AEAudioDescription.mBytesPerFrame * truncateFrames;
+        for ( int i=0; i<buffer->mNumberBuffers; i++ ) {
+            buffer->mBuffers[i].mDataByteSize -= AEAudioDescription.mBytesPerFrame * truncateFrames;
         }
         frames -= truncateFrames;
     }
     
-    AECheckOSStatus(ExtAudioFileWriteAsync(THIS->_audioFile, frames, stereoBuffer), "ExtAudioFileWriteAsync");
+    AECheckOSStatus(ExtAudioFileWriteAsync(THIS->_audioFile, frames, buffer), "ExtAudioFileWriteAsync");
     THIS->_recordedFrames += frames;
     
     if ( stopTime && stopTime < hostTimeAtBufferEnd ) {
