@@ -228,26 +228,24 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
 }
 
 - (void)setupMainThreadEndpoint {
-    __weak AEAudioFilePlayerModule * weakSelf = self;
+    __unsafe_unretained AEAudioFilePlayerModule * weakSelf = self;
     self.mainThreadEndpointValue.objectValue
             = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void * data, size_t length) {
-        AEAudioFilePlayerModule * self = weakSelf;
-        
-        if ( self.beginBlock && self->_anchorTime != 0 ) {
-            self.beginBlock();
-            self.beginBlock = nil;
-            if ( !self.completionBlock || self.loop ) {
-                self.mainThreadEndpointValue.objectValue = nil;
+        if ( weakSelf.beginBlock && weakSelf->_anchorTime != 0 ) {
+            weakSelf.beginBlock();
+            weakSelf.beginBlock = nil;
+            if ( !weakSelf.completionBlock || weakSelf.loop ) {
+                weakSelf.mainThreadEndpointValue.objectValue = nil;
             }
         }
         
-        if ( self->_stopEventScheduled ) {
-            self->_stopEventScheduled = NO;
-            AECheckOSStatus(AudioUnitReset(self.audioUnit, kAudioUnitScope_Global, 0), "AudioUnitReset");
-            self->_sequenceScheduled = NO;
-            self->_playing = NO;
-            if ( self.completionBlock ) self.completionBlock();
-            self.mainThreadEndpointValue.objectValue = nil;
+        if ( weakSelf->_stopEventScheduled ) {
+            weakSelf->_stopEventScheduled = NO;
+            AECheckOSStatus(AudioUnitReset(weakSelf.audioUnit, kAudioUnitScope_Global, 0), "AudioUnitReset");
+            weakSelf->_sequenceScheduled = NO;
+            weakSelf->_playing = NO;
+            if ( weakSelf.completionBlock ) weakSelf.completionBlock();
+            weakSelf.mainThreadEndpointValue.objectValue = nil;
         }
     }];
 }

@@ -33,7 +33,7 @@
 #import <AVFoundation/AVFoundation.h>
 
 @interface AEAudioUnitInputModule ()
-@property (nonatomic, strong) AEIOAudioUnit * ioUnit;
+@property (nonatomic, weak) AEIOAudioUnit * ioUnit;
 @property (nonatomic, readwrite) int numberOfInputChannels;
 @property (nonatomic, strong) id ioUnitStreamChangeObserverToken;
 @property (nonatomic) BOOL ownsIOUnit;
@@ -55,7 +55,8 @@
     if ( audioUnit ) {
         self.ioUnit = audioUnit;
     } else {
-        self.ioUnit = [AEIOAudioUnit new];
+        // We need to add a bridging retain, because the property is weak
+        self.ioUnit = (__bridge AEIOAudioUnit*) CFBridgingRetain([AEIOAudioUnit new]);
         self.ioUnit.inputEnabled = YES;
         self.ioUnit.sampleRate = self.renderer.sampleRate;
         self.ownsIOUnit = YES;
@@ -81,6 +82,10 @@
 }
 
 - (void)dealloc {
+    if ( self.ownsIOUnit ) {
+        // Add a bridging release, because we manually retained the audio unit
+        CFBridgingRelease((__bridge CFTypeRef)self.ioUnit);
+    }
     [[NSNotificationCenter defaultCenter] removeObserver:self.ioUnitStreamChangeObserverToken];
 }
 

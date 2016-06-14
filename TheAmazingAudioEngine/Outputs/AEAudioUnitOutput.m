@@ -110,12 +110,12 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
         
         if ( rateChanged ) {
            [[NSNotificationCenter defaultCenter]
-            postNotificationName:AEAudioUnitOutputDidChangeSampleRateNotification object:self];
+            postNotificationName:AEAudioUnitOutputDidChangeSampleRateNotification object:weakSelf];
         }
         
         if ( channelsChanged ) {
            [[NSNotificationCenter defaultCenter]
-            postNotificationName:AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification object:self];
+            postNotificationName:AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification object:weakSelf];
         }
     }];
     
