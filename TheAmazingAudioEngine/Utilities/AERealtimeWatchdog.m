@@ -132,7 +132,7 @@ void * realloc(void * ptr, size_t size) {
 void free(void *p) {
     static free_t funcptr = NULL;
     if ( !funcptr ) funcptr = (free_t) dlsym(RTLD_NEXT, "free");
-    if ( AERealtimeWatchdogIsOnRealtimeThread() ) AERealtimeWatchdogUnsafeActivityWarning("free");
+    if ( p && AERealtimeWatchdogIsOnRealtimeThread() ) AERealtimeWatchdogUnsafeActivityWarning("free");
     funcptr(p);
 }
 
