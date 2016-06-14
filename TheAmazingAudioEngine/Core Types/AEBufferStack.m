@@ -288,6 +288,7 @@ void AEBufferStackApplyFaders(AEBufferStack * stack,
     
     if ( fabsf(targetBalance) > FLT_EPSILON && abl->mNumberBuffers == 1 ) {
         // Make mono buffer stereo
+        float * priorBuffer = abl->mBuffers[0].mData;
         AEBufferStackPop(stack, 1);
         abl = AEBufferStackPushWithChannels(stack, 1, 2);
         if ( !abl ) {
@@ -295,7 +296,10 @@ void AEBufferStackApplyFaders(AEBufferStack * stack,
             AEBufferStackPushWithChannels(stack, 1, 1);
             return;
         }
-        memcpy(abl->mBuffers[1].mData, abl->mBuffers[0].mData, abl->mBuffers[1].mDataByteSize);
+        if ( abl->mBuffers[0].mData != priorBuffer ) {
+            memcpy(abl->mBuffers[1].mData, priorBuffer, abl->mBuffers[1].mDataByteSize);
+        }
+        memcpy(abl->mBuffers[1].mData, priorBuffer, abl->mBuffers[1].mDataByteSize);
     }
     
     AEDSPApplyVolumeAndBalance(abl, targetVolume, currentVolume, targetBalance, currentBalance, stack->frameCount);
