@@ -73,6 +73,10 @@ typedef void * _Nullable (^AEArrayIndexedCustomMappingBlock)(id _Nonnull item, i
  */
 typedef void (^AEArrayReleaseBlock)(id _Nonnull item, void * _Nonnull bytes);
 
+// Some indirection macros required for AEArrayEnumerate
+#define __AEArrayVar2(x, y) x ## y
+#define __AEArrayVar(x, y) __AEArrayVar2(__ ## x ## _line_, y)
+
 /*!
  * Real-time safe array
  *
@@ -228,6 +232,12 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
  *  This convenience macro provides the ability to enumerate the objects
  *  in the array, in a realtime-thread safe fashion.
  *
+ *  Use it like:
+ *
+ *      AEArrayEnumerateObjects(array, MyObjectType *, myVar) {
+ *          // Do stuff with myVar, which is a MyObjectType *
+ *      }
+ *
  *  Note: This macro calls AEArrayGetToken to access the array. Consequently, it is not
  *  recommended for use when you need to access the array in addition to this enumeration.
  *
@@ -236,16 +246,15 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
  * @param array The array
  * @param type The object type
  * @param varname Name of object variable for inner loop
- * @param inner Inner loop implementation
  */
-#define AEArrayEnumerateObjects(array, type, varname, inner) { \
-    AEArrayToken _token = AEArrayGetToken(array); \
-    int _count = AEArrayGetCount(_token); \
-    for ( int _i=0; _i < _count; _i++ ) { \
-        __unsafe_unretained type varname = (__bridge type)AEArrayGetItem(_token, _i); \
-        { inner; } \
-    } \
-}
+#define AEArrayEnumerateObjects(array, type, varname) \
+    AEArrayToken __AEArrayVar(token, __LINE__) = AEArrayGetToken(array); \
+    int __AEArrayVar(count, __LINE__) = AEArrayGetCount(__AEArrayVar(token, __LINE__)); \
+    int __AEArrayVar(i, __LINE__) = 0; \
+    for ( __unsafe_unretained type varname = __AEArrayVar(count, __LINE__) > 0 ? (__bridge type)AEArrayGetItem(__AEArrayVar(token, __LINE__), 0) : NULL; \
+          __AEArrayVar(i, __LINE__) < __AEArrayVar(count, __LINE__); \
+          __AEArrayVar(i, __LINE__)++, varname = __AEArrayVar(i, __LINE__) < __AEArrayVar(count, __LINE__) ? \
+            (__bridge type)AEArrayGetItem(__AEArrayVar(token, __LINE__), __AEArrayVar(i, __LINE__)) : NULL )
 
 /*!
  * Enumerate pointer types in the array, for use on audio thread
@@ -253,6 +262,12 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
  *  This convenience macro provides the ability to enumerate the pointers
  *  in the array, in a realtime-thread safe fashion. It differs from AEArrayEnumerateObjects
  *  in that it is designed for use with pointer types, rather than objects.
+ *
+ *  Use it like:
+ *
+ *      AEArrayEnumeratePointers(array, MyCType *, myVar) {
+ *          // Do stuff with myVar, which is a MyCType *
+ *      }
  *
  *  Note: This macro calls AEArrayGetToken to access the array. Consequently, it is not
  *  recommended for use when you need to access the array in addition to this enumeration.
@@ -262,16 +277,16 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
  * @param array The array
  * @param type The pointer type (e.g. struct myStruct *)
  * @param varname Name of pointer variable for inner loop
- * @param inner Inner loop implementation
  */
-#define AEArrayEnumeratePointers(array, type, varname, inner) { \
-    AEArrayToken _token = AEArrayGetToken(array); \
-    int _count = AEArrayGetCount(_token); \
-    for ( int _i=0; _i < _count; _i++ ) { \
-        type varname = (type)AEArrayGetItem(_token, _i); \
-        { inner; } \
-    } \
-}
+#define AEArrayEnumeratePointers(array, type, varname) \
+    AEArrayToken __AEArrayVar(token, __LINE__) = AEArrayGetToken(array); \
+    int __AEArrayVar(count, __LINE__) = AEArrayGetCount(__AEArrayVar(token, __LINE__)); \
+    int __AEArrayVar(i, __LINE__) = 0; \
+    for ( type varname = __AEArrayVar(count, __LINE__) > 0 ? (type)AEArrayGetItem(__AEArrayVar(token, __LINE__), 0) : NULL; \
+          __AEArrayVar(i, __LINE__) < __AEArrayVar(count, __LINE__); \
+          __AEArrayVar(i, __LINE__)++, varname = __AEArrayVar(i, __LINE__) < __AEArrayVar(count, __LINE__) ? \
+            (type)AEArrayGetItem(__AEArrayVar(token, __LINE__), __AEArrayVar(i, __LINE__)) : NULL )
+
 
 //! Number of values in array
 @property (nonatomic, readonly) int count;

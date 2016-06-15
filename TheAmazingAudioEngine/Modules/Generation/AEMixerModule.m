@@ -112,7 +112,7 @@ static void AEMixerModuleProcess(__unsafe_unretained AEMixerModule * self, const
     AEAudioBufferListSilence(abl, 0, context->frames);
     
     // Run each module, applying volume/balance then mixing into our output buffer
-    AEArrayEnumeratePointers(self->_array, AEMixerModuleSubModuleEntry *, entry, {
+    AEArrayEnumeratePointers(self->_array, AEMixerModuleSubModuleEntry *, entry) {
         
         if ( !AEModuleIsActive(entry->module) ) {
             // Module is idle; skip (and skip the volume/balance ramp, too)
@@ -140,7 +140,7 @@ static void AEMixerModuleProcess(__unsafe_unretained AEMixerModule * self, const
                                  entry->targetVolume, &entry->currentVolume,
                                  entry->targetBalance, &entry->currentBalance);
         AEBufferStackMix(context->stack, 2);
-    });
+    }
 }
 
 - (AEMixerModuleSubModuleEntry *)newEntryForModule:(AEModule *)module volume:(float)volume balance:(float)balance {
