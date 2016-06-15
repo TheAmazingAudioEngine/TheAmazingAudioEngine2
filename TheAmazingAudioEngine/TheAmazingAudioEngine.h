@@ -81,10 +81,33 @@ extern "C" {
  @mainpage
  
  The Amazing Audio Engine (or TAAE) is a framework for making audio apps.
-  
- It is an infrastructure and a variety of utilities that make it easier to focus on the core
- tasks of making and working with audio, without spending time writing boilerplate code and
- reinventing the wheel. Most of the common tasks are taken care of, so you can get straight to the good stuff.
+ 
+ @section What-TAAE-Is What TAAE Is, And Who It's For
+ 
+ TAAE comprises an infrastructure and a variety of utilities that make it easier to focus on the core
+ tasks of generating and working with audio, without spending time writing boilerplate code and
+ reinventing the wheel. Most of the common tasks are taken care of, so you can get straight to the good stuff:
+ no friction.
+ 
+ If you're writing code that directly generates or processes audio on the audio thread - and you know what the 
+ audio thread is, and what it does - TAAE may be for you.
+ 
+ @section What-TAAE-Isnt What TAAE Isn't
+ 
+ TAAE *is not* a comprehensive audio processing library where all the work is already done for you, and it's not
+ necessarily a suitable choice for those just starting out with audio, or for those with very simple needs.
+ 
+ With TAAE, you're going to write code that runs on the audio thread; it gives you great power, but that comes 
+ with [certain important responsibilities](http://atastypixel.com/blog/four-common-mistakes-in-audio-development/).
+ 
+ If you don't know or aren't keen on finding out what the audio thread is, what 'realtime' means, what an 
+ `AudioBufferList` is or how to handle lock-free concurrency, or if you want a library that consists
+ of pre-built pieces you can just fit together, then I strongly recommend checking out
+ [AudioKit](http://audiokit.io/), a powerful audio synthesis, processing, and analysis library without the 
+ steep learning curve.
+ 
+ @section Design TAAE's Design
+ 
  
  TAAE 2's design philosophy leans towards the simple and modular: to provide a set of small and simple
  building blocks that you can use together, or alone.
