@@ -102,7 +102,7 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
     for ( int i=0; i<buffer->mNumberBuffers; i++ ) {
         buffer->mBuffers[i] = abl->mBuffers[MIN(abl->mNumberBuffers-1, i)];
     }
-    if ( buffer->mBuffers == 1 && abl->mNumberBuffers > 1 ) {
+    if ( buffer->mNumberBuffers == 1 && abl->mNumberBuffers > 1 ) {
         // Mix down to mono
         for ( int i=1; i<abl->mNumberBuffers; i++ ) {
             AEDSPMixMono(abl->mBuffers[i].mData, buffer->mBuffers[0].mData, 1.0, 1.0, context->frames, buffer->mBuffers[0].mData);
