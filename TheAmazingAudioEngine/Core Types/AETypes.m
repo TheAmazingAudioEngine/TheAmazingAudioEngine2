@@ -44,4 +44,4 @@ AudioStreamBasicDescription AEAudioDescriptionWithChannelsAndRate(int channels, 
     return description;
 }
 
-AEChannelSet AEChannelSetDefault = {1, 2};
+AEChannelSet AEChannelSetDefault = {0, 1};
