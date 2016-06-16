@@ -62,6 +62,24 @@ typedef struct {
     XCTAssertNil(weakEndpoint);
 }
 
+- (void)testMainThreadEndpointStressTest {
+    __block int counter = 0;
+    AEMainThreadEndpoint * endpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void *data, size_t length) {
+        counter++;
+    }];
+    
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_DEFAULT, 0), ^{
+        for ( int i=0; i<100; i++) {
+            AEMainThreadEndpointSend(endpoint, NULL, 0);
+            usleep(100);
+        }
+    });
+    
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.2]];
+    
+    XCTAssertEqual(counter, 100);
+}
+
 - (void)testAudioThreadEndpointMessaging {
     NSMutableArray * messages = [NSMutableArray array];
     AEAudioThreadEndpoint * endpoint = [[AEAudioThreadEndpoint alloc] initWithHandler:^(const void *data, size_t length) {
