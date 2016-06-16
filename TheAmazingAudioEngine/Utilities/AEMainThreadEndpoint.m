@@ -26,7 +26,9 @@
 
 #import "AEMainThreadEndpoint.h"
 #import "TPCircularBuffer.h"
-#import <dispatch/semaphore.h>
+#import <mach/semaphore.h>
+#import <mach/task.h>
+#import <mach/mach_init.h>
 
 @class AEMainThreadEndpointThread;
 
@@ -35,7 +37,7 @@
     BOOL _hasPendingMainThreadMessages;
 }
 @property (nonatomic, copy) AEMainThreadEndpointHandler handler;
-@property (nonatomic) dispatch_semaphore_t semaphore;
+@property (nonatomic) semaphore_t semaphore;
 @property (nonatomic, strong) AEMainThreadEndpointThread * thread;
 @end
 
@@ -58,7 +60,7 @@
         return nil;
     }
     
-    self.semaphore = dispatch_semaphore_create(0);
+    semaphore_create(mach_task_self(), &_semaphore, SYNC_POLICY_FIFO, 0);
     
     self.thread = [AEMainThreadEndpointThread new];
     self.thread.endpoint = self;
@@ -70,9 +72,10 @@
 - (void)dealloc {
     @synchronized ( self.thread ) {
         [self.thread cancel];
-        dispatch_semaphore_signal(_semaphore);
+        semaphore_signal(_semaphore);
     }
     TPCircularBufferCleanup(&_buffer);
+    semaphore_destroy(mach_task_self(), _semaphore);
 }
 
 BOOL AEMainThreadEndpointSend(__unsafe_unretained AEMainThreadEndpoint * THIS, const void * data, size_t length) {
@@ -120,7 +123,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
     
     // Mark as ready to read
     TPCircularBufferProduce(&THIS->_buffer, (int32_t)size);
-    dispatch_semaphore_signal(THIS->_semaphore);
+    semaphore_signal(THIS->_semaphore);
 }
 
 - (void)serviceMessages {
@@ -149,7 +152,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 @implementation AEMainThreadEndpointThread
 
 - (void)main {
-    dispatch_semaphore_t semaphore = self.endpoint.semaphore;
+    semaphore_t semaphore = self.endpoint.semaphore;
     
     while ( 1 ) {
         @synchronized ( self ) {
@@ -160,7 +163,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
                 [self.endpoint serviceMessages];
             }
         }
-        dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);
+        semaphore_wait(semaphore);
     }
 }
 
