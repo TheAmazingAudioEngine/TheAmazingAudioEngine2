@@ -175,7 +175,7 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
                     "AudioUnitAddPropertyListener(kAudioUnitProperty_StreamFormat)");
     
 #if TARGET_OS_IPHONE
-    __weak AEIOAudioUnit * weakSelf = self;
+    __weak typeof(self) weakSelf = self;
     
     // Watch for session interruptions
     __block BOOL wasRunning;

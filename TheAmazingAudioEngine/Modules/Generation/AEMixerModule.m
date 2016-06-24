@@ -49,7 +49,7 @@ typedef struct {
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
     if ( !(self = [super initWithRenderer:renderer]) ) return nil;
     
-    __weak AEMixerModule * weakSelf = self;
+    __weak typeof(self) weakSelf = self;
     self.array = [[AEArray alloc] initWithCustomMapping:^void * _Nonnull(id _Nonnull item) {
         return [weakSelf newEntryForModule:item volume:1.0 balance:0.0];
     }];
