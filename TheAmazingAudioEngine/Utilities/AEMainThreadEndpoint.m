@@ -160,7 +160,15 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
                 break;
             }
             @autoreleasepool {
-                [self.endpoint serviceMessages];
+                // Keep strong reference to endpoint to avoid deallocation during servicing
+                AEMainThreadEndpoint * endpoint = self.endpoint;
+                if ( !endpoint ) break;
+                [endpoint serviceMessages];
+            }
+            
+            if ( self.cancelled ) {
+                // We'll be cancelled here if the endpoint was released during servicing, so exit
+                break;
             }
         }
         semaphore_wait(semaphore);
