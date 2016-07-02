@@ -53,7 +53,7 @@ BOOL AERateLimit(void) {
     return YES;
 }
 
-ExtAudioFileRef AEExtAudioFileRefCreate(NSURL * url, AEAudioFileType fileType, double sampleRate, int channelCount,
+ExtAudioFileRef AEExtAudioFileCreate(NSURL * url, AEAudioFileType fileType, double sampleRate, int channelCount,
                                         NSError ** error) {
     
     AudioStreamBasicDescription asbd = {

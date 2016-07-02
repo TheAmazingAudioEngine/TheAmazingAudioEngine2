@@ -29,7 +29,7 @@
                            error:(NSError *__autoreleasing  _Nullable *)error {
     if ( !(self = [super init]) ) return nil;
 
-    if ( !(_audioFile = AEExtAudioFileRefCreate(url, type, sampleRate, channelCount, error)) ) return nil;
+    if ( !(_audioFile = AEExtAudioFileCreate(url, type, sampleRate, channelCount, error)) ) return nil;
 
     self.fileURL = url;
     self.sampleRate = sampleRate;

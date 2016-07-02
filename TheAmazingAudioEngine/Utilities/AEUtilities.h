@@ -90,8 +90,10 @@ static inline BOOL _AECheckOSStatus(OSStatus result, const char * _Nonnull opera
  * @param error If not NULL, the error on output
  * @return The initialized ExtAudioFileRef, or NULL on error
  */
-ExtAudioFileRef _Nullable AEExtAudioFileRefCreate(NSURL * _Nonnull url, AEAudioFileType fileType, double sampleRate,
-                                                  int channelCount, NSError * _Nullable * _Nullable error);
+ExtAudioFileRef _Nullable AEExtAudioFileCreate(NSURL * _Nonnull url, AEAudioFileType fileType, double sampleRate,
+                                               int channelCount, NSError * _Nullable * _Nullable error);
+
+#define AEExtAudioFileRefCreate AEExtAudioFileCreate
 
 #ifdef __cplusplus
 }

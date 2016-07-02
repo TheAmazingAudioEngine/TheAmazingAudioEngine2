@@ -39,7 +39,7 @@
     
     if ( !(self = [super initWithRenderer:renderer]) ) return nil;
     
-    if ( !(_audioFile = AEExtAudioFileRefCreate(url, type, self.renderer.sampleRate, numberOfChannels, error)) ) return nil;
+    if ( !(_audioFile = AEExtAudioFileCreate(url, type, self.renderer.sampleRate, numberOfChannels, error)) ) return nil;
     
     // Prime async recording
     ExtAudioFileWriteAsync(_audioFile, 0, NULL);
