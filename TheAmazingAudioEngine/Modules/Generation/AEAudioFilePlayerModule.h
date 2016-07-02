@@ -67,12 +67,12 @@ typedef void (^AEAudioFilePlayerModuleBlock)();
  *  is reached. Use this method to synchronize playback with other audio
  *  generators.
  *
- *  If you pass 0 as the time, the module will immediately begin outputting
- *  audio.
+ *  If you pass AETimeStampNone as the time, the module will immediately 
+ *  begin outputting audio.
  *
- * @param time The time, in host ticks, at which to begin playback
+ * @param time The timestamp at which to begin playback
  */
-- (void)playAtTime:(AEHostTicks)time;
+- (void)playAtTime:(AudioTimeStamp)time;
 
 /*!
  * Begin playback
@@ -80,10 +80,10 @@ typedef void (^AEAudioFilePlayerModuleBlock)();
  *  Begins playback at the given time; this version allows you to provide a 
  *  block which will be called on the main thread shortly after playback starts.
  *
- * @param time The time, in host ticks, at which to begin playback
+ * @param time The timestamp at which to begin playback
  * @param block Block to call on main thread when the time is reached and playback starts
  */
-- (void)playAtTime:(AEHostTicks)time beginBlock:(AEAudioFilePlayerModuleBlock _Nullable)block;
+- (void)playAtTime:(AudioTimeStamp)time beginBlock:(AEAudioFilePlayerModuleBlock _Nullable)block;
 
 /*!
  * Stop playback

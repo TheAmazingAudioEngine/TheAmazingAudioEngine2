@@ -30,6 +30,8 @@
 static double __hostTicksToSeconds = 0.0;
 static double __secondsToHostTicks = 0.0;
 
+const AudioTimeStamp AETimeStampNone = {};
+
 void AETimeInit() {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
@@ -60,3 +62,11 @@ AESeconds AESecondsFromHostTicks(AEHostTicks ticks) {
     return ticks * __hostTicksToSeconds;
 }
 
+AudioTimeStamp AETimeStampWithHostTicks(AEHostTicks ticks) {
+    if ( !ticks ) return AETimeStampNone;
+    return (AudioTimeStamp) { .mFlags = kAudioTimeStampHostTimeValid, .mHostTime = ticks };
+}
+
+AudioTimeStamp AETimeStampWithSamples(Float64 samples) {
+    return (AudioTimeStamp) { .mFlags = kAudioTimeStampSampleTimeValid, .mSampleTime = samples };
+}

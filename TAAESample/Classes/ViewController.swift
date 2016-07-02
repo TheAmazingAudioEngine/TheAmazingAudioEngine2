@@ -127,7 +127,7 @@ class ViewController: UIViewController {
                     
                     // Start player
                     player.currentTime = 0
-                    player.playAtTime(syncTime, beginBlock: {
+                    player.playAtTime(AETimeStampWithHostTicks(syncTime), beginBlock: {
                         // Show playing state
                         sender.rotateSpeed = self.currentRotateSpeed()
                     })
@@ -159,7 +159,7 @@ class ViewController: UIViewController {
                     
                     // Start player
                     player.currentTime = 0
-                    player.playAtTime(syncTime, beginBlock: {
+                    player.playAtTime(AETimeStampWithHostTicks(syncTime), beginBlock: {
                         // Set button state to playing
                         sender.imageView!.layer.removeAllAnimations()
                         sender.selected = true
@@ -311,7 +311,7 @@ class ViewController: UIViewController {
                 audio.hit.loop = true
                 if !audio.hit.playing {
                     audio.hit.currentTime = 0
-                    audio.hit.playAtTime(audio.nextSyncTimeForPlayer(audio.hit))
+                    audio.hit.playAtTime(AETimeStampWithHostTicks(audio.nextSyncTimeForPlayer(audio.hit)))
                 }
                 hitButton.selected = true
                 
@@ -331,7 +331,7 @@ class ViewController: UIViewController {
                 // Start the drums playing again
                 if !audio.drums.playing {
                     audio.drums.currentTime = 0
-                    audio.drums.playAtTime(audio.nextSyncTimeForPlayer(audio.drums))
+                    audio.drums.playAtTime(AETimeStampWithHostTicks(audio.nextSyncTimeForPlayer(audio.drums)))
                     beatButton.rotateSpeed = currentRotateSpeed()
                 }
                 

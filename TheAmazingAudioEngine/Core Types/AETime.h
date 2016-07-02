@@ -29,9 +29,12 @@ extern "C" {
 #endif
 
 #import <Foundation/Foundation.h>
+#import <AudioToolbox/AudioToolbox.h>
 
 typedef uint64_t AEHostTicks;
 typedef double AESeconds;
+    
+extern const AudioTimeStamp AETimeStampNone; //!< An empty timestamp
     
 /*!
  * Initialize
@@ -63,6 +66,24 @@ AEHostTicks AEHostTicksFromSeconds(AESeconds seconds);
  * @return The time in seconds
  */
 AESeconds AESecondsFromHostTicks(AEHostTicks ticks);
+    
+/*!
+ * Create an AudioTimeStamps with a host ticks value
+ *
+ *  If a zero value is provided, then AETimeStampNone will be returned.
+ *
+ * @param ticks The time in host ticks
+ * @return The timestamp
+ */
+AudioTimeStamp AETimeStampWithHostTicks(AEHostTicks ticks);
+
+/*!
+ * Create an AudioTimeStamps with a sample time value
+ *
+ * @param samples The time in samples
+ * @return The timestamp
+ */
+AudioTimeStamp AETimeStampWithSamples(Float64 samples);
 
 #ifdef __cplusplus
 }

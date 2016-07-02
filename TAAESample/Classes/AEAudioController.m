@@ -328,7 +328,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         
         // Go
         self.playingRecording = YES;
-        [player playAtTime:0];
+        [player playAtTime:AETimeStampNone];
     }
 }
 
