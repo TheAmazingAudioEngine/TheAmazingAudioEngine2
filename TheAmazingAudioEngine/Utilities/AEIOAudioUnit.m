@@ -548,11 +548,9 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
             hasChanges = YES;
         }
         
-        if ( self.numberOfOutputChannels != (int)asbd.mChannelsPerFrame ) {
+        if ( _numberOfOutputChannels != (int)asbd.mChannelsPerFrame ) {
             hasChanges = YES;
             self.numberOfOutputChannels = asbd.mChannelsPerFrame;
-        } else {
-            _numberOfOutputChannels = (int)asbd.mChannelsPerFrame; // (Report change quietly)
         }
         
         // Update the stream format
@@ -573,11 +571,9 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
                         "AudioUnitGetProperty(kAudioUnitProperty_StreamFormat)");
         
         int channels = MIN(asbd.mChannelsPerFrame, self.maximumInputChannels);
-        if ( self.numberOfInputChannels != (int)channels ) {
+        if ( _numberOfInputChannels != (int)channels ) {
             hasChanges = YES;
             self.numberOfInputChannels = channels;
-        } else {
-            _numberOfInputChannels = channels; // (Report change quietly)
         }
         
         if ( !self.outputEnabled ) {
