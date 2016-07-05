@@ -23,6 +23,9 @@
     UInt32 frames = 1024;
     AEBufferStackSetFrameCount(stack, frames);
     
+    AudioTimeStamp timestamp = { .mFlags = kAudioTimeStampSampleTimeValid, .mSampleTime = 1000 };
+    AEBufferStackSetTimeStamp(stack, &timestamp);
+    
     // Push a buffer, verify
     const AudioBufferList * item1 = AEBufferStackPush(stack, 1);
     XCTAssertNotEqual(item1, NULL);
@@ -30,6 +33,7 @@
     XCTAssertEqual(item1->mBuffers[0].mDataByteSize, frames * AEAudioDescription.mBytesPerFrame);
     XCTAssertEqual(item1->mBuffers[1].mDataByteSize, frames * AEAudioDescription.mBytesPerFrame);
     XCTAssertEqual(item1, AEBufferStackGet(stack, 0));
+    XCTAssertEqual(memcmp(&timestamp, AEBufferStackGetTimeStampForBuffer(stack, 0), sizeof(AudioTimeStamp)), 0);
     XCTAssertEqual(AEBufferStackCount(stack), 1);
     
     // Make note of the mData pointers, and set some values

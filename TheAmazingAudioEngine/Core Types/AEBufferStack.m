@@ -43,10 +43,16 @@ typedef struct {
     AEBufferStackPoolEntry * used;
 } AEBufferStackPool;
 
+typedef struct {
+    AudioTimeStamp timestamp;
+    AudioBufferList audioBufferList;
+} AEBufferStackBuffer;
+
 struct AEBufferStack {
     int                poolSize;
     int                maxChannelsPerBuffer;
     UInt32             frameCount;
+    AudioTimeStamp     timeStamp;
     int                stackCount;
     AEBufferStackPool  audioPool;
     AEBufferStackPool  bufferListPool;
@@ -76,7 +82,7 @@ AEBufferStack * AEBufferStackNewWithOptions(int poolSize, int maxChannelsPerBuff
     size_t bytesPerBufferChannel = AEBufferStackMaxFramesPerSlice * AEAudioDescription.mBytesPerFrame;
     AEBufferStackPoolInit(&stack->audioPool, numberOfSingleChannelBuffers, bytesPerBufferChannel);
     
-    size_t bytesPerBufferListEntry = sizeof(AudioBufferList) + ((maxChannelsPerBuffer-1) * sizeof(AudioBuffer));
+    size_t bytesPerBufferListEntry = sizeof(AEBufferStackBuffer) + ((maxChannelsPerBuffer-1) * sizeof(AudioBuffer));
     AEBufferStackPoolInit(&stack->bufferListPool, poolSize, bytesPerBufferListEntry);
     
     return stack;
@@ -97,6 +103,14 @@ UInt32 AEBufferStackGetFrameCount(const AEBufferStack * stack) {
     return stack->frameCount;
 }
 
+void AEBufferStackSetTimeStamp(AEBufferStack * stack, const AudioTimeStamp * timestamp) {
+    stack->timeStamp = *timestamp;
+}
+
+const AudioTimeStamp * AEBufferStackGetTimeStamp(const AEBufferStack * stack) {
+    return &stack->timeStamp;
+}
+
 int AEBufferStackGetPoolSize(const AEBufferStack * stack) {
     return stack->poolSize;
 }
@@ -111,7 +125,7 @@ int AEBufferStackCount(const AEBufferStack * stack) {
 
 const AudioBufferList * AEBufferStackGet(const AEBufferStack * stack, int index) {
     if ( index >= stack->stackCount ) return NULL;
-    return (const AudioBufferList*)AEBufferStackPoolGetUsedBufferAtIndex(&stack->bufferListPool, index);
+    return &((const AEBufferStackBuffer*)AEBufferStackPoolGetUsedBufferAtIndex(&stack->bufferListPool, index))->audioBufferList;
 }
 
 const AudioBufferList * AEBufferStackPush(AEBufferStack * stack, int count) {
@@ -143,23 +157,24 @@ const AudioBufferList * AEBufferStackPushWithChannels(AEBufferStack * stack, int
     }
     
     size_t sizePerBuffer = stack->frameCount * AEAudioDescription.mBytesPerFrame;
-    AudioBufferList * first = NULL;
+    AEBufferStackBuffer * first = NULL;
     for ( int j=0; j<count; j++ ) {
-        AudioBufferList * buffer = (AudioBufferList *)AEBufferStackPoolGetNextFreeBuffer(&stack->bufferListPool);
+        AEBufferStackBuffer * buffer = (AEBufferStackBuffer *)AEBufferStackPoolGetNextFreeBuffer(&stack->bufferListPool);
         assert(buffer);
         if ( !first ) first = buffer;
         
-        buffer->mNumberBuffers = channelCount;
+        buffer->timestamp = stack->timeStamp;
+        buffer->audioBufferList.mNumberBuffers = channelCount;
         for ( int i=0; i<channelCount; i++ ) {
-            buffer->mBuffers[i].mNumberChannels = 1;
-            buffer->mBuffers[i].mDataByteSize = (UInt32)sizePerBuffer;
-            buffer->mBuffers[i].mData = AEBufferStackPoolGetNextFreeBuffer(&stack->audioPool);
-            assert(buffer->mBuffers[i].mData);
+            buffer->audioBufferList.mBuffers[i].mNumberChannels = 1;
+            buffer->audioBufferList.mBuffers[i].mDataByteSize = (UInt32)sizePerBuffer;
+            buffer->audioBufferList.mBuffers[i].mData = AEBufferStackPoolGetNextFreeBuffer(&stack->audioPool);
+            assert(buffer->audioBufferList.mBuffers[i].mData);
         }
         stack->stackCount++;
     }
     
-    return first;
+    return &first->audioBufferList;
 }
 
 const AudioBufferList * AEBufferStackPushExternal(AEBufferStack * stack, const AudioBufferList * buffer) {
@@ -192,28 +207,36 @@ const AudioBufferList * AEBufferStackPushExternal(AEBufferStack * stack, const A
     }
 #endif
     
-    AudioBufferList * newBuffer
-        = (AudioBufferList *)AEBufferStackPoolGetNextFreeBuffer(&stack->bufferListPool);
+    AEBufferStackBuffer * newBuffer
+        = (AEBufferStackBuffer *)AEBufferStackPoolGetNextFreeBuffer(&stack->bufferListPool);
     assert(newBuffer);
-    memcpy(newBuffer, buffer, AEAudioBufferListGetStructSize(buffer));
+    newBuffer->timestamp = stack->timeStamp;
+    memcpy(&newBuffer->audioBufferList, buffer, AEAudioBufferListGetStructSize(buffer));
     
     stack->stackCount++;
     
-    return newBuffer;
+    return &newBuffer->audioBufferList;
 }
 
 const AudioBufferList * AEBufferStackDuplicate(AEBufferStack * stack) {
-    const AudioBufferList * top = AEBufferStackGet(stack, 0);
+    if ( stack->stackCount == 0 ) return NULL;
+    
+    const AEBufferStackBuffer * top
+        = (const AEBufferStackBuffer*)AEBufferStackPoolGetUsedBufferAtIndex(&stack->bufferListPool, 0);
     if ( !top ) return NULL;
     
-    const AudioBufferList * duplicate = AEBufferStackPushWithChannels(stack, 1, top->mNumberBuffers);
-    if ( !duplicate ) return NULL;
+    if ( !AEBufferStackPushWithChannels(stack, 1, top->audioBufferList.mNumberBuffers) ) return NULL;
     
-    for ( int i=0; i<duplicate->mNumberBuffers; i++ ) {
-        memcpy(duplicate->mBuffers[i].mData, top->mBuffers[i].mData, duplicate->mBuffers[i].mDataByteSize);
+    AEBufferStackBuffer * duplicate
+        = (AEBufferStackBuffer*)AEBufferStackPoolGetUsedBufferAtIndex(&stack->bufferListPool, 0);
+    
+    for ( int i=0; i<duplicate->audioBufferList.mNumberBuffers; i++ ) {
+        memcpy(duplicate->audioBufferList.mBuffers[i].mData, top->audioBufferList.mBuffers[i].mData,
+               duplicate->audioBufferList.mBuffers[i].mDataByteSize);
     }
+    duplicate->timestamp = top->timestamp;
     
-    return duplicate;
+    return &duplicate->audioBufferList;
 }
 
 void AEBufferStackSwap(AEBufferStack * stack) {
@@ -231,13 +254,13 @@ void AEBufferStackPop(AEBufferStack * stack, int count) {
 }
 
 void AEBufferStackRemove(AEBufferStack * stack, int index) {
-    AudioBufferList * buffer = (AudioBufferList *)AEBufferStackPoolGetUsedBufferAtIndex(&stack->bufferListPool, index);
+    AEBufferStackBuffer * buffer = (AEBufferStackBuffer *)AEBufferStackPoolGetUsedBufferAtIndex(&stack->bufferListPool, index);
     if ( !buffer ) {
         return;
     }
-    for ( int j=buffer->mNumberBuffers-1; j >= 0; j-- ) {
+    for ( int j=buffer->audioBufferList.mNumberBuffers-1; j >= 0; j-- ) {
         // Free buffers in reverse order, so that they're in correct order if we push again
-        AEBufferStackPoolFreeBuffer(&stack->audioPool, buffer->mBuffers[j].mData);
+        AEBufferStackPoolFreeBuffer(&stack->audioPool, buffer->audioBufferList.mBuffers[j].mData);
     }
     AEBufferStackPoolFreeBuffer(&stack->bufferListPool, buffer);
     stack->stackCount--;
@@ -331,6 +354,11 @@ void AEBufferStackMixToBufferListChannels(AEBufferStack * stack, int bufferCount
         if ( !abl ) return;
         AEDSPMix(abl, outputBuffer, 1, 1, YES, stack->frameCount, outputBuffer);
     }
+}
+
+AudioTimeStamp * AEBufferStackGetTimeStampForBuffer(AEBufferStack * stack, int index) {
+    if ( index >= stack->stackCount ) return NULL;
+    return &((AEBufferStackBuffer*)AEBufferStackPoolGetUsedBufferAtIndex(&stack->bufferListPool, index))->timestamp;
 }
 
 void AEBufferStackReset(AEBufferStack * stack) {

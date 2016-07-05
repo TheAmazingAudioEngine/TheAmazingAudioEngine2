@@ -78,6 +78,22 @@ void AEBufferStackSetFrameCount(AEBufferStack * stack, UInt32 frameCount);
 UInt32 AEBufferStackGetFrameCount(const AEBufferStack * stack);
 
 /*!
+ * Set timestamp for the current interval
+ *
+ * @param stack The stack
+ * @param timestamp The current timestamp
+ */
+void AEBufferStackSetTimeStamp(AEBufferStack * stack, const AudioTimeStamp * timestamp);
+
+/*!
+ * Get the timestamp for the current interval
+ *
+ * @param stack The stack
+ * @return The current timestamp
+ */
+const AudioTimeStamp * AEBufferStackGetTimeStamp(const AEBufferStack * stack);
+
+/*!
  * Get the pool size
  *
  * @param stack The stack
@@ -273,6 +289,19 @@ void AEBufferStackMixToBufferListChannels(AEBufferStack * stack,
                                           int bufferCount,
                                           AEChannelSet channels,
                                           const AudioBufferList * output);
+
+/*!
+ * Get the timestamp for the given buffer index
+ *
+ *  Modules can use this method to access and manipulate the timestamp that corresponds
+ *  to a piece of audio. For example, AEAudioUnitInputModule replaces the timestamp with
+ *  one that corresponds to the input audio.
+ *
+ * @param stack The stack
+ * @param index The buffer index
+ * @return The timestamp that corresponds to the buffer at the given index
+ */
+AudioTimeStamp * AEBufferStackGetTimeStampForBuffer(AEBufferStack * stack, int index);
 
 /*!
  * Reset the stack

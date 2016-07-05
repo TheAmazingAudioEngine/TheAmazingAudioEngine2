@@ -31,6 +31,7 @@
 
 @interface AESplitterModule () {
     AudioBufferList * _buffer;
+    AudioTimeStamp _timestamp;
     UInt64 _bufferedTime;
     UInt32 _bufferedFrames;
 }
@@ -76,6 +77,7 @@ static void AESplitterModuleProcess(__unsafe_unretained AESplitterModule * self,
         }
         #endif
         
+        self->_timestamp = *AEBufferStackGetTimeStampForBuffer(context->stack, 0);
         self->_bufferedTime = (UInt64)context->timestamp->mSampleTime;
         self->_bufferedFrames = context->frames;
         AEAudioBufferListCopyContents(self->_buffer, AEBufferStackGet(context->stack, 0), 0, 0, context->frames);
@@ -89,6 +91,7 @@ static void AESplitterModuleProcess(__unsafe_unretained AESplitterModule * self,
         #endif
         
         AEBufferStackPushWithChannels(context->stack, 1, self->_numberOfChannels);
+        *AEBufferStackGetTimeStampForBuffer(context->stack, 0) = self->_timestamp;
         AEAudioBufferListCopyContents(AEBufferStackGet(context->stack, 0), self->_buffer, 0, 0, context->frames);
     }
 }

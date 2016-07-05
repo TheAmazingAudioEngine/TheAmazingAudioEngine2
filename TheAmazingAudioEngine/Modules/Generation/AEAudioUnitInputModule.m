@@ -150,6 +150,8 @@ static void AEAudioUnitInputModuleProcess(__unsafe_unretained AEAudioUnitInputMo
     const AudioBufferList * abl = AEBufferStackPushWithChannels(context->stack, 1, self->_numberOfInputChannels);
     if ( !abl) return;
     
+    *AEBufferStackGetTimeStampForBuffer(context->stack, 0) = AEIOAudioUnitGetInputTimestamp(self->_ioUnit);
+    
     OSStatus status = AEIOAudioUnitRenderInput(self->_ioUnit, abl, context->frames);
     if ( status != noErr ) {
         if ( status == -1 || status == kAudioToolboxErr_CannotDoInCurrentContext ) {
