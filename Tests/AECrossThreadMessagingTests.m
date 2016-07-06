@@ -182,6 +182,21 @@ typedef struct {
     XCTAssertEqual(self.mainThreadMessageValue1, 3);
 }
 
+- (void)testReleaseWithinHandler {
+    __block AEMainThreadEndpoint * endpoint
+            = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void * _Nullable data, size_t length) {
+        endpoint = nil;
+    }];
+    
+    __weak AEMainThreadEndpoint * weakEndpoint = endpoint;
+    
+    AEMainThreadEndpointSend(endpoint, NULL, 0);
+    
+    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    
+    XCTAssertNil(weakEndpoint);
+}
+
 - (void)sendMainThreadMessage:(AEMessageQueue*)queue {
     int data[2] = {1, 2};
     AEMessageQueuePerformSelectorOnMainThread(queue, self,
