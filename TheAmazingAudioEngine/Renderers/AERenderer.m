@@ -58,9 +58,10 @@ NSString * const AERendererDidChangeNumberOfOutputChannelsNotification = @"AERen
 void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList * bufferList, UInt32 frames,
                    const AudioTimeStamp * timestamp) {
     
-    // Reset the buffer stack, and set the frame count
+    // Reset the buffer stack, and set the frame count/timestamp
     AEBufferStackReset(THIS->_stack);
     AEBufferStackSetFrameCount(THIS->_stack, frames);
+    AEBufferStackSetTimeStamp(THIS->_stack, timestamp);
     
     // Clear the output buffer
     AEAudioBufferListSilence(bufferList, 0, frames);
