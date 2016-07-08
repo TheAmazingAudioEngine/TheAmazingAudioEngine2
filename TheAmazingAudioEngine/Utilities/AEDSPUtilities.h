@@ -37,7 +37,7 @@ extern "C" {
  *
  * @param bufferList Audio buffer list, in non-interleaved float format
  * @param gain Gain amount (power ratio)
- * @param frames Length in frames
+ * @param frames Length of buffer in frames
  */
 void AEDSPApplyGain(const AudioBufferList * bufferList, float gain, UInt32 frames);
 
@@ -47,7 +47,7 @@ void AEDSPApplyGain(const AudioBufferList * bufferList, float gain, UInt32 frame
  * @param bufferList Audio buffer list, in non-interleaved float format
  * @param start Starting gain (power ratio) on input; final gain value on output
  * @param step Amount per frame to advance gain
- * @param frames Length in frames
+ * @param frames Length of buffer in frames
  */
 void AEDSPApplyRamp(const AudioBufferList * bufferList, float * start, float step, UInt32 frames);
 
@@ -60,7 +60,7 @@ void AEDSPApplyRamp(const AudioBufferList * bufferList, float * start, float ste
  * @param bufferList Audio buffer list, in non-interleaved float format
  * @param start Starting gain (power ratio) on input; final gain value on output
  * @param step Amount per frame to advance gain
- * @param frames Length in frames
+ * @param frames Length of buffer in frames
  * @param scratch A scratch buffer to use, or NULL to use an internal buffer. Not thread-safe if the latter is used.
  */
 void AEDSPApplyEqualPowerRamp(const AudioBufferList * bufferList, float * start, float step, UInt32 frames, float * scratch);
@@ -72,17 +72,30 @@ void AEDSPApplyEqualPowerRamp(const AudioBufferList * bufferList, float * start,
  * @param targetGain Target gain amount (power ratio)
  * @param currentGain On input, current gain; on output, the new gain. Store this and pass it back to this
  *  function on successive calls for a smooth ramp
- * @param frames Length in frames
+ * @param frames Length of buffer in frames
  */
 void AEDSPApplyGainSmoothed(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames);
 
+/*!
+ * Scale values in a buffer list by some gain value, with smoothing to avoid discontinuities
+ *
+ * @param bufferList Audio buffer list, in non-interleaved float format
+ * @param targetGain Target gain amount (power ratio)
+ * @param currentGain On input, current gain; on output, the new gain. Store this and pass it back to this
+ *  function on successive calls for a smooth ramp
+ * @param frames Length of buffer in frames
+ * @param rampDuration Duration of ramp, in frames
+ */
+void AEDSPApplyGainWithRampDuration(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames,
+                                    UInt32 rampDuration);
+    
 /*!
  * Scale values in a single buffer by some gain value, with smoothing to avoid discontinuities
  *
  * @param buffer Float array
  * @param targetGain Target gain amount (power ratio)
  * @param currentGain On input, current gain; on output, the new gain
- * @param frames Length in frames
+ * @param frames Length of buffer in frames
  */
 void AEDSPApplyGainSmoothedMono(float * buffer, float targetGain, float * currentGain, UInt32 frames);
 
@@ -99,7 +112,7 @@ void AEDSPApplyGainSmoothedMono(float * buffer, float targetGain, float * curren
  * @param targetBalance The target balance
  * @param currentBalance On input, the current balance; on output, the new balance. Store this and pass it
  *  back to this function on successive calls for a smooth ramp. If NULL, no smoothing will be applied.
- * @param frames Length in frames
+ * @param frames Length of buffer in frames
  */
 void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float targetVolume, float * currentVolume,
                                 float targetBalance, float * currentBalance, UInt32 frames);
@@ -122,7 +135,7 @@ void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float target
  * @param gain1 Gain factor for first buffer list (power ratio)
  * @param gain2 Gain factor for second buffer list
  * @param monoToStereo Whether to double mono tracks to stereo, if output is stereo
- * @param frames Length in frames, or 0 for entire buffer (based on mDataByteSize fields)
+ * @param frames Length of buffer in frames, or 0 for entire buffer (based on mDataByteSize fields)
  * @param output Output buffer list (may be same as bufferList1 or bufferList2)
  */
 void AEDSPMix(const AudioBufferList * bufferList1, const AudioBufferList * bufferList2, float gain1, float gain2,
