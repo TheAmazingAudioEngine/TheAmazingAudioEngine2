@@ -12,7 +12,9 @@
 #import "AEAudioBufferListUtilities.h"
 #import "AEWeakRetainingProxy.h"
 #import "AEDSPUtilities.h"
+#import "AEMainThreadEndpoint.h"
 #import <AudioToolbox/AudioToolbox.h>
+#import <libkern/OSAtomic.h>
 
 @interface AEAudioFileRecorderModule () {
     ExtAudioFileRef _audioFile;
@@ -23,8 +25,7 @@
 }
 @property (nonatomic, readwrite) int numberOfChannels;
 @property (nonatomic, readwrite) BOOL recording;
-@property (nonatomic, copy) void (^completionBlock)();
-@property (nonatomic, strong) NSTimer * pollTimer;
+@property (nonatomic, strong) AEMainThreadEndpoint * stopRecordingNotificationEndpoint;
 @end
 
 @implementation AEAudioFileRecorderModule
@@ -51,9 +52,6 @@
 }
 
 - (void)dealloc {
-    if ( self.pollTimer ) {
-        [self.pollTimer invalidate];
-    }
     if ( _audioFile ) {
         [self finishWriting];
     }
@@ -67,10 +65,16 @@
 }
 
 - (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(AEAudioFileRecorderModuleCompletionBlock)block {
-    self.completionBlock = block;
+    __weak typeof(self) weakSelf = self;
+    self.stopRecordingNotificationEndpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void * _Nullable data, size_t length) {
+        weakSelf.stopRecordingNotificationEndpoint = nil;
+        weakSelf.recording = NO;
+        [weakSelf finishWriting];
+        if ( block ) block();
+    } bufferCapacity:32];
+    
+    OSMemoryBarrier();
     _stopTime = time ? time : AECurrentTimeInHostTicks();
-    self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:[AEWeakRetainingProxy proxyWithTarget:self]
-                                                    selector:@selector(pollForCompletion) userInfo:nil repeats:YES];
 }
 
 static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileRecorderModule * THIS,
@@ -83,6 +87,7 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
     
     if ( stopTime && stopTime < context->timestamp->mHostTime ) {
         THIS->_complete = YES;
+        AEMainThreadEndpointSend(THIS->_stopRecordingNotificationEndpoint, NULL, 0);
         return;
     }
     
@@ -134,17 +139,7 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
     
     if ( stopTime && stopTime < hostTimeAtBufferEnd ) {
         THIS->_complete = YES;
-    }
-}
-
-- (void)pollForCompletion {
-    if ( _complete ) {
-        [self.pollTimer invalidate];
-        self.pollTimer = nil;
-        self.recording = NO;
-        [self finishWriting];
-        if ( self.completionBlock ) self.completionBlock();
-        self.completionBlock = nil;
+        AEMainThreadEndpointSend(THIS->_stopRecordingNotificationEndpoint, NULL, 0);
     }
 }
 
