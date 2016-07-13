@@ -83,6 +83,9 @@ typedef void (^AEAudioFileRecorderModuleCompletionBlock)();
 /*!
  * Stop recording
  *
+ *  Will finish recording asynchronously at the given time, or if time is zero,
+ *  will finish recording synchronously.
+ *
  * @param time Time to end recording, or 0 for "now"
  * @param block Block to perform once recording has completed
  */

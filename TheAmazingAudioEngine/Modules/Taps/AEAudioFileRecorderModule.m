@@ -15,9 +15,11 @@
 #import "AEMainThreadEndpoint.h"
 #import <AudioToolbox/AudioToolbox.h>
 #import <libkern/OSAtomic.h>
+#import <pthread.h>
 
 @interface AEAudioFileRecorderModule () {
     ExtAudioFileRef _audioFile;
+    pthread_mutex_t _audioFileMutex;
     AEHostTicks    _startTime;
     AEHostTicks    _stopTime;
     BOOL           _complete;
@@ -48,6 +50,8 @@
     self.processFunction = AEAudioFileRecorderModuleProcess;
     self.numberOfChannels = numberOfChannels;
     
+    pthread_mutex_init(&_audioFileMutex, NULL);
+    
     return self;
 }
 
@@ -55,6 +59,7 @@
     if ( _audioFile ) {
         [self finishWriting];
     }
+    pthread_mutex_destroy(&_audioFileMutex);
 }
 
 - (void)beginRecordingAtTime:(AEHostTicks)time {
@@ -65,22 +70,41 @@
 }
 
 - (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(AEAudioFileRecorderModuleCompletionBlock)block {
-    __weak typeof(self) weakSelf = self;
-    self.stopRecordingNotificationEndpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void * _Nullable data, size_t length) {
-        weakSelf.stopRecordingNotificationEndpoint = nil;
-        weakSelf.recording = NO;
-        [weakSelf finishWriting];
-        if ( block ) block();
-    } bufferCapacity:32];
-    
-    OSMemoryBarrier();
-    _stopTime = time ? time : AECurrentTimeInHostTicks();
+    if ( time ) {
+        // Stop after a delay
+        __weak typeof(self) weakSelf = self;
+        self.stopRecordingNotificationEndpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void * _Nullable data, size_t length) {
+            weakSelf.stopRecordingNotificationEndpoint = nil;
+            [weakSelf finishWriting];
+            weakSelf.recording = NO;
+            if ( block ) block();
+        } bufferCapacity:32];
+        
+        OSMemoryBarrier();
+        _stopTime = time;
+    } else {
+        // Stop immediately
+        pthread_mutex_lock(&_audioFileMutex);
+        [self finishWriting];
+        self.recording = NO;
+        pthread_mutex_unlock(&_audioFileMutex);
+        if ( block ) {
+            block();
+        }
+    }
 }
 
 static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileRecorderModule * THIS,
                                         const AERenderContext * _Nonnull context) {
     
-    if ( !THIS->_recording || THIS->_complete ) return;
+    if ( pthread_mutex_trylock(&THIS->_audioFileMutex) != 0 ) {
+        return;
+    }
+    
+    if ( !THIS->_recording || THIS->_complete ) {
+        pthread_mutex_unlock(&THIS->_audioFileMutex);
+        return;
+    }
     
     AEHostTicks startTime = THIS->_startTime;
     AEHostTicks stopTime = THIS->_stopTime;
@@ -88,19 +112,24 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
     if ( stopTime && stopTime < context->timestamp->mHostTime ) {
         THIS->_complete = YES;
         AEMainThreadEndpointSend(THIS->_stopRecordingNotificationEndpoint, NULL, 0);
+        pthread_mutex_unlock(&THIS->_audioFileMutex);
         return;
     }
     
     AEHostTicks hostTimeAtBufferEnd
         = context->timestamp->mHostTime + AEHostTicksFromSeconds((double)context->frames / context->sampleRate);
     if ( startTime && startTime > hostTimeAtBufferEnd ) {
+        pthread_mutex_unlock(&THIS->_audioFileMutex);
         return;
     }
     
     THIS->_startTime = 0;
     
     const AudioBufferList * abl = AEBufferStackGet(context->stack, 0);
-    if ( !abl ) return;
+    if ( !abl ) {
+        pthread_mutex_unlock(&THIS->_audioFileMutex);
+        return;
+    }
     
     // Prepare buffer with the right number of channels
     AEAudioBufferListCreateOnStackWithFormat(buffer, AEAudioDescriptionWithChannelsAndRate(THIS->_numberOfChannels, 0));
@@ -141,6 +170,8 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
         THIS->_complete = YES;
         AEMainThreadEndpointSend(THIS->_stopRecordingNotificationEndpoint, NULL, 0);
     }
+    
+    pthread_mutex_unlock(&THIS->_audioFileMutex);
 }
 
 - (void)finishWriting {
