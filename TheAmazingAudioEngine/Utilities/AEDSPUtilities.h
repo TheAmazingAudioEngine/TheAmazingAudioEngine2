@@ -152,7 +152,7 @@ void AEDSPMixMono(const float * buffer1, const float * buffer2, float gain1, flo
 /*!
  * Generate oscillator/LFO
  *
- *  This function produces, sample by sample, a sine-line oscillator signal. Its
+ *  This function produces, sample by sample, an oscillator signal that approximates a sine wave. Its
  *  output lies in the range 0 - 1.
  *
  * @param rate Oscillation rate, per sample (frequency / sample rate)
