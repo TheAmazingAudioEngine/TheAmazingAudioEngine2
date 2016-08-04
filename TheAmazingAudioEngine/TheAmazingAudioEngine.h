@@ -326,10 +326,14 @@ extern "C" {
  Note that we interact with the rendering environment via the AERenderContext; this provides us with a variety
  of important state information for the current render, as well as access to the buffer stack.
  
- Finally, when we're initialized, we start the output:
+ Finally, when we're initialized, we start the output, and the players:
  
  @code
  [self.output start:NULL];
+ 
+ [file1 playAtTime:0];
+ [file2 playAtTime:0];
+ [file3 playAtTime:0];
  @endcode
  
  We should hear all three audio file players, with a bandpass effect on the first, and a delay effect on the
