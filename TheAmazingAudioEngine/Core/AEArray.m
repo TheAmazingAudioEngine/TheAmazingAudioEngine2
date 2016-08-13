@@ -160,17 +160,15 @@ void * AEArrayGetItem(AEArrayToken token, int index) {
 #pragma mark - Helpers
 
 - (void)releaseOldArray:(array_t *)array {
-    if ( _mappingBlock ) {
-        for ( int i=0; i<array->count; i++ ) {
-            array->entries[i]->referenceCount--;
-            if ( array->entries[i]->referenceCount == 0 ) {
-                if ( _releaseBlock ) {
-                    _releaseBlock(array->objects[i], array->entries[i]->pointer);
-                } else if ( array->entries[i]->pointer != (__bridge void*)array->objects[i] && array->entries[i]->pointer ) {
-                    free(array->entries[i]->pointer);
-                }
-                free(array->entries[i]);
+    for ( int i=0; i<array->count; i++ ) {
+        array->entries[i]->referenceCount--;
+        if ( array->entries[i]->referenceCount == 0 ) {
+            if ( _releaseBlock ) {
+                _releaseBlock(array->objects[i], array->entries[i]->pointer);
+            } else if ( array->entries[i]->pointer && array->entries[i]->pointer != (__bridge void*)array->objects[i] ) {
+                free(array->entries[i]->pointer);
             }
+            free(array->entries[i]);
         }
     }
     if ( array->objects ) CFRelease((CFTypeRef)array->objects);
