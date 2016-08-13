@@ -13,6 +13,8 @@ static const UInt32 kMaxFramesPerSlice = 4096;
 static const UInt32 kGainSmoothingRampDuration = 128;
 static const float kGainSmoothingRampStep = 1.0 / kGainSmoothingRampDuration;
 static const float kSmoothGainThreshold = kGainSmoothingRampStep;
+static const UInt32 kMinRampDurationForPowerCurve = 8192;
+static const float kPowerCurvePower = 3.0;
 
 void AEDSPApplyGain(const AudioBufferList * bufferList, float gain, UInt32 frames) {
     for ( int i=0; i < bufferList->mNumberBuffers; i++ ) {
@@ -59,10 +61,10 @@ void AEDSPApplyEqualPowerRamp(const AudioBufferList * bufferList, float * start,
 }
 
 void AEDSPApplyGainSmoothed(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames) {
-    AEDSPApplyGainWithRampDuration(bufferList, targetGain, currentGain, frames, 0);
+    AEDSPApplyGainWithRamp(bufferList, targetGain, currentGain, frames, 0);
 }
 
-void AEDSPApplyGainWithRampDuration(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames,
+void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames,
                                     UInt32 rampDuration) {
     
     float diff = fabsf(targetGain - *currentGain);
@@ -70,6 +72,19 @@ void AEDSPApplyGainWithRampDuration(const AudioBufferList * bufferList, float ta
         // Need to apply ramp
         UInt32 duration = MIN(diff * (rampDuration ? rampDuration : kGainSmoothingRampDuration), frames);
         float step = (targetGain > *currentGain ? 1.0 : -1.0) * (rampDuration ? 1.0/rampDuration : kGainSmoothingRampStep);
+        
+        if ( rampDuration > kMinRampDurationForPowerCurve ) {
+            // We're going to use a power function curve for more linear-sounding transitions.
+            // Invert power function to get current t
+            float t = powf(*currentGain, 1.0/kPowerCurvePower);
+            
+            // Calculate target for this segment
+            float localTarget = powf(t + (step * duration), kPowerCurvePower);
+            
+            // Calculate step
+            step = (localTarget - *currentGain) / (float)duration;
+        }
+        
         AEDSPApplyRamp(bufferList, currentGain, step, duration);
         
         if ( duration < frames && fabsf(targetGain - 1.0f) > FLT_EPSILON ) {
