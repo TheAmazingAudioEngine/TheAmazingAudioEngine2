@@ -81,6 +81,8 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     
     __unsafe_unretained AEAudioUnitOutput * weakSelf = self;
     self.ioUnit.renderBlock = ^(AudioBufferList * _Nonnull ioData, UInt32 frames, const AudioTimeStamp * _Nonnull timestamp) {
+        AEManagedValueCommitPendingUpdates();
+        
         __unsafe_unretained AERenderer * renderer = (__bridge AERenderer*)AEManagedValueGetValue(rendererValue);
         if ( renderer ) {
             #ifdef DEBUG

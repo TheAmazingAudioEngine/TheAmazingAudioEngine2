@@ -40,6 +40,10 @@ static pthread_mutex_t __atomicUpdateMutex = PTHREAD_MUTEX_INITIALIZER;
 static NSHashTable * __atomicUpdatedDeferredSyncValues = nil;
 static BOOL __atomicUpdateWaitingForCommit = NO;
 
+static linkedlistitem_t * __pendingInstances = NULL;
+static linkedlistitem_t * __servicedInstances = NULL;
+static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
+
 @interface AEManagedValue () {
     void *      _value;
     BOOL        _valueSet;
@@ -87,7 +91,7 @@ static BOOL __atomicUpdateWaitingForCommit = NO;
  *
  *  - Consequently, this is deferred until the next time sync is required: at the beginning
  *    of the next batch update. We do this by keeping track of those deferrals in a static
- *    NSMutableSet, and performing them at the start of the batch update method.
+ *    NSHashTable, and performing them at the start of the batch update method.
  *
  *  - In order to allow values to be deallocated cleanly, we store weak values in this set, and
  *    remove outgoing instances in dealloc.
@@ -135,7 +139,25 @@ static BOOL __atomicUpdateWaitingForCommit = NO;
 }
 
 - (void)dealloc {
+    // Remove self from deferred sync list
     [__atomicUpdatedDeferredSyncValues removeObject:self];
+    
+    // Remove self from instances awaiting service list
+    pthread_mutex_lock(&__pendingInstancesMutex);
+    for ( linkedlistitem_t * entry = __pendingInstances, * prior = NULL; entry; prior = entry, entry = entry->next ) {
+        if ( entry->data == (__bridge void*)self ) {
+            if ( prior ) {
+                prior->next = entry->next;
+            } else {
+                __pendingInstances = entry->next;
+            }
+            free(entry);
+            break;
+        }
+    }
+    pthread_mutex_unlock(&__pendingInstancesMutex);
+    
+    // Perform any pending releases
     if ( _value ) {
         [self releaseOldValue:_value];
     }
@@ -196,15 +218,51 @@ static BOOL __atomicUpdateWaitingForCommit = NO;
             self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:[AEWeakRetainingProxy proxyWithTarget:self]
                                                             selector:@selector(pollReleaseList) userInfo:nil repeats:YES];
         }
+        
+        // Add self to the list of instances to service on the realtime thread within AEManagedValueCommitPendingUpdates
+        pthread_mutex_lock(&__pendingInstancesMutex);
+        BOOL alreadyPresent = NO;
+        for ( linkedlistitem_t * entry = __pendingInstances; entry; entry = entry->next ) {
+            if ( entry->data == (__bridge void*)self ) {
+                alreadyPresent = YES;
+            }
+        }
+        if ( !alreadyPresent ) {
+            linkedlistitem_t * entry = malloc(sizeof(linkedlistitem_t));
+            entry->next = __pendingInstances;
+            entry->data = (__bridge void*)self;
+            __pendingInstances = entry;
+        }
+        pthread_mutex_unlock(&__pendingInstancesMutex);
     }
 }
 
 #pragma mark - Realtime thread
 
-void AEManagedValueCommitPendingAtomicUpdates() {
+void AEManagedValueCommitPendingUpdates() {
+    // Finish atomic update
     if ( pthread_mutex_trylock(&__atomicUpdateMutex) == 0 ) {
         __atomicUpdateWaitingForCommit = NO;
         pthread_mutex_unlock(&__atomicUpdateMutex);
+    } else {
+        // Still in the middle of an atomic update
+        return;
+    }
+    
+    // Service any instances pending an update so we can mark the old value as ready for release
+    if ( pthread_mutex_trylock(&__pendingInstancesMutex) == 0 ) {
+        linkedlistitem_t * lastEntry = NULL;
+        for ( linkedlistitem_t * entry = __pendingInstances; entry; lastEntry = entry, entry = entry->next ) {
+            AEManagedValueServiceReleaseQueue((__bridge AEManagedValue*)entry->data);
+        }
+        
+        if ( lastEntry ) {
+            // Move pending instances to serviced instances list, ready for cleanup on main thread
+            lastEntry->next = __servicedInstances;
+            __servicedInstances = __pendingInstances;
+            __pendingInstances = NULL;
+        }
+        pthread_mutex_unlock(&__pendingInstancesMutex);
     }
 }
 
@@ -222,16 +280,20 @@ void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
         return THIS->_atomicBatchUpdateLastValue;
     }
     
-    linkedlistitem_t * release;
-    while ( (release = OSAtomicDequeue(&THIS->_pendingReleaseQueue, offsetof(linkedlistitem_t, next))) ) {
-        OSAtomicEnqueue(&THIS->_releaseQueue, release, offsetof(linkedlistitem_t, next));
-    }
+    AEManagedValueServiceReleaseQueue(THIS);
     
     void * value = THIS->_value;
     
     pthread_mutex_unlock(&__atomicUpdateMutex);
     
     return value;
+}
+
+void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS) {
+    linkedlistitem_t * release;
+    while ( (release = OSAtomicDequeue(&THIS->_pendingReleaseQueue, offsetof(linkedlistitem_t, next))) ) {
+        OSAtomicEnqueue(&THIS->_releaseQueue, release, offsetof(linkedlistitem_t, next));
+    }
 }
 
 #pragma mark - Helpers
@@ -247,6 +309,21 @@ void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
         [self.pollTimer invalidate];
         self.pollTimer = nil;
     }
+    
+    // Remove self from serviced instances list
+    pthread_mutex_lock(&__pendingInstancesMutex);
+    for ( linkedlistitem_t * entry = __servicedInstances, * prior = NULL; entry; prior = entry, entry = entry->next ) {
+        if ( entry->data == (__bridge void*)self ) {
+            if ( prior ) {
+                prior->next = entry->next;
+            } else {
+                __servicedInstances = entry->next;
+            }
+            free(entry);
+            break;
+        }
+    }
+    pthread_mutex_unlock(&__pendingInstancesMutex);
 }
 
 - (void)releaseOldValue:(void *)value {
