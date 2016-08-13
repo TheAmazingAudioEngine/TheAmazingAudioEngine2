@@ -19,7 +19,7 @@
 @property (nonatomic, readwrite) double sampleRate;
 @property (nonatomic, readwrite) int numberOfChannels;
 @property (nonatomic, strong, readwrite) NSURL * fileURL;
-@property (nonatomic, readwrite) UInt32 numberOfFramesRecorded;
+@property (nonatomic, readwrite) UInt64 numberOfFramesRecorded;
 @end
 
 @implementation AEAudioFileOutput
