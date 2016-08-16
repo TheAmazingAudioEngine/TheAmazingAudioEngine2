@@ -121,6 +121,17 @@
     }
 }
 
+- (AudioUnit)audioUnit {
+    if ( !self.ioUnit.audioUnit ) {
+        NSError * error = nil;
+        if ( ![self.ioUnit setup:&error] ) {
+            NSLog(@"Unable to set up IO unit: %@", error);
+            return NULL;
+        }
+    }
+    return self.ioUnit.audioUnit;
+}
+
 #if TARGET_OS_IPHONE
 - (BOOL)latencyCompensation {
     return self.ioUnit.latencyCompensation;

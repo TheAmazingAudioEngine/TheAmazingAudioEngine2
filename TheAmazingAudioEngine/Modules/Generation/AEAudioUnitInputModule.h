@@ -110,7 +110,7 @@ AESeconds AEAudioUnitInputModuleGetInputLatency(__unsafe_unretained AEAudioUnitI
 
 #endif
 
-@property (nonatomic, readonly) AudioUnit _Nonnull audioUnit; //!< The audio unit
+@property (nonatomic, readonly) AudioUnit _Nullable audioUnit; //!< The audio unit
 @property (nonatomic, readonly) BOOL running; //!< Whether unit is currently active
 @property (nonatomic, readonly) int numberOfInputChannels; //!< The current number of input channels (key-value observable)
 
