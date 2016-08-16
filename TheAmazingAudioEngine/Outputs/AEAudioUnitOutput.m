@@ -165,6 +165,13 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
 }
 
 - (AudioUnit)audioUnit {
+    if ( !self.ioUnit.audioUnit ) {
+        NSError * error = nil;
+        if ( ![self.ioUnit setup:&error] ) {
+            NSLog(@"Unable to set up IO unit: %@", error);
+            return NULL;
+        }
+    }
     return self.ioUnit.audioUnit;
 }
 
