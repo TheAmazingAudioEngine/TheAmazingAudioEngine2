@@ -113,11 +113,11 @@ typedef struct {
         } else if ( *type == AEMessageQueueAudioThreadMessage ) {
             // Clean up audio thread message, and possibly call completion block
             const audio_thread_message_t * message = (const audio_thread_message_t *)data;
-            CFRelease((__bridge CFTypeRef)(message->block));
+            CFBridgingRelease((__bridge CFTypeRef)(message->block));
             
             if ( message->completionBlock ) {
                 message->completionBlock();
-                CFRelease((__bridge CFTypeRef)(message->completionBlock));
+                CFBridgingRelease((__bridge CFTypeRef)(message->completionBlock));
             }
         }
     } bufferCapacity:bufferCapacity];
@@ -144,8 +144,8 @@ typedef struct {
     // Prepare message
     audio_thread_message_t message = {
         .type = AEMessageQueueAudioThreadMessage,
-        .block = CFRetain((__bridge CFTypeRef)[block copy]),
-        .completionBlock = completionBlock ? CFRetain((__bridge CFTypeRef)[completionBlock copy]) : NULL,
+        .block = (__bridge id)CFBridgingRetain([block copy]),
+        .completionBlock = completionBlock ? (__bridge id)CFBridgingRetain([completionBlock copy]) : NULL,
     };
     
     // Dispatch

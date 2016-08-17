@@ -171,7 +171,7 @@ void * AEArrayGetItem(AEArrayToken token, int index) {
             free(array->entries[i]);
         }
     }
-    if ( array->objects ) CFRelease((CFTypeRef)array->objects);
+    if ( array->objects ) CFBridgingRelease((__bridge CFTypeRef)array->objects);
     free(array);
 }
 

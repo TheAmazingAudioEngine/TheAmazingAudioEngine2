@@ -330,7 +330,7 @@ void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS
     if ( _releaseBlock ) {
         _releaseBlock(value);
     } else if ( _isObjectValue ) {
-        CFRelease(value);
+        CFBridgingRelease(value);
     } else {
         free(value);
     }
