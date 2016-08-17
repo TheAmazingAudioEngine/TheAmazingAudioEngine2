@@ -282,7 +282,9 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull s
     AudioUnitRenderActionFlags flags = 0;
     AudioTimeStamp timestamp = self->_inputTimestamp;
     AEAudioBufferListCopyOnStack(mutableAbl, buffer, 0);
-    return AudioUnitRender(self->_audioUnit, &flags, &timestamp, 1, frames, mutableAbl);
+    OSStatus status = AudioUnitRender(self->_audioUnit, &flags, &timestamp, 1, frames, mutableAbl);
+    AECheckOSStatus(status, "AudioUnitRender");
+    return status;
 }
 
 AudioTimeStamp AEIOAudioUnitGetInputTimestamp(__unsafe_unretained AEIOAudioUnit * _Nonnull self) {
