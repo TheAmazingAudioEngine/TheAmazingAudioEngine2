@@ -165,7 +165,8 @@ typedef void (^AEArrayReleaseBlock)(id _Nonnull item, void * _Nonnull bytes);
  *  for instance, then you may access these structures using this method.
  *
  *  Note: Take care if modifying these values, as they may also be accessed from the audio 
- *  thread
+ *  thread. If you wish to make changes atomically with respect to the audio thread, use
+ *  @link updatePointerValue:forObject: @endlink.
  *
  * @param index Index of the item to retrieve
  * @return Pointer to the item at the given index
@@ -180,13 +181,28 @@ typedef void (^AEArrayReleaseBlock)(id _Nonnull item, void * _Nonnull bytes);
  *  for instance, then you may access these structures using this method.
  *
  *  Note: Take care if modifying these values, as they may also be accessed from the audio
- *  thread
+ *  thread. If you wish to make changes atomically with respect to the audio thread, use
+ *  @link updatePointerValue:forObject: @endlink.
  *
  * @param object The object
  * @return Pointer to the item corresponding to the object
  */
 - (void * _Nullable)pointerValueForObject:(id _Nonnull)object;
 
+/*!
+ * Update the pointer value associated with the given object
+ *
+ *  If you are using a mapping block to create structures that correspond to objects in the
+ *  original array, you may use this method to update those structures atomically, with 
+ *  respect to the audio thread.
+ *
+ *  The prior value associated with this object will be released, possibly calling your
+ *  @link releaseBlock @endlink, if one is provided.
+ *
+ * @param value The new pointer value
+ * @param object The associated object
+ */
+- (void)updatePointerValue:(void * _Nullable)value forObject:(id _Nonnull)object;
 
 /*!
  * Access objects using subscript syntax

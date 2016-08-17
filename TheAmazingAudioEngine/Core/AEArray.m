@@ -103,6 +103,29 @@ typedef struct {
     return [self pointerValueAtIndex:(int)index];
 }
 
+- (void)updatePointerValue:(void *)value forObject:(id)object {
+    array_t * array = (array_t*)_value.pointerValue;
+    if ( !array->objects ) return;
+    NSUInteger index = [array->objects indexOfObject:object];
+    if ( index == NSNotFound || index >= array->count ) return;
+    
+    size_t size = sizeof(array_t) + (sizeof(void*) * array->count-1);
+    array_t * newArray = (array_t*)malloc(size);
+    memcpy(newArray, array, size);
+    
+    newArray->entries[index] = (array_entry_t*)malloc(sizeof(array_entry_t));
+    newArray->entries[index]->pointer = value;
+    newArray->entries[index]->referenceCount = 1;
+    
+    for ( int i=0; i<newArray->count; i++ ) {
+        if ( i != index ) newArray->entries[i]->referenceCount++;
+    }
+    
+    CFBridgingRetain(newArray->objects);
+    
+    _value.pointerValue = newArray;
+}
+
 - (void)updateWithContentsOfArray:(NSArray *)array {
     [self updateWithContentsOfArray:array customMapping:nil];
 }
