@@ -92,7 +92,7 @@ typedef struct {
 
 - (void *)pointerValueAtIndex:(int)index {
     array_t * array = (array_t*)_value.pointerValue;
-    return array->count >= index ? array->entries[index]->pointer : NULL;
+    return index < array->count ? array->entries[index]->pointer : NULL;
 }
 
 - (void *)pointerValueForObject:(id)object {
