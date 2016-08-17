@@ -118,7 +118,7 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
                                   0, &AEBufferStackMaxFramesPerSlice, sizeof(AEBufferStackMaxFramesPerSlice));
     AECheckOSStatus(result, "AudioUnitSetProperty(kAudioUnitProperty_MaximumFramesPerSlice)");
     
-    if (TARGET_OS_IPHONE || !self.outputEnabled) {
+    if ( TARGET_OS_IPHONE || !self.outputEnabled ) {
         // Enable/disable input
         UInt32 flag = self.inputEnabled ? 1 : 0;
         result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input, 1, &flag, sizeof(flag));
@@ -148,7 +148,7 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
         return NO;
     }
     
-    if (TARGET_OS_IPHONE || !self.outputEnabled) {
+    if ( TARGET_OS_IPHONE || !self.outputEnabled ) {
         // Set the input callback
         AURenderCallbackStruct inRenderProc;
         inRenderProc.inputProc = &AEIOAudioUnitInputCallback;
