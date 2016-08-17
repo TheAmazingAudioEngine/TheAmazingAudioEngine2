@@ -67,7 +67,9 @@ typedef struct {
 }
 
 - (void)dealloc {
-    self.value = nil;
+    @autoreleasepool {
+        self.value = nil;
+    }
 }
 
 - (NSArray *)allValues {
