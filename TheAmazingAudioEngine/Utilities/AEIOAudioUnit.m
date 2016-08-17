@@ -637,7 +637,7 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
     AudioStreamBasicDescription asbd;
     UInt32 size = sizeof(asbd);
     AudioObjectPropertyAddress addr = { kAudioDevicePropertyStreamFormat, scope, 0 };
-    if ( !AECheckOSStatus(AudioObjectGetPropertyData(deviceId, &addr, 0, NULL, &size, &deviceId),
+    if ( !AECheckOSStatus(AudioObjectGetPropertyData(deviceId, &addr, 0, NULL, &size, &asbd),
                           "AudioObjectGetPropertyData") ) {
         return (AudioStreamBasicDescription){};
     }
