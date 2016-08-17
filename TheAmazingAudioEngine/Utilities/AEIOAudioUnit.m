@@ -101,8 +101,7 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
 #if TARGET_OS_IPHONE
     acd = AEAudioComponentDescriptionMake(kAudioUnitManufacturer_Apple, kAudioUnitType_Output, kAudioUnitSubType_RemoteIO);
 #else
-    acd = AEAudioComponentDescriptionMake(kAudioUnitManufacturer_Apple, kAudioUnitType_Output,
-                                          self.outputEnabled ? kAudioUnitSubType_DefaultOutput : kAudioUnitSubType_HALOutput);
+    acd = AEAudioComponentDescriptionMake(kAudioUnitManufacturer_Apple, kAudioUnitType_Output, kAudioUnitSubType_HALOutput);
 #endif
     
     AudioComponent inputComponent = AudioComponentFindNext(NULL, &acd);
