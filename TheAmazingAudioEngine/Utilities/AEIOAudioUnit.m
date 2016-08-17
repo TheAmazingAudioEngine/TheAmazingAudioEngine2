@@ -118,39 +118,37 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
                                   0, &AEBufferStackMaxFramesPerSlice, sizeof(AEBufferStackMaxFramesPerSlice));
     AECheckOSStatus(result, "AudioUnitSetProperty(kAudioUnitProperty_MaximumFramesPerSlice)");
     
-#if TARGET_OS_IPHONE
-    // Enable/disable input
-    UInt32 flag = self.inputEnabled ? 1 : 0;
-    result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input, 1, &flag, sizeof(flag));
-    if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_EnableIO)") ) {
-        if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
-                                              userInfo:@{ NSLocalizedDescriptionKey: @"Unable to enable/disable input" }];
-        return NO;
-    }
-    
-    // Enable/disable output
-    flag = self.outputEnabled ? 1 : 0;
-    result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, 0, &flag, sizeof(flag));
-    if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_EnableIO)") ) {
-        if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
-                                              userInfo:@{ NSLocalizedDescriptionKey: @"Unable to enable/disable output" }];
-        return NO;
-    }
-#endif
-    
-    if (TARGET_OS_IPHONE || self.outputEnabled) {
-        // Set the render callback
-        AURenderCallbackStruct rcbs = { .inputProc = AEIOAudioUnitRenderCallback, .inputProcRefCon = (__bridge void *)(self) };
-        result = AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Global, 0,
-                                      &rcbs, sizeof(rcbs));
-        if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioUnitProperty_SetRenderCallback)") ) {
+    if (TARGET_OS_IPHONE || !self.outputEnabled) {
+        // Enable/disable input
+        UInt32 flag = self.inputEnabled ? 1 : 0;
+        result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input, 1, &flag, sizeof(flag));
+        if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_EnableIO)") ) {
             if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
-                                                  userInfo:@{ NSLocalizedDescriptionKey: @"Unable to configure output render" }];
+                                                  userInfo:@{ NSLocalizedDescriptionKey: @"Unable to enable/disable input" }];
+            return NO;
+        }
+        
+        // Enable/disable output
+        flag = self.outputEnabled ? 1 : 0;
+        result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, 0, &flag, sizeof(flag));
+        if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_EnableIO)") ) {
+            if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
+                                                  userInfo:@{ NSLocalizedDescriptionKey: @"Unable to enable/disable output" }];
             return NO;
         }
     }
     
-    if (TARGET_OS_IPHONE || self.inputEnabled) {
+    // Set the render callback
+    AURenderCallbackStruct rcbs = { .inputProc = AEIOAudioUnitRenderCallback, .inputProcRefCon = (__bridge void *)(self) };
+    result = AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_SetRenderCallback, kAudioUnitScope_Global, 0,
+                                  &rcbs, sizeof(rcbs));
+    if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioUnitProperty_SetRenderCallback)") ) {
+        if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
+                                              userInfo:@{ NSLocalizedDescriptionKey: @"Unable to configure output render" }];
+        return NO;
+    }
+    
+    if (TARGET_OS_IPHONE || !self.outputEnabled) {
         // Set the input callback
         AURenderCallbackStruct inRenderProc;
         inRenderProc.inputProc = &AEIOAudioUnitInputCallback;
