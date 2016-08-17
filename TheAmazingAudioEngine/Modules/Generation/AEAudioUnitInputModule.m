@@ -58,6 +58,9 @@
         // We need to add a bridging retain, because the property is weak
         self.ioUnit = (__bridge AEIOAudioUnit*) CFBridgingRetain([AEIOAudioUnit new]);
         self.ioUnit.inputEnabled = YES;
+#if !TARGET_OS_IPHONE
+        self.ioUnit.outputEnabled = NO;
+#endif
         self.ioUnit.sampleRate = self.renderer.sampleRate;
         self.ownsIOUnit = YES;
     }
