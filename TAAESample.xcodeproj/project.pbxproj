@@ -7,46 +7,76 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4C1027921D640B960029D0D5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1027871D640B960029D0D5 /* AppDelegate.swift */; };
+		4C1027931D640B960029D0D5 /* PlayerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1027881D640B960029D0D5 /* PlayerButton.swift */; };
+		4C1027941D640B960029D0D5 /* TriggerGestureRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C1027891D640B960029D0D5 /* TriggerGestureRecognizer.swift */; };
+		4C1027951D640B960029D0D5 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C10278A1D640B960029D0D5 /* ViewController.swift */; };
+		4C1027961D640B960029D0D5 /* iOS Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C10278C1D640B960029D0D5 /* iOS Assets.xcassets */; };
+		4C1027971D640B960029D0D5 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4C10278D1D640B960029D0D5 /* LaunchScreen.storyboard */; };
+		4C1027981D640B960029D0D5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4C10278F1D640B960029D0D5 /* Main.storyboard */; };
+		4C1027A31D640BD40029D0D5 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C10279C1D640BD40029D0D5 /* AppDelegate.swift */; };
+		4C1027A41D640BD40029D0D5 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C10279D1D640BD40029D0D5 /* ViewController.swift */; };
+		4C1027A51D640BD40029D0D5 /* macOS Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C10279F1D640BD40029D0D5 /* macOS Assets.xcassets */; };
+		4C1027A61D640BD40029D0D5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4C1027A01D640BD40029D0D5 /* Main.storyboard */; };
+		4C1027A91D640C690029D0D5 /* libTheAmazingAudioEngine OS X.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C1027A81D640C690029D0D5 /* libTheAmazingAudioEngine OS X.a */; };
+		4C1027AA1D640C750029D0D5 /* amen.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4C94E2CB1CAF9E9C006EB497 /* amen.m4a */; };
+		4C1027AB1D640C750029D0D5 /* bass.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4C94E2CD1CAF9F17006EB497 /* bass.m4a */; };
+		4C1027AC1D640C750029D0D5 /* piano.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4C94E2CE1CAF9F17006EB497 /* piano.m4a */; };
+		4C1027AD1D640C750029D0D5 /* sample1.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4C94E2AF1CAF7129006EB497 /* sample1.m4a */; };
+		4C1027AE1D640C750029D0D5 /* sample2.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4C94E2B01CAF7129006EB497 /* sample2.m4a */; };
+		4C1027AF1D640C750029D0D5 /* sweep.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4C94E2B11CAF7129006EB497 /* sweep.m4a */; };
+		4C1027B01D640C790029D0D5 /* AEAudioController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C94E2B41CAF7129006EB497 /* AEAudioController.m */; };
+		4C1027B21D6410880029D0D5 /* Common Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C1027B11D6410880029D0D5 /* Common Assets.xcassets */; };
+		4C1027B31D6410880029D0D5 /* Common Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4C1027B11D6410880029D0D5 /* Common Assets.xcassets */; };
 		4C94E2BC1CAF7129006EB497 /* sample1.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4C94E2AF1CAF7129006EB497 /* sample1.m4a */; };
 		4C94E2BD1CAF7129006EB497 /* sample2.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4C94E2B01CAF7129006EB497 /* sample2.m4a */; };
 		4C94E2BE1CAF7129006EB497 /* sweep.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4C94E2B11CAF7129006EB497 /* sweep.m4a */; };
 		4C94E2BF1CAF7129006EB497 /* AEAudioController.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C94E2B41CAF7129006EB497 /* AEAudioController.m */; };
-		4C94E2C01CAF7129006EB497 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C94E2B51CAF7129006EB497 /* AppDelegate.swift */; };
-		4C94E2C11CAF7129006EB497 /* TriggerGestureRecognizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C94E2B61CAF7129006EB497 /* TriggerGestureRecognizer.swift */; };
-		4C94E2C21CAF7129006EB497 /* PlayerButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C94E2B71CAF7129006EB497 /* PlayerButton.swift */; };
-		4C94E2C31CAF7129006EB497 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C94E2B81CAF7129006EB497 /* ViewController.swift */; };
 		4C94E2CC1CAF9E9C006EB497 /* amen.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4C94E2CB1CAF9E9C006EB497 /* amen.m4a */; };
 		4C94E2CF1CAF9F17006EB497 /* bass.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4C94E2CD1CAF9F17006EB497 /* bass.m4a */; };
 		4C94E2D01CAF9F17006EB497 /* piano.m4a in Resources */ = {isa = PBXBuildFile; fileRef = 4C94E2CE1CAF9F17006EB497 /* piano.m4a */; };
-		4CDCACC51CA25AA8008AAEF1 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4CDCACC31CA25AA8008AAEF1 /* Main.storyboard */; };
-		4CDCACC71CA25AA8008AAEF1 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 4CDCACC61CA25AA8008AAEF1 /* Assets.xcassets */; };
-		4CDCACCA1CA25AA8008AAEF1 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 4CDCACC81CA25AA8008AAEF1 /* LaunchScreen.storyboard */; };
 		4CDCACD81CA25AFD008AAEF1 /* libTheAmazingAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CDCACD71CA25AFD008AAEF1 /* libTheAmazingAudioEngine.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		4C1027681D640ABD0029D0D5 /* TAAESample macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "TAAESample macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C1027871D640B960029D0D5 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		4C1027881D640B960029D0D5 /* PlayerButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayerButton.swift; sourceTree = "<group>"; };
+		4C1027891D640B960029D0D5 /* TriggerGestureRecognizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TriggerGestureRecognizer.swift; sourceTree = "<group>"; };
+		4C10278A1D640B960029D0D5 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		4C10278C1D640B960029D0D5 /* iOS Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "iOS Assets.xcassets"; sourceTree = "<group>"; };
+		4C10278E1D640B960029D0D5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		4C1027901D640B960029D0D5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		4C1027911D640B960029D0D5 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4C10279C1D640BD40029D0D5 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		4C10279D1D640BD40029D0D5 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		4C10279F1D640BD40029D0D5 /* macOS Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "macOS Assets.xcassets"; sourceTree = "<group>"; };
+		4C1027A11D640BD40029D0D5 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		4C1027A21D640BD40029D0D5 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		4C1027A81D640C690029D0D5 /* libTheAmazingAudioEngine OS X.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libTheAmazingAudioEngine OS X.a"; path = "build/Debug/libTheAmazingAudioEngine OS X.a"; sourceTree = "<group>"; };
+		4C1027B11D6410880029D0D5 /* Common Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Common Assets.xcassets"; sourceTree = "<group>"; };
 		4C94E2AF1CAF7129006EB497 /* sample1.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = sample1.m4a; sourceTree = "<group>"; };
 		4C94E2B01CAF7129006EB497 /* sample2.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = sample2.m4a; sourceTree = "<group>"; };
 		4C94E2B11CAF7129006EB497 /* sweep.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = sweep.m4a; sourceTree = "<group>"; };
 		4C94E2B31CAF7129006EB497 /* AEAudioController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAudioController.h; sourceTree = "<group>"; };
 		4C94E2B41CAF7129006EB497 /* AEAudioController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEAudioController.m; sourceTree = "<group>"; };
-		4C94E2B51CAF7129006EB497 /* AppDelegate.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		4C94E2B61CAF7129006EB497 /* TriggerGestureRecognizer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TriggerGestureRecognizer.swift; sourceTree = "<group>"; };
-		4C94E2B71CAF7129006EB497 /* PlayerButton.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PlayerButton.swift; sourceTree = "<group>"; };
-		4C94E2B81CAF7129006EB497 /* ViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
 		4C94E2CB1CAF9E9C006EB497 /* amen.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = amen.m4a; sourceTree = "<group>"; };
 		4C94E2CD1CAF9F17006EB497 /* bass.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = bass.m4a; sourceTree = "<group>"; };
 		4C94E2CE1CAF9F17006EB497 /* piano.m4a */ = {isa = PBXFileReference; lastKnownFileType = file; path = piano.m4a; sourceTree = "<group>"; };
 		4CDCACBC1CA25AA8008AAEF1 /* TAAESample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = TAAESample.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		4CDCACC41CA25AA8008AAEF1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		4CDCACC61CA25AA8008AAEF1 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		4CDCACC91CA25AA8008AAEF1 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
-		4CDCACCB1CA25AA8008AAEF1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4CDCACD71CA25AFD008AAEF1 /* libTheAmazingAudioEngine.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libTheAmazingAudioEngine.a; path = "build/Debug-iphoneos/libTheAmazingAudioEngine.a"; sourceTree = "<group>"; };
 		4CDCACED1CA25BFF008AAEF1 /* TAAESample-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "TAAESample-Bridging-Header.h"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4C1027651D640ABD0029D0D5 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4C1027A91D640C690029D0D5 /* libTheAmazingAudioEngine OS X.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4CDCACB91CA25AA8008AAEF1 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -58,6 +88,75 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4C1027791D640B1C0029D0D5 /* Platform */ = {
+			isa = PBXGroup;
+			children = (
+				4C10277A1D640B1C0029D0D5 /* iOS */,
+				4C10279A1D640BD40029D0D5 /* macOS */,
+			);
+			name = Platform;
+			path = TAAESample/Platform;
+			sourceTree = "<group>";
+		};
+		4C10277A1D640B1C0029D0D5 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				4C1027861D640B960029D0D5 /* Classes */,
+				4C10278B1D640B960029D0D5 /* Support */,
+			);
+			path = iOS;
+			sourceTree = "<group>";
+		};
+		4C1027861D640B960029D0D5 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				4C1027871D640B960029D0D5 /* AppDelegate.swift */,
+				4C1027881D640B960029D0D5 /* PlayerButton.swift */,
+				4C1027891D640B960029D0D5 /* TriggerGestureRecognizer.swift */,
+				4C10278A1D640B960029D0D5 /* ViewController.swift */,
+			);
+			path = Classes;
+			sourceTree = "<group>";
+		};
+		4C10278B1D640B960029D0D5 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				4C10278C1D640B960029D0D5 /* iOS Assets.xcassets */,
+				4C10278D1D640B960029D0D5 /* LaunchScreen.storyboard */,
+				4C10278F1D640B960029D0D5 /* Main.storyboard */,
+				4C1027911D640B960029D0D5 /* Info.plist */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
+		4C10279A1D640BD40029D0D5 /* macOS */ = {
+			isa = PBXGroup;
+			children = (
+				4C10279B1D640BD40029D0D5 /* Classes */,
+				4C10279E1D640BD40029D0D5 /* Support */,
+			);
+			path = macOS;
+			sourceTree = "<group>";
+		};
+		4C10279B1D640BD40029D0D5 /* Classes */ = {
+			isa = PBXGroup;
+			children = (
+				4C10279C1D640BD40029D0D5 /* AppDelegate.swift */,
+				4C10279D1D640BD40029D0D5 /* ViewController.swift */,
+			);
+			path = Classes;
+			sourceTree = "<group>";
+		};
+		4C10279E1D640BD40029D0D5 /* Support */ = {
+			isa = PBXGroup;
+			children = (
+				4C10279F1D640BD40029D0D5 /* macOS Assets.xcassets */,
+				4C1027A01D640BD40029D0D5 /* Main.storyboard */,
+				4C1027A21D640BD40029D0D5 /* Info.plist */,
+			);
+			path = Support;
+			sourceTree = "<group>";
+		};
 		4C94E2AB1CAF7129006EB497 /* Audio */ = {
 			isa = PBXGroup;
 			children = (
@@ -74,32 +173,17 @@
 		4C94E2B21CAF7129006EB497 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
-				4C94E2B81CAF7129006EB497 /* ViewController.swift */,
-				4C94E2B51CAF7129006EB497 /* AppDelegate.swift */,
-				4C94E2B71CAF7129006EB497 /* PlayerButton.swift */,
-				4C94E2B61CAF7129006EB497 /* TriggerGestureRecognizer.swift */,
 				4C94E2B31CAF7129006EB497 /* AEAudioController.h */,
 				4C94E2B41CAF7129006EB497 /* AEAudioController.m */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
 		};
-		4C94E2C41CAF7134006EB497 /* Support */ = {
-			isa = PBXGroup;
-			children = (
-				4CDCACED1CA25BFF008AAEF1 /* TAAESample-Bridging-Header.h */,
-				4CDCACC31CA25AA8008AAEF1 /* Main.storyboard */,
-				4CDCACC61CA25AA8008AAEF1 /* Assets.xcassets */,
-				4CDCACC81CA25AA8008AAEF1 /* LaunchScreen.storyboard */,
-				4CDCACCB1CA25AA8008AAEF1 /* Info.plist */,
-			);
-			name = Support;
-			sourceTree = "<group>";
-		};
 		4CDCACB31CA25AA8008AAEF1 = {
 			isa = PBXGroup;
 			children = (
-				4CDCACBE1CA25AA8008AAEF1 /* TAAESample */,
+				4C1027791D640B1C0029D0D5 /* Platform */,
+				4CDCACBE1CA25AA8008AAEF1 /* Common */,
 				4CDCACD91CA25B14008AAEF1 /* Frameworks */,
 				4CDCACBD1CA25AA8008AAEF1 /* Products */,
 			);
@@ -109,23 +193,27 @@
 			isa = PBXGroup;
 			children = (
 				4CDCACBC1CA25AA8008AAEF1 /* TAAESample.app */,
+				4C1027681D640ABD0029D0D5 /* TAAESample macOS.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		4CDCACBE1CA25AA8008AAEF1 /* TAAESample */ = {
+		4CDCACBE1CA25AA8008AAEF1 /* Common */ = {
 			isa = PBXGroup;
 			children = (
+				4C1027B11D6410880029D0D5 /* Common Assets.xcassets */,
 				4C94E2B21CAF7129006EB497 /* Classes */,
 				4C94E2AB1CAF7129006EB497 /* Audio */,
-				4C94E2C41CAF7134006EB497 /* Support */,
+				4CDCACED1CA25BFF008AAEF1 /* TAAESample-Bridging-Header.h */,
 			);
+			name = Common;
 			path = TAAESample;
 			sourceTree = "<group>";
 		};
 		4CDCACD91CA25B14008AAEF1 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				4C1027A81D640C690029D0D5 /* libTheAmazingAudioEngine OS X.a */,
 				4CDCACD71CA25AFD008AAEF1 /* libTheAmazingAudioEngine.a */,
 			);
 			name = Frameworks;
@@ -134,6 +222,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		4C1027671D640ABD0029D0D5 /* TAAESample macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4C1027761D640ABE0029D0D5 /* Build configuration list for PBXNativeTarget "TAAESample macOS" */;
+			buildPhases = (
+				4C1027641D640ABD0029D0D5 /* Sources */,
+				4C1027651D640ABD0029D0D5 /* Frameworks */,
+				4C1027661D640ABD0029D0D5 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "TAAESample macOS";
+			productName = "TAAESample macOS";
+			productReference = 4C1027681D640ABD0029D0D5 /* TAAESample macOS.app */;
+			productType = "com.apple.product-type.application";
+		};
 		4CDCACBB1CA25AA8008AAEF1 /* TAAESample */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4CDCACCE1CA25AA8008AAEF1 /* Build configuration list for PBXNativeTarget "TAAESample" */;
@@ -161,6 +266,9 @@
 				LastUpgradeCheck = 0730;
 				ORGANIZATIONNAME = "A Tasty Pixel";
 				TargetAttributes = {
+					4C1027671D640ABD0029D0D5 = {
+						CreatedOnToolsVersion = 7.3.1;
+					};
 					4CDCACBB1CA25AA8008AAEF1 = {
 						CreatedOnToolsVersion = 7.3;
 						DevelopmentTeam = X925S83LF5;
@@ -181,23 +289,41 @@
 			projectRoot = "";
 			targets = (
 				4CDCACBB1CA25AA8008AAEF1 /* TAAESample */,
+				4C1027671D640ABD0029D0D5 /* TAAESample macOS */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		4C1027661D640ABD0029D0D5 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4C1027AC1D640C750029D0D5 /* piano.m4a in Resources */,
+				4C1027A51D640BD40029D0D5 /* macOS Assets.xcassets in Resources */,
+				4C1027AD1D640C750029D0D5 /* sample1.m4a in Resources */,
+				4C1027AB1D640C750029D0D5 /* bass.m4a in Resources */,
+				4C1027AA1D640C750029D0D5 /* amen.m4a in Resources */,
+				4C1027AF1D640C750029D0D5 /* sweep.m4a in Resources */,
+				4C1027A61D640BD40029D0D5 /* Main.storyboard in Resources */,
+				4C1027B31D6410880029D0D5 /* Common Assets.xcassets in Resources */,
+				4C1027AE1D640C750029D0D5 /* sample2.m4a in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4CDCACBA1CA25AA8008AAEF1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4CDCACCA1CA25AA8008AAEF1 /* LaunchScreen.storyboard in Resources */,
 				4C94E2BC1CAF7129006EB497 /* sample1.m4a in Resources */,
 				4C94E2CC1CAF9E9C006EB497 /* amen.m4a in Resources */,
+				4C1027981D640B960029D0D5 /* Main.storyboard in Resources */,
 				4C94E2CF1CAF9F17006EB497 /* bass.m4a in Resources */,
-				4CDCACC71CA25AA8008AAEF1 /* Assets.xcassets in Resources */,
-				4CDCACC51CA25AA8008AAEF1 /* Main.storyboard in Resources */,
+				4C1027B21D6410880029D0D5 /* Common Assets.xcassets in Resources */,
+				4C1027961D640B960029D0D5 /* iOS Assets.xcassets in Resources */,
 				4C94E2D01CAF9F17006EB497 /* piano.m4a in Resources */,
 				4C94E2BE1CAF7129006EB497 /* sweep.m4a in Resources */,
+				4C1027971D640B960029D0D5 /* LaunchScreen.storyboard in Resources */,
 				4C94E2BD1CAF7129006EB497 /* sample2.m4a in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -205,40 +331,88 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4C1027641D640ABD0029D0D5 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4C1027B01D640C790029D0D5 /* AEAudioController.m in Sources */,
+				4C1027A31D640BD40029D0D5 /* AppDelegate.swift in Sources */,
+				4C1027A41D640BD40029D0D5 /* ViewController.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4CDCACB81CA25AA8008AAEF1 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4C94E2C31CAF7129006EB497 /* ViewController.swift in Sources */,
+				4C1027951D640B960029D0D5 /* ViewController.swift in Sources */,
+				4C1027941D640B960029D0D5 /* TriggerGestureRecognizer.swift in Sources */,
+				4C1027931D640B960029D0D5 /* PlayerButton.swift in Sources */,
+				4C1027921D640B960029D0D5 /* AppDelegate.swift in Sources */,
 				4C94E2BF1CAF7129006EB497 /* AEAudioController.m in Sources */,
-				4C94E2C11CAF7129006EB497 /* TriggerGestureRecognizer.swift in Sources */,
-				4C94E2C21CAF7129006EB497 /* PlayerButton.swift in Sources */,
-				4C94E2C01CAF7129006EB497 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXVariantGroup section */
-		4CDCACC31CA25AA8008AAEF1 /* Main.storyboard */ = {
+		4C10278D1D640B960029D0D5 /* LaunchScreen.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				4CDCACC41CA25AA8008AAEF1 /* Base */,
+				4C10278E1D640B960029D0D5 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+		4C10278F1D640B960029D0D5 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				4C1027901D640B960029D0D5 /* Base */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
 		};
-		4CDCACC81CA25AA8008AAEF1 /* LaunchScreen.storyboard */ = {
+		4C1027A01D640BD40029D0D5 /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				4CDCACC91CA25AA8008AAEF1 /* Base */,
+				4C1027A11D640BD40029D0D5 /* Base */,
 			);
-			name = LaunchScreen.storyboard;
+			name = Main.storyboard;
 			sourceTree = "<group>";
 		};
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		4C1027741D640ABE0029D0D5 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = TAAESample/Platform/macOS/Support/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.atastypixel.TAAESample-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		4C1027751D640ABE0029D0D5 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				COMBINE_HIDPI_IMAGES = YES;
+				INFOPLIST_FILE = TAAESample/Platform/macOS/Support/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.atastypixel.TAAESample-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
 		4CDCACCC1CA25AA8008AAEF1 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -281,6 +455,7 @@
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "TAAESample/TAAESample-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -324,6 +499,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.3;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_BRIDGING_HEADER = "TAAESample/TAAESample-Bridging-Header.h";
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -334,11 +510,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				INFOPLIST_FILE = TAAESample/Info.plist;
+				INFOPLIST_FILE = TAAESample/Platform/iOS/Support/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.atastypixel.TAAESample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "TAAESample/TAAESample-Bridging-Header.h";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -348,11 +523,10 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				INFOPLIST_FILE = TAAESample/Info.plist;
+				INFOPLIST_FILE = TAAESample/Platform/iOS/Support/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.atastypixel.TAAESample;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SWIFT_OBJC_BRIDGING_HEADER = "TAAESample/TAAESample-Bridging-Header.h";
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
@@ -360,6 +534,14 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4C1027761D640ABE0029D0D5 /* Build configuration list for PBXNativeTarget "TAAESample macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C1027741D640ABE0029D0D5 /* Debug */,
+				4C1027751D640ABE0029D0D5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
 		4CDCACB71CA25AA8008AAEF1 /* Build configuration list for PBXProject "TAAESample" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

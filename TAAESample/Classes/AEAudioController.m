@@ -237,6 +237,8 @@ static const double kMicBandpassCenterFrequency = 2000.0;
 
 - (BOOL)start:(NSError *__autoreleasing *)error registerObservers:(BOOL)registerObservers {
 
+#if TARGET_OS_IPHONE
+    
     // Request a 128 frame hardware duration, for minimal latency
     AVAudioSession * session = [AVAudioSession sharedInstance];
     [session setPreferredIOBufferDuration:128.0/session.sampleRate error:NULL];
@@ -254,6 +256,8 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         [self registerObservers];
     }
     
+#endif
+    
     // Start the output and input
     return [self.output start:error] && (!self.inputEnabled || [self.input start:error]);
 }
@@ -266,12 +270,18 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     // Stop, and deactivate the audio session
     [self.output stop];
     [self.input stop];
+    
+#if TARGET_OS_IPHONE
+
     [[AVAudioSession sharedInstance] setActive:NO error:NULL];
     
     if ( removeObservers ) {
         // Remove our notification handlers
         [self unregisterObservers];
     }
+
+#endif
+
 }
 
 #pragma mark - Recording
@@ -409,6 +419,8 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     
     _inputEnabled = inputEnabled;
     
+#if TARGET_OS_IPHONE
+    
     if ( _inputEnabled ) {
         // See if we have record permissions
         __weak AEAudioController * weakSelf = self;
@@ -430,6 +442,8 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     if ( ![self setAudioSessionCategory:nil] ) {
         return;
     }
+    
+#endif
     
     // Start or stop the input module
     if ( _inputEnabled ) {
@@ -479,6 +493,8 @@ static const double kMicBandpassCenterFrequency = 2000.0;
 }
 
 #pragma mark - Helpers
+
+#if TARGET_OS_IPHONE
 
 - (void)updatePlayingThroughSpeaker {
     AVAudioSession * session = [AVAudioSession sharedInstance];
@@ -542,5 +558,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         self.audioInterruptionObserverToken = nil;
     }
 }
+
+#endif
 
 @end
