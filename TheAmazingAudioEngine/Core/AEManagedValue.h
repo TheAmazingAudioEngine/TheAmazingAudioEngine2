@@ -82,8 +82,8 @@ typedef void (^AEManagedValueReleaseNotificationBlock)();
  *
  *  The object or buffer returned is guaranteed to remain valid until the next call to this function.
  *
- *  Important: Only call this function on the audio thread. If you call this on the main thread, you
- *  will see sporadic crashes on the audio thread.
+ *  Can also be called safely on the main thread (although the @link objectValue @endlink and
+ *  @link pointerValue @endlink properties are easier).
  *
  * @param managedValue The instance
  * @return The value

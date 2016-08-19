@@ -269,18 +269,14 @@ void AEManagedValueCommitPendingUpdates() {
 void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     if ( !THIS ) return NULL;
     
-#ifdef DEBUG
-    if ( pthread_main_np() ) {
-        if ( AERateLimit() ) NSLog(@"Warning: %s called from main thread!", __FUNCTION__);
-    }
-#endif
-    
     if ( __atomicUpdateWaitingForCommit || pthread_mutex_trylock(&__atomicUpdateMutex) != 0 ) {
         // Atomic update in progress - return previous value
         return THIS->_atomicBatchUpdateLastValue;
     }
     
-    AEManagedValueServiceReleaseQueue(THIS);
+    if ( !pthread_main_np() ) {
+        AEManagedValueServiceReleaseQueue(THIS);
+    }
     
     void * value = THIS->_value;
     
