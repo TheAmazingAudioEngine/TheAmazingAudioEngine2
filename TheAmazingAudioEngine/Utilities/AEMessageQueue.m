@@ -30,10 +30,10 @@
 
 AEArgument AEArgumentNone = {NO, NULL, 0};
 
-typedef enum {
+typedef NS_ENUM(NSInteger, AEMessageQueueMessageType) {
     AEMessageQueueMainThreadMessage,
     AEMessageQueueAudioThreadMessage,
-} AEMessageQueueMessageType;
+};
 
 // Audio thread message type
 typedef struct {
