@@ -188,8 +188,8 @@ static inline float AEDSPGenerateOscillator(float rate, float * position) {
  * @param decibels Value in decibels
  * @return Power ratio value
  */
-static inline float AEDSPDecibelsToRatio(float decibels) {
-    return powf(10.0f, decibels / 20.0f);
+static inline double AEDSPDecibelsToRatio(double decibels) {
+    return pow(10.0, decibels / 20.0);
 }
 
 /*!
@@ -198,8 +198,8 @@ static inline float AEDSPDecibelsToRatio(float decibels) {
  * @param ratio Power ratio
  * @return Value in decibels
  */
-static inline float AEDSPRatioToDecibels(float ratio) {
-    return 20.0f * log10f(ratio);
+static inline double AEDSPRatioToDecibels(double ratio) {
+    return 20.0 * log10(ratio);
 }
 
 #ifdef __cplusplus
