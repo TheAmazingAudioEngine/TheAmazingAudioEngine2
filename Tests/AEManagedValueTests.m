@@ -37,6 +37,7 @@
     
         XCTAssertEqualObjects(value.objectValue, @"2");
         XCTAssertEqualObjects((__bridge NSString*)AEManagedValueGetValue(value), @"2");
+        AEManagedValueCommitPendingUpdates();
     }
     
     // Allow release timer to run

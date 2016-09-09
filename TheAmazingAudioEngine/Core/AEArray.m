@@ -67,9 +67,22 @@ typedef struct {
 }
 
 - (void)dealloc {
+#ifdef DEBUG
+    // Verify that value is deallocated correctly
+    __weak AEManagedValue * weakValue = nil;
+    @autoreleasepool {
+        weakValue = _value;
+        self.value = nil;
+    }
+    if ( weakValue ) {
+        NSLog(@"AEArray value leaked: %@", weakValue);
+        weakValue.releaseBlock = nil;
+    }
+#else
     @autoreleasepool {
         self.value = nil;
     }
+#endif
 }
 
 - (NSArray *)allValues {
