@@ -198,6 +198,10 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 //! reconfigured, and initialized again, temporarily interrupting audio rendering.
 @property (nonatomic) BOOL inputEnabled;
 
+//! The microphone gain, as power ratio. If the current audio session permits, this will be applied
+//! using AVAudioSession's gain controls. Otherwise, it will be applied by affecting the input signal directly.
+@property (nonatomic) double inputGain;
+
 //! The maximum number of input channels to support, or zero for unlimited
 @property (nonatomic) int maximumInputChannels;
 
