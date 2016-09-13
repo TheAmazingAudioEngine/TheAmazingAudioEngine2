@@ -42,11 +42,11 @@ class ViewController: UIViewController {
     
     var audio: AEAudioController?
     
-    private var padWetDryTimer: NSTimer?
-    private var padWetDryTarget = 0.0
-    private var padWetDryValue = 0.0
-    private var speedRestoreTimer: NSTimer?
-    private var playSliderUpdateTimer: NSTimer?
+    fileprivate var padWetDryTimer: Timer?
+    fileprivate var padWetDryTarget = 0.0
+    fileprivate var padWetDryValue = 0.0
+    fileprivate var speedRestoreTimer: Timer?
+    fileprivate var playSliderUpdateTimer: Timer?
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -59,25 +59,25 @@ class ViewController: UIViewController {
         pianoButton.image = UIImage(named: "Piano")
         
         let speedTrackImage = UIImage(named: "Speed Track")?
-            .resizableImageWithCapInsets(UIEdgeInsets(top: 0.0, left: 2.0, bottom: 0.0, right: 2.0))
-        speedSlider.setMaximumTrackImage(speedTrackImage, forState: UIControlState.Normal)
-        speedSlider.setMinimumTrackImage(speedTrackImage, forState: UIControlState.Normal)
-        speedSlider.setThumbImage(UIImage(named: "Speed Handle"), forState: UIControlState.Normal)
+            .resizableImage(withCapInsets: UIEdgeInsets(top: 0.0, left: 2.0, bottom: 0.0, right: 2.0))
+        speedSlider.setMaximumTrackImage(speedTrackImage, for: UIControlState())
+        speedSlider.setMinimumTrackImage(speedTrackImage, for: UIControlState())
+        speedSlider.setThumbImage(UIImage(named: "Speed Handle"), for: UIControlState())
         speedSlider.maximumValue = 2.0
         speedSlider.minimumValue = 0.0
         speedSlider.value = 1.0
         
-        if traitCollection.horizontalSizeClass != UIUserInterfaceSizeClass.Compact {
-            speedSlider.transform = CGAffineTransformMakeRotation(CGFloat(-M_PI_2))
+        if traitCollection.horizontalSizeClass != UIUserInterfaceSizeClass.compact {
+            speedSlider.transform = CGAffineTransform(rotationAngle: CGFloat(-M_PI_2))
         }
         
-        let playTrackImage = UIImage(named: "Play Slider Track")?.resizableImageWithCapInsets(UIEdgeInsetsMake(0, 1, 0, 1))
-        playSlider.setMaximumTrackImage(playTrackImage, forState: UIControlState.Normal)
-        playSlider.setMinimumTrackImage(playTrackImage, forState: UIControlState.Normal)
-        playSlider.setThumbImage(UIImage(named: "Play Slider Thumb"), forState: UIControlState.Normal)
+        let playTrackImage = UIImage(named: "Play Slider Track")?.resizableImage(withCapInsets: UIEdgeInsetsMake(0, 1, 0, 1))
+        playSlider.setMaximumTrackImage(playTrackImage, for: UIControlState())
+        playSlider.setMinimumTrackImage(playTrackImage, for: UIControlState())
+        playSlider.setThumbImage(UIImage(named: "Play Slider Thumb"), for: UIControlState())
         
         pad.image = UIImage(named: "Effect Bar")?
-            .resizableImageWithCapInsets(UIEdgeInsets(top: 0, left: 63.0, bottom: 0, right: 62.0))
+            .resizableImage(withCapInsets: UIEdgeInsets(top: 0, left: 63.0, bottom: 0, right: 62.0))
         
         // Add gesture recognizers
         pad.addGestureRecognizer(TriggerGestureRecognizer(target: self, action: #selector(effectPadPan)))
@@ -88,32 +88,32 @@ class ViewController: UIViewController {
         updateFileActionsEnabled()
         
         // Monitor for some events
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(inputEnabledChanged), name: AEAudioControllerInputEnabledChangedNotification, object: nil);
-        NSNotificationCenter.defaultCenter().addObserver(self, selector: #selector(inputPermissionsError), name: AEAudioControllerInputPermissionErrorNotification, object: nil);
+        NotificationCenter.default.addObserver(self, selector: #selector(inputEnabledChanged), name: NSNotification.Name.AEAudioControllerInputEnabledChanged, object: nil);
+        NotificationCenter.default.addObserver(self, selector: #selector(inputPermissionsError), name: NSNotification.Name.AEAudioControllerInputPermissionError, object: nil);
     }
     
     deinit {
-        NSNotificationCenter.defaultCenter().removeObserver(self)
+        NotificationCenter.default.removeObserver(self)
     }
     
-    override func prefersStatusBarHidden() -> Bool {
+    override var prefersStatusBarHidden : Bool {
         // No status bar, please
         return true
     }
     
-    override func willTransitionToTraitCollection(newCollection: UITraitCollection,
-                                                  withTransitionCoordinator coordinator: UIViewControllerTransitionCoordinator) {
+    override func willTransition(to newCollection: UITraitCollection,
+                                                  with coordinator: UIViewControllerTransitionCoordinator) {
         // Slider is horizontal for small screens, vertical otherwise
-        if newCollection.horizontalSizeClass == UIUserInterfaceSizeClass.Compact {
-            speedSlider.transform = CGAffineTransformIdentity
+        if newCollection.horizontalSizeClass == UIUserInterfaceSizeClass.compact {
+            speedSlider.transform = CGAffineTransform.identity
         } else {
-            speedSlider.transform = CGAffineTransformMakeRotation(CGFloat(-M_PI_2))
+            speedSlider.transform = CGAffineTransform(rotationAngle: CGFloat(-M_PI_2))
         }
     }
     
     // MARK: - Actions
     
-    @IBAction func loopTapped(recognizer: UITapGestureRecognizer) {
+    @IBAction func loopTapped(_ recognizer: UITapGestureRecognizer) {
         let sender = recognizer.view! as! PlayerButton
         if let player = associatedPlayerForView(sender) {
             if let audio = audio {
@@ -123,11 +123,11 @@ class ViewController: UIViewController {
                     sender.rotateSpeed = 0
                 } else {
                     // Work out sync time
-                    let syncTime = audio.nextSyncTimeForPlayer(player)
+                    let syncTime = audio.nextSyncTime(forPlayer: player)
                     
                     // Start player
                     player.currentTime = 0
-                    player.playAtTime(AETimeStampWithHostTicks(syncTime), beginBlock: {
+                    player.play(atTime: AETimeStampWithHostTicks(syncTime), begin: {
                         // Show playing state
                         sender.rotateSpeed = self.currentRotateSpeed()
                     })
@@ -145,28 +145,28 @@ class ViewController: UIViewController {
         }
     }
     
-    @IBAction func sampleButtonTapped(sender: UIButton) {
+    @IBAction func sampleButtonTapped(_ sender: UIButton) {
         if let player = associatedPlayerForView(sender) {
             if let audio = audio {
                 if player.playing {
                     // Stop, and reset button state
                     player.stop()
                     sender.imageView!.layer.removeAllAnimations()
-                    sender.selected = false
+                    sender.isSelected = false
                 } else {
                     // Work out sync time
-                    let syncTime = audio.nextSyncTimeForPlayer(player)
+                    let syncTime = audio.nextSyncTime(forPlayer: player)
                     
                     // Start player
                     player.currentTime = 0
-                    player.playAtTime(AETimeStampWithHostTicks(syncTime), beginBlock: {
+                    player.play(atTime: AETimeStampWithHostTicks(syncTime), begin: {
                         // Set button state to playing
                         sender.imageView!.layer.removeAllAnimations()
-                        sender.selected = true
+                        sender.isSelected = true
                     })
                     
                     // Reset button state when we're done
-                    player.completionBlock = { sender.selected = false }
+                    player.completionBlock = { sender.isSelected = false }
                     
                     let now = AECurrentTimeInHostTicks()
                     if syncTime > now && AESecondsFromHostTicks(syncTime - now) > ShowCountInThreshold {
@@ -177,10 +177,10 @@ class ViewController: UIViewController {
                         animation.autoreverses = true
                         animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
                         animation.repeatCount = Float.infinity
-                        sender.imageView!.layer.addAnimation(animation, forKey: nil)
+                        sender.imageView!.layer.add(animation, forKey: nil)
                     } else {
                         // Show playing state
-                        sender.selected = true
+                        sender.isSelected = true
                     }
                 }
             }
@@ -200,7 +200,7 @@ class ViewController: UIViewController {
     
     @IBAction func speedSliderEnd() {
         // Finished interacting with slider - set a timer to gradually bring the speed back to normal
-        speedRestoreTimer = NSTimer.scheduledTimerWithTimeInterval(SpeedSliderRestoreInterval, target: self,
+        speedRestoreTimer = Timer.scheduledTimer(timeInterval: SpeedSliderRestoreInterval, target: self,
                                 selector: #selector(speedSliderRestoreTimeout), userInfo: nil, repeats: true);
     }
     
@@ -208,26 +208,26 @@ class ViewController: UIViewController {
         if let audio = audio {
             if audio.recording {
                 // Stop recording
-                audio.stopRecordingAtTime(0, completionBlock: { 
-                    self.recordButton.selected = false
+                audio.stopRecording(atTime: 0, completionBlock: { 
+                    self.recordButton.isSelected = false
                     self.recordButton.layer.removeAllAnimations()
                     self.updateFileActionsEnabled()
                 });
             } else {
                 do {
                     // Start recording
-                    try audio.beginRecordingAtTime(0)
+                    try audio.beginRecording(atTime: 0)
                     
                     // Add a little animation to show recording is active
-                    recordButton.selected = true
+                    recordButton.isSelected = true
                     let animation = CABasicAnimation(keyPath: "transform.rotation.z")
                     animation.byValue = 2.0*M_PI
                     animation.duration = 2.0
                     animation.repeatCount = Float.infinity
-                    recordButton.layer.addAnimation(animation, forKey: nil)
+                    recordButton.layer.add(animation, forKey: nil)
                 } catch _ {
                     // D'oh, something went wrong. Guess we can't record.
-                    recordButton.enabled = false
+                    recordButton.isEnabled = false
                     recordButton.layer.removeAllAnimations()
                 }
             }
@@ -239,33 +239,33 @@ class ViewController: UIViewController {
             if audio.playingRecording {
                 // Stop the playback
                 audio.stopPlayingRecording()
-                playButton.selected = false
-                UIView.animateWithDuration(0.3, animations: { 
+                playButton.isSelected = false
+                UIView.animate(withDuration: 0.3, animations: { 
                     self.playSliderWidthConstraint.constant = 0
                     self.view.layoutIfNeeded()
                 }, completion: { _ in
-                    self.playSlider.hidden = true
+                    self.playSlider.isHidden = true
                 })
                 playSliderUpdateTimer?.invalidate()
                 playSliderUpdateTimer = nil
             } else {
                 // Start playback
-                playButton.selected = true
-                self.playSlider.hidden = false
-                UIView.animateWithDuration(0.3, animations: {
+                playButton.isSelected = true
+                self.playSlider.isHidden = false
+                UIView.animate(withDuration: 0.3, animations: {
                     self.playSliderWidthConstraint.constant = 150
                     self.view.layoutIfNeeded()
                 })
-                playSliderUpdateTimer = NSTimer.scheduledTimerWithTimeInterval(1.0/60.0, target: self,
+                playSliderUpdateTimer = Timer.scheduledTimer(timeInterval: 1.0/60.0, target: self,
                                                                                selector: #selector(updatePlaySlider),
                                                                                userInfo: nil, repeats: true)
-                audio.playRecordingWithCompletionBlock({ 
-                    self.playButton.selected = false
-                    UIView.animateWithDuration(0.3, animations: {
+                audio.playRecording(completionBlock: { 
+                    self.playButton.isSelected = false
+                    UIView.animate(withDuration: 0.3, animations: {
                         self.playSliderWidthConstraint.constant = 0
                         self.view.layoutIfNeeded()
                     }, completion: { _ in
-                        self.playSlider.hidden = true
+                        self.playSlider.isHidden = true
                     })
                     self.playSliderUpdateTimer?.invalidate()
                     self.playSliderUpdateTimer = nil
@@ -274,7 +274,7 @@ class ViewController: UIViewController {
         }
     }
     
-    @IBAction func playSliderChanged(sender: UISlider) {
+    @IBAction func playSliderChanged(_ sender: UISlider) {
         audio!.recordingPlaybackPosition = Double(sender.value)
     }
     
@@ -283,15 +283,15 @@ class ViewController: UIViewController {
             // Show the share controller
             let controller = UIActivityViewController(activityItems: [audio.recordingPath], applicationActivities: nil)
             controller.completionWithItemsHandler = { activity, success, items, error in
-                self.dismissViewControllerAnimated(true, completion: nil)
+                self.dismiss(animated: true, completion: nil)
             }
             
-            if UIDevice.currentDevice().userInterfaceIdiom == UIUserInterfaceIdiom.Pad {
-                controller.modalPresentationStyle = UIModalPresentationStyle.Popover
+            if UIDevice.current.userInterfaceIdiom == UIUserInterfaceIdiom.pad {
+                controller.modalPresentationStyle = UIModalPresentationStyle.popover
                 controller.popoverPresentationController?.sourceView = exportButton
             }
             
-            presentViewController(controller, animated: true, completion: nil)
+            present(controller, animated: true, completion: nil)
         }
     }
     
@@ -299,21 +299,21 @@ class ViewController: UIViewController {
         if let audio = audio {
             // Toggle mic
             audio.inputEnabled = !audio.inputEnabled
-            micButton.selected = audio.inputEnabled
+            micButton.isSelected = audio.inputEnabled
         }
     }
     
-    @objc private func hitTouch(sender: TriggerGestureRecognizer) {
-        if sender.state == UIGestureRecognizerState.Began {
+    @objc fileprivate func hitTouch(_ sender: TriggerGestureRecognizer) {
+        if sender.state == UIGestureRecognizerState.began {
             if let audio = audio {
                 // Begin playing the hit sample
                 audio.hit.regionDuration = audio.drums.regionDuration / 32
                 audio.hit.loop = true
                 if !audio.hit.playing {
                     audio.hit.currentTime = 0
-                    audio.hit.playAtTime(AETimeStampWithHostTicks(audio.nextSyncTimeForPlayer(audio.hit)))
+                    audio.hit.play(atTime: AETimeStampWithHostTicks(audio.nextSyncTime(forPlayer: audio.hit)))
                 }
-                hitButton.selected = true
+                hitButton.isSelected = true
                 
                 // Stop the drum loop
                 if audio.drums.playing {
@@ -321,23 +321,23 @@ class ViewController: UIViewController {
                 }
                 beatButton.rotateSpeed = -60.0 / audio.hit.regionDuration
             }
-        } else if ( sender.state == UIGestureRecognizerState.Changed ) {
+        } else if ( sender.state == UIGestureRecognizerState.changed ) {
             if let audio = audio {
                 // Adjust the hit cycle length, based on 3D Touch pressure, for a beat repeat-like feature
                 audio.hit.regionDuration = audio.drums.regionDuration / (sender.pressure >= 1.0 ? 64 : 32)
             }
-        } else if sender.state == UIGestureRecognizerState.Ended || sender.state == UIGestureRecognizerState.Cancelled {
+        } else if sender.state == UIGestureRecognizerState.ended || sender.state == UIGestureRecognizerState.cancelled {
             if let audio = audio {
                 // Start the drums playing again
                 if !audio.drums.playing {
                     audio.drums.currentTime = 0
-                    audio.drums.playAtTime(AETimeStampWithHostTicks(audio.nextSyncTimeForPlayer(audio.drums)))
+                    audio.drums.play(atTime: AETimeStampWithHostTicks(audio.nextSyncTime(forPlayer: audio.drums)))
                     beatButton.rotateSpeed = currentRotateSpeed()
                 }
                 
                 // Stop the hit sample
                 audio.hit.completionBlock = {
-                    self.hitButton.selected = false
+                    self.hitButton.isSelected = false
                 }
                 audio.hit.loop = false
             }
@@ -345,19 +345,19 @@ class ViewController: UIViewController {
         
     }
     
-    @objc private func effectPadPan(sender: TriggerGestureRecognizer) {
-        if sender.state == UIGestureRecognizerState.Began {
+    @objc fileprivate func effectPadPan(_ sender: TriggerGestureRecognizer) {
+        if sender.state == UIGestureRecognizerState.began {
             // Start transitioning to 100% wet
             padWetDryTarget = 1.0
             if padWetDryTimer == nil {
-                padWetDryTimer = NSTimer.scheduledTimerWithTimeInterval(PadWetDryUpdateInterval, target: self,
+                padWetDryTimer = Timer.scheduledTimer(timeInterval: PadWetDryUpdateInterval, target: self,
                                                                        selector: #selector(padWetDryTimeout),
                                                                        userInfo: nil, repeats: true)
             }
         }
-        if sender.state == UIGestureRecognizerState.Began || sender.state == UIGestureRecognizerState.Changed {
+        if sender.state == UIGestureRecognizerState.began || sender.state == UIGestureRecognizerState.changed {
             // Update effect
-            let location = sender.locationInView(sender.view!)
+            let location = sender.location(in: sender.view!)
             let bounds = sender.view!.bounds
             let x = Double(location.x / bounds.size.width);
             audio?.bandpassCenterFrequency = min(1.0, max(0.001, x*x*x*x)) * 16000.0
@@ -365,16 +365,16 @@ class ViewController: UIViewController {
             // Start transitioning to 0% wet
             padWetDryTarget = 0.0
             if padWetDryTimer == nil {
-                padWetDryTimer = NSTimer.scheduledTimerWithTimeInterval(PadWetDryUpdateInterval, target: self,
+                padWetDryTimer = Timer.scheduledTimer(timeInterval: PadWetDryUpdateInterval, target: self,
                                                                         selector: #selector(padWetDryTimeout),
                                                                         userInfo: nil, repeats: true)
             }
         }
     }
     
-    @objc private func stereoSweepTouch(sender: TriggerGestureRecognizer) {
+    @objc fileprivate func stereoSweepTouch(_ sender: TriggerGestureRecognizer) {
         if let audio = audio {
-            if sender.state == UIGestureRecognizerState.Began || sender.state == UIGestureRecognizerState.Changed {
+            if sender.state == UIGestureRecognizerState.began || sender.state == UIGestureRecognizerState.changed {
                 audio.balanceSweepRate = (sender.pressure >= 1.0 ? 0.5 : 2.0)
             } else {
                 audio.balanceSweepRate = 0.0
@@ -386,21 +386,21 @@ class ViewController: UIViewController {
 // Mark: - Events
 
 private extension ViewController {
-    @objc private func inputEnabledChanged() {
-        micButton.selected = audio!.inputEnabled
+    @objc func inputEnabledChanged() {
+        micButton.isSelected = audio!.inputEnabled
     }
     
-    @objc private func inputPermissionsError() {
-        let displayName = NSBundle.mainBundle().infoDictionary!["CFBundleDisplayName"]!
-        let alert = UIAlertController(title: "Microphone permissions required", message: "In order to record, you need to enable microphone permissions for \(displayName). To fix this, open the Settings app, then under Privacy and Microphone, turn on the switch beside \(displayName)", preferredStyle: UIAlertControllerStyle.ActionSheet)
-        alert.addAction(UIAlertAction.init(title: "Open Settings", style: UIAlertActionStyle.Default, handler: { action in
-            UIApplication.sharedApplication().openURL(NSURL(string: UIApplicationOpenSettingsURLString)!)
+    @objc func inputPermissionsError() {
+        let displayName = Bundle.main.infoDictionary!["CFBundleDisplayName"]!
+        let alert = UIAlertController(title: "Microphone permissions required", message: "In order to record, you need to enable microphone permissions for \(displayName). To fix this, open the Settings app, then under Privacy and Microphone, turn on the switch beside \(displayName)", preferredStyle: UIAlertControllerStyle.actionSheet)
+        alert.addAction(UIAlertAction.init(title: "Open Settings", style: UIAlertActionStyle.default, handler: { action in
+            UIApplication.shared.openURL(URL(string: UIApplicationOpenSettingsURLString)!)
         }));
-        alert.addAction(UIAlertAction.init(title: "OK", style: UIAlertActionStyle.Default, handler: nil))
+        alert.addAction(UIAlertAction.init(title: "OK", style: UIAlertActionStyle.default, handler: nil))
         alert.popoverPresentationController?.sourceView = micButton
         alert.popoverPresentationController?.sourceRect = micButton.bounds
-        alert.modalPresentationStyle = UIModalPresentationStyle.Popover
-        presentViewController(alert, animated: true, completion: nil)
+        alert.modalPresentationStyle = UIModalPresentationStyle.popover
+        present(alert, animated: true, completion: nil)
     }
 }
 
@@ -409,7 +409,7 @@ private extension ViewController {
 private extension ViewController {
     
     // Get player for a given UI element
-    private func associatedPlayerForView(view: UIView) -> AEAudioFilePlayerModule? {
+    func associatedPlayerForView(_ view: UIView) -> AEAudioFilePlayerModule? {
         if let audio = audio {
             return view == beatButton ? audio.drums :
                     view == bassButton ? audio.bass :
@@ -425,7 +425,7 @@ private extension ViewController {
     }
     
     // Respond to a change in playback rate
-    private func updatePlaybackRate(rate: Double) {
+    func updatePlaybackRate(_ rate: Double) {
         if let audio = audio {
             audio.varispeed.playbackRate = rate
             let rotateSpeed = currentRotateSpeed()
@@ -442,21 +442,21 @@ private extension ViewController {
     }
     
     // Enable/disable recording-based actions, depending on whether a recording exists
-    private func updateFileActionsEnabled() {
+    func updateFileActionsEnabled() {
         if let audio = audio {
-            let fileManager = NSFileManager.defaultManager()
-            exportButton.enabled = fileManager.fileExistsAtPath(audio.recordingPath.path!)
-            playButton.enabled = exportButton.enabled;
+            let fileManager = FileManager.default
+            exportButton.isEnabled = fileManager.fileExists(atPath: audio.recordingPath.path)
+            playButton.isEnabled = exportButton.isEnabled;
         }
     }
     
     // Calculate rotation animation speed
-    private func currentRotateSpeed() -> Double {
+    func currentRotateSpeed() -> Double {
         return audio != nil ? audio!.varispeed.playbackRate * NormalRecordRotateSpeed : 1.0
     }
     
     // Transition between wet and dry for effect
-    @objc private func padWetDryTimeout() {
+    @objc func padWetDryTimeout() {
         if padWetDryTarget > padWetDryValue {
             padWetDryValue = min(padWetDryTarget, padWetDryValue + PadWetDryRate)
         } else {
@@ -470,7 +470,7 @@ private extension ViewController {
     }
     
     // Transition speed back to normal
-    @objc private func speedSliderRestoreTimeout() {
+    @objc func speedSliderRestoreTimeout() {
         if let speedSlider = speedSlider {
             if speedSlider.value > 1.0 {
                 speedSlider.value = max(1.0, speedSlider.value - Float(SpeedSliderRestoreRate))
@@ -487,7 +487,7 @@ private extension ViewController {
         }
     }
     
-    @objc private func updatePlaySlider() {
+    @objc func updatePlaySlider() {
         playSlider.value = Float(audio!.recordingPlaybackPosition)
     }
 }

@@ -95,7 +95,7 @@ typedef BOOL (*AEModuleIsActiveFunc)(__unsafe_unretained AEModule * _Nonnull sel
  */
 - (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer NS_DESIGNATED_INITIALIZER;
 
-- (instancetype _Nullable)init NS_UNAVAILABLE;
+- (instancetype _Nonnull)init NS_UNAVAILABLE;
 
 /*!
  * Notifies the module that the renderer's sample rate has changed

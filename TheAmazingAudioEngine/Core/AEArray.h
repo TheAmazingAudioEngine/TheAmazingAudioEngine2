@@ -106,7 +106,7 @@ typedef void (^AEArrayReleaseBlock)(id _Nonnull item, void * _Nonnull bytes);
  *  This configures the instance to manage an array of object references. You can cast the items 
  *  returned directly to an __unsafe_unretained Objective-C type.
  */
-- (instancetype _Nullable)init;
+- (instancetype _Nonnull)init;
 
 /*!
  * Custom initializer

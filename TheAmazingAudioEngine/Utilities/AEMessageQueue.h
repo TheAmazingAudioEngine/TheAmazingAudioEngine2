@@ -117,7 +117,7 @@ typedef void (^AEMessageQueueBlock)();
 /*!
  * Default initializer
  */
-- (instancetype _Nullable)init;
+- (instancetype _Nonnull)init;
 
 /*!
  * Initializer with custom buffer capacity

@@ -13,32 +13,32 @@ import UIKit.UIGestureRecognizerSubclass
 
 class TriggerGestureRecognizer : UIGestureRecognizer {
     var pressure: Double = 0
-    private var location: CGPoint = CGPointZero
+    fileprivate var location: CGPoint = CGPoint.zero
     
-    override func touchesBegan(touches: Set<UITouch>, withEvent event: UIEvent) {
-        self.state = UIGestureRecognizerState.Began
-        location = touches.first!.locationInView(nil)
+    override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
+        self.state = UIGestureRecognizerState.began
+        location = touches.first!.location(in: nil)
         pressure = Double(touches.first!.force / touches.first!.maximumPossibleForce)
     }
     
-    override func touchesMoved(touches: Set<UITouch>, withEvent event: UIEvent) {
-        self.state = UIGestureRecognizerState.Changed
-        location = touches.first!.locationInView(nil)
+    override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
+        self.state = UIGestureRecognizerState.changed
+        location = touches.first!.location(in: nil)
         pressure = Double(touches.first!.force / touches.first!.maximumPossibleForce)
     }
     
-    override func touchesEnded(touches: Set<UITouch>, withEvent event: UIEvent) {
-        self.state = UIGestureRecognizerState.Ended
-        location = touches.first!.locationInView(nil)
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
+        self.state = UIGestureRecognizerState.ended
+        location = touches.first!.location(in: nil)
     }
     
-    override func touchesCancelled(touches: Set<UITouch>, withEvent event: UIEvent) {
-        self.state = UIGestureRecognizerState.Cancelled
+    override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
+        self.state = UIGestureRecognizerState.cancelled
     }
     
-    override func locationInView(view: UIView?) -> CGPoint {
+    override func location(in view: UIView?) -> CGPoint {
         if let view = view {
-            return view.convertPoint(location, fromView: nil)
+            return view.convert(location, from: nil)
         } else {
             return location
         }
