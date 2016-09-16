@@ -14,8 +14,8 @@
 #import "AEDSPUtilities.h"
 #import "AEMainThreadEndpoint.h"
 #import <AudioToolbox/AudioToolbox.h>
-#import <libkern/OSAtomic.h>
 #import <pthread.h>
+#import <stdatomic.h>
 
 @interface AEAudioFileRecorderModule () {
     ExtAudioFileRef _audioFile;
@@ -80,7 +80,7 @@
             if ( block ) block();
         } bufferCapacity:32];
         
-        OSMemoryBarrier();
+        atomic_thread_fence(memory_order_release);
         _stopTime = time;
     } else {
         // Stop immediately
