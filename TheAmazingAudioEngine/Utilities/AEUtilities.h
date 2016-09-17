@@ -93,7 +93,25 @@ static inline BOOL _AECheckOSStatus(OSStatus result, const char * _Nonnull opera
 ExtAudioFileRef _Nullable AEExtAudioFileCreate(NSURL * _Nonnull url, AEAudioFileType fileType, double sampleRate,
                                                int channelCount, NSError * _Nullable * _Nullable error);
 
-#define AEExtAudioFileRefCreate AEExtAudioFileCreate
+    
+/*!
+ * Open an audio file for reading
+ * 
+ *  This utility creates a new reader instance, and returns the reader, the client format AudioStreamBasicDescription
+ *  used for reading, and the total length in frames, both usually useful for operating on files.
+ *
+ *  It will be configured to use the standard AEAudioDescription format, with the channel count and sample rate
+ *  determined by the file format - this configured format is returned via the outAudioDescription parameter.
+ *  Use kExtAudioFileProperty_ClientDataFormat to change this if required.
+ *
+ * @param url URL to the file to read from
+ * @param outAudioDescription On output, the AEAudioDescription-derived stream format for reading (the client format)
+ * @param outLengthInFrames On output, the total length in frames
+ * @param error If not NULL, the error on output
+ * @return The initialized ExtAudioFileRef, or NULL on error
+ */
+ExtAudioFileRef _Nullable AEExtAudioFileOpen(NSURL * _Nonnull url, AudioStreamBasicDescription * _Nullable outAudioDescription,
+                                             UInt64 * _Nullable outLengthInFrames, NSError * _Nullable * _Nullable error);
 
 #ifdef __cplusplus
 }
