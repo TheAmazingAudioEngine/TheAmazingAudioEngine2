@@ -35,6 +35,7 @@
 #import "AEAudioBufferListUtilities.h"
 #import "AEAudioUnitInputModule.h"
 #import <AVFoundation/AVFoundation.h>
+#import <pthread.h>
 
 NSString * const AEAudioUnitOutputDidChangeSampleRateNotification = @"AEAudioUnitOutputDidChangeSampleRateNotification";
 NSString * const AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification = @"AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification";
@@ -43,6 +44,7 @@ NSString * const AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification = 
 static const AESeconds kRenderTimeReportInterval = 0.0;   // Seconds between render time reports; 0 = no reporting
 static const double kRenderBudgetWarningThreshold = 0.75; // Ratio of total buffer duration to hit before budget overrun warnings
 static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wait before warning about budget overrun
+extern pthread_t AEManagedValueRealtimeThreadIdentifier;
 #endif
 
 @interface AEAudioUnitInputModule ()
@@ -81,6 +83,9 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     
     __unsafe_unretained AEAudioUnitOutput * weakSelf = self;
     self.ioUnit.renderBlock = ^(AudioBufferList * _Nonnull ioData, UInt32 frames, const AudioTimeStamp * _Nonnull timestamp) {
+        #ifdef DEBUG
+        if ( !AEManagedValueRealtimeThreadIdentifier ) AEManagedValueRealtimeThreadIdentifier = pthread_self();
+        #endif
         AEManagedValueCommitPendingUpdates();
         
         __unsafe_unretained AERenderer * renderer = (__bridge AERenderer*)AEManagedValueGetValue(rendererValue);

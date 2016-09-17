@@ -44,6 +44,10 @@ static linkedlistitem_t * __pendingInstances = NULL;
 static linkedlistitem_t * __servicedInstances = NULL;
 static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
 
+#ifdef DEBUG
+pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
+#endif
+
 @interface AEManagedValue () {
     void *      _value;
     BOOL        _valueSet;
@@ -241,6 +245,12 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
 #pragma mark - Realtime thread
 
 void AEManagedValueCommitPendingUpdates() {
+    #ifdef DEBUG
+    if ( AEManagedValueRealtimeThreadIdentifier && AEManagedValueRealtimeThreadIdentifier != pthread_self() ) {
+        if ( AERateLimit() ) printf("%s called from outside realtime thread\n", __FUNCTION__);
+    }
+    #endif
+    
     // Finish atomic update
     if ( pthread_rwlock_tryrdlock(&__atomicUpdateMutex) == 0 ) {
         __atomicUpdateWaitingForCommit = NO;
@@ -287,6 +297,12 @@ void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
 }
 
 void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS) {
+    #ifdef DEBUG
+    if ( AEManagedValueRealtimeThreadIdentifier && AEManagedValueRealtimeThreadIdentifier != pthread_self() ) {
+        if ( AERateLimit() ) printf("%p: %s called from outside realtime thread\n", THIS, __FUNCTION__);
+    }
+    #endif
+    
     linkedlistitem_t * release;
     while ( (release = OSAtomicDequeue(&THIS->_pendingReleaseQueue, offsetof(linkedlistitem_t, next))) ) {
         OSAtomicEnqueue(&THIS->_releaseQueue, release, offsetof(linkedlistitem_t, next));
@@ -298,6 +314,7 @@ void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS
 - (void)pollReleaseList {
     linkedlistitem_t * release;
     while ( (release = OSAtomicDequeue(&_releaseQueue, offsetof(linkedlistitem_t, next))) ) {
+        NSAssert(release->data != _value, @"About to release value still in use");
         [self releaseOldValue:release->data];
         free(release);
         _pendingReleaseCount--;
