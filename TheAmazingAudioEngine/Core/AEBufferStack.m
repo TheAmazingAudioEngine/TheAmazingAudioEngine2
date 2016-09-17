@@ -293,7 +293,7 @@ const AudioBufferList * AEBufferStackMixWithGain(AEBufferStack * stack, int coun
         
         AEBufferStackPop(stack, 1);
 
-        if ( i == 1 ) {
+        if ( i == 1 && abl1Gain != 1.0f ) {
             AEDSPApplyGain(abl1, abl1Gain, stack->frameCount);
         }
         
