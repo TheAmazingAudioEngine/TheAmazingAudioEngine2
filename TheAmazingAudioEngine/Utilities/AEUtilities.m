@@ -53,6 +53,17 @@ BOOL AERateLimit(void) {
     return YES;
 }
 
+void AEError(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line) {
+    if ( AERateLimit() ) {
+        int fourCC = CFSwapInt32HostToBig(result);
+        if ( isascii(((char*)&fourCC)[0]) && isascii(((char*)&fourCC)[1]) && isascii(((char*)&fourCC)[2]) ) {
+            NSLog(@"%s:%d: %s: '%4.4s' (%d)", file, line, operation, (char*)&fourCC, (int)result);
+        } else {
+            NSLog(@"%s:%d: %s: %d", file, line, operation, (int)result);
+        }
+    }
+}
+
 ExtAudioFileRef AEExtAudioFileCreate(NSURL * url, AEAudioFileType fileType, double sampleRate, int channelCount,
                                         NSError ** error) {
     

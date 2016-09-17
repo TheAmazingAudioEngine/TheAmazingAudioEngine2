@@ -51,6 +51,13 @@ AudioComponentDescription AEAudioComponentDescriptionMake(OSType manufacturer, O
 BOOL AERateLimit(void);
 
 /*!
+ * An error occurred within AECheckOSStatus
+ *
+ *  Create a symbolic breakpoint with this function name to break on errors.
+ */
+void AEError(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line);
+
+/*!
  * Check an OSStatus condition
  *
  * @param result The result
@@ -59,14 +66,7 @@ BOOL AERateLimit(void);
 #define AECheckOSStatus(result,operation) (_AECheckOSStatus((result),(operation),strrchr(__FILE__, '/')+1,__LINE__))
 static inline BOOL _AECheckOSStatus(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line) {
     if ( result != noErr ) {
-        if ( AERateLimit() ) {
-            int fourCC = CFSwapInt32HostToBig(result);
-            if ( isascii(((char*)&fourCC)[0]) && isascii(((char*)&fourCC)[1]) && isascii(((char*)&fourCC)[2]) ) {
-                NSLog(@"%s:%d: %s: '%4.4s' (%d)", file, line, operation, (char*)&fourCC, (int)result);
-            } else {
-                NSLog(@"%s:%d: %s: %d", file, line, operation, (int)result);
-            }
-        }
+        AEError(result, operation, file, line);
         return NO;
     }
     return YES;
