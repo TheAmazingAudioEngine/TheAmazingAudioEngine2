@@ -190,6 +190,7 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
 }
 
 - (void)setValue:(void *)value {
+    if ( value == _value ) return;
     
     // Assign new value
     void * oldValue = _value;
