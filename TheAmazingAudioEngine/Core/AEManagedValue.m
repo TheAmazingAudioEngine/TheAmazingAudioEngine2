@@ -36,7 +36,7 @@ typedef struct __linkedlistitem_t {
 } linkedlistitem_t;
 
 static int __atomicUpdateCounter = 0;
-static pthread_mutex_t __atomicUpdateMutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_rwlock_t __atomicUpdateMutex = PTHREAD_RWLOCK_INITIALIZER;
 static NSHashTable * __atomicUpdatedDeferredSyncValues = nil;
 static BOOL __atomicUpdateWaitingForCommit = NO;
 
@@ -114,7 +114,7 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
     
     if ( __atomicUpdateCounter == 0 ) {
         // Wait for realtime thread to exit any GetValue calls
-        pthread_mutex_lock(&__atomicUpdateMutex);
+        pthread_rwlock_wrlock(&__atomicUpdateMutex);
         
         // Mark that we're awaiting a commit
         __atomicUpdateWaitingForCommit = YES;
@@ -129,7 +129,7 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
     
     if ( __atomicUpdateCounter == 0 ) {
         // Unlock, allowing GetValue to access _value again
-        pthread_mutex_unlock(&__atomicUpdateMutex);
+        pthread_rwlock_unlock(&__atomicUpdateMutex);
     }
 }
 
@@ -241,9 +241,9 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
 
 void AEManagedValueCommitPendingUpdates() {
     // Finish atomic update
-    if ( pthread_mutex_trylock(&__atomicUpdateMutex) == 0 ) {
+    if ( pthread_rwlock_tryrdlock(&__atomicUpdateMutex) == 0 ) {
         __atomicUpdateWaitingForCommit = NO;
-        pthread_mutex_unlock(&__atomicUpdateMutex);
+        pthread_rwlock_unlock(&__atomicUpdateMutex);
     } else {
         // Still in the middle of an atomic update
         return;
@@ -269,7 +269,7 @@ void AEManagedValueCommitPendingUpdates() {
 void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     if ( !THIS ) return NULL;
     
-    if ( __atomicUpdateWaitingForCommit || pthread_mutex_trylock(&__atomicUpdateMutex) != 0 ) {
+    if ( __atomicUpdateWaitingForCommit || pthread_rwlock_tryrdlock(&__atomicUpdateMutex) != 0 ) {
         // Atomic update in progress - return previous value
         return THIS->_atomicBatchUpdateLastValue;
     }
@@ -280,7 +280,7 @@ void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     
     void * value = THIS->_value;
     
-    pthread_mutex_unlock(&__atomicUpdateMutex);
+    pthread_rwlock_unlock(&__atomicUpdateMutex);
     
     return value;
 }
