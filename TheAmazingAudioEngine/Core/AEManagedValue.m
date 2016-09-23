@@ -222,6 +222,7 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
             // Start polling for pending releases
             self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:[AEWeakRetainingProxy proxyWithTarget:self]
                                                             selector:@selector(pollReleaseList) userInfo:nil repeats:YES];
+            self.pollTimer.tolerance = 0.5;
         }
         
         // Add self to the list of instances to service on the realtime thread within AEManagedValueCommitPendingUpdates
