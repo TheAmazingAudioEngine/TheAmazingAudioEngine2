@@ -70,7 +70,7 @@ typedef struct {
     if ( !(self = [super init]) ) return nil;
     
     // Create main thread endpoint
-    self.mainThreadEndpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void * _Nullable data, size_t length) {
+    self.mainThreadEndpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(void * _Nullable data, size_t length) {
         const AEMessageQueueMessageType * type = (AEMessageQueueMessageType *)data;
         if ( *type == AEMessageQueueMainThreadMessage ) {
             const main_thread_message_t * message = (const main_thread_message_t *)data;

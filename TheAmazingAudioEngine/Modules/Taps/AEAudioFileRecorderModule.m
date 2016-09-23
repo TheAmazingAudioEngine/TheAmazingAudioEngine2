@@ -73,7 +73,7 @@
     if ( time ) {
         // Stop after a delay
         __weak typeof(self) weakSelf = self;
-        self.stopRecordingNotificationEndpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void * _Nullable data, size_t length) {
+        self.stopRecordingNotificationEndpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(void * _Nullable data, size_t length) {
             weakSelf.stopRecordingNotificationEndpoint = nil;
             [weakSelf finishWriting];
             weakSelf.recording = NO;
