@@ -84,7 +84,7 @@ extern pthread_t AEManagedValueRealtimeThreadIdentifier;
     __unsafe_unretained AEAudioUnitOutput * weakSelf = self;
     self.ioUnit.renderBlock = ^(AudioBufferList * _Nonnull ioData, UInt32 frames, const AudioTimeStamp * _Nonnull timestamp) {
         #ifdef DEBUG
-        if ( !AEManagedValueRealtimeThreadIdentifier ) AEManagedValueRealtimeThreadIdentifier = pthread_self();
+        AEManagedValueRealtimeThreadIdentifier = pthread_self();
         #endif
         AEManagedValueCommitPendingUpdates();
         
