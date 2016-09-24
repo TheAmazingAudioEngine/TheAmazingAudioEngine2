@@ -536,14 +536,14 @@
 			isa = PBXGroup;
 			children = (
 				4CDCACAA1CA25A6E008AAEF1 /* AEArrayTests.m */,
-				4C94E2851CAC9EAA006EB497 /* AEBufferStackTests.m */,
-				4C9F0FBD1CB339180032903E /* AEManagedValueTests.m */,
-				4CE5F4CA1CD3135800322F03 /* AECrossThreadMessagingTests.m */,
-				4C3183461CE8307A0085634F /* AEDSPUtilitiesTests.m */,
 				4C31835F1CEAE6830085634F /* AEAudioBufferListUtilitiesTests.m */,
 				4C43E5AF1CF14A340000DB62 /* AEAudioFileReadWriteTests.m */,
-				4CDCACAC1CA25A6E008AAEF1 /* Info.plist */,
+				4C94E2851CAC9EAA006EB497 /* AEBufferStackTests.m */,
+				4CE5F4CA1CD3135800322F03 /* AECrossThreadMessagingTests.m */,
+				4C3183461CE8307A0085634F /* AEDSPUtilitiesTests.m */,
+				4C9F0FBD1CB339180032903E /* AEManagedValueTests.m */,
 				2236604F1D96E34800CFA5B8 /* AENewTimePitchModuleTests.m */,
+				4CDCACAC1CA25A6E008AAEF1 /* Info.plist */,
 			);
 			path = Tests;
 			sourceTree = "<group>";
