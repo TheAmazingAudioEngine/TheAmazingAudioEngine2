@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		223660501D96E34800CFA5B8 /* AENewTimePitchModuleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2236604F1D96E34800CFA5B8 /* AENewTimePitchModuleTests.m */; };
 		4C3183101CDDEFDE0085634F /* AEMixerModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C31830E1CDDEFDE0085634F /* AEMixerModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C3183111CDDEFDE0085634F /* AEMixerModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C31830E1CDDEFDE0085634F /* AEMixerModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C3183121CDDEFDE0085634F /* AEMixerModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C31830E1CDDEFDE0085634F /* AEMixerModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -330,6 +331,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		2236604F1D96E34800CFA5B8 /* AENewTimePitchModuleTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AENewTimePitchModuleTests.m; sourceTree = "<group>"; };
 		4C31830E1CDDEFDE0085634F /* AEMixerModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEMixerModule.h; sourceTree = "<group>"; };
 		4C31830F1CDDEFDE0085634F /* AEMixerModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEMixerModule.m; sourceTree = "<group>"; };
 		4C3183161CDEC6560085634F /* AEAudioFileOutput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAudioFileOutput.h; sourceTree = "<group>"; };
@@ -534,12 +536,13 @@
 			isa = PBXGroup;
 			children = (
 				4CDCACAA1CA25A6E008AAEF1 /* AEArrayTests.m */,
-				4C94E2851CAC9EAA006EB497 /* AEBufferStackTests.m */,
-				4C9F0FBD1CB339180032903E /* AEManagedValueTests.m */,
-				4CE5F4CA1CD3135800322F03 /* AECrossThreadMessagingTests.m */,
-				4C3183461CE8307A0085634F /* AEDSPUtilitiesTests.m */,
 				4C31835F1CEAE6830085634F /* AEAudioBufferListUtilitiesTests.m */,
 				4C43E5AF1CF14A340000DB62 /* AEAudioFileReadWriteTests.m */,
+				4C94E2851CAC9EAA006EB497 /* AEBufferStackTests.m */,
+				4CE5F4CA1CD3135800322F03 /* AECrossThreadMessagingTests.m */,
+				4C3183461CE8307A0085634F /* AEDSPUtilitiesTests.m */,
+				4C9F0FBD1CB339180032903E /* AEManagedValueTests.m */,
+				2236604F1D96E34800CFA5B8 /* AENewTimePitchModuleTests.m */,
 				4CDCACAC1CA25A6E008AAEF1 /* Info.plist */,
 			);
 			path = Tests;
@@ -1118,6 +1121,7 @@
 				4C43E5B01CF14A340000DB62 /* AEAudioFileReadWriteTests.m in Sources */,
 				4C3183601CEAE6830085634F /* AEAudioBufferListUtilitiesTests.m in Sources */,
 				4C9F0FBE1CB339180032903E /* AEManagedValueTests.m in Sources */,
+				223660501D96E34800CFA5B8 /* AENewTimePitchModuleTests.m in Sources */,
 				4CDCACAB1CA25A6E008AAEF1 /* AEArrayTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

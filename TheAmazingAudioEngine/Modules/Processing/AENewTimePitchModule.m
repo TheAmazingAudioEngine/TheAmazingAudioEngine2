@@ -48,7 +48,7 @@
     return [self getParameterValueForId:kNewTimePitchParam_Overlap];
 }
 
-- (double)enablePeakLocking {
+- (BOOL)enablePeakLocking {
     return [self getParameterValueForId:kNewTimePitchParam_EnablePeakLocking];
 }
 
@@ -70,7 +70,7 @@
                       forId: kNewTimePitchParam_Overlap];
 }
 
-- (void)setEnablePeakLocking:(double)enablePeakLocking {
+- (void)setEnablePeakLocking:(BOOL)enablePeakLocking {
     [self setParameterValue: enablePeakLocking
                       forId: kNewTimePitchParam_EnablePeakLocking];
 }
