@@ -180,8 +180,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
     pthread_mutex_t _deferredMutex;
 }
 @property (nonatomic, strong) NSHashTable * endpoints;
-@property (nonatomic, strong) NSHashTable * deferredRemovals;
-@property (nonatomic, strong) NSHashTable * deferredAdditions;
+@property (nonatomic, strong) NSMutableSet * deferredAdditions;
 @end
 
 @implementation AEMainThreadEndpointThread
@@ -217,9 +216,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
         // Defer addition to avoid contention over endpoints list
         pthread_mutex_lock(&_deferredMutex);
         if ( !self.deferredAdditions ) {
-            self.deferredAdditions =
-                [[NSHashTable alloc] initWithOptions:NSPointerFunctionsOpaqueMemory|NSPointerFunctionsObjectPointerPersonality
-                                            capacity:8];
+            self.deferredAdditions = [NSMutableSet set];
         }
         [self.deferredAdditions addObject:endpoint];
         semaphore_signal(_semaphore);
@@ -228,57 +225,47 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 }
 
 - (void)removeEndpoint:(AEMainThreadEndpoint *)endpoint {
-    if ( pthread_mutex_trylock(&_mutex) == 0 ) {
-        [self.endpoints removeObject:endpoint];
-        if ( self.endpoints.count == 0 ) {
-            __sharedThread = nil;
-            [self cancel];
-        }
-        pthread_mutex_unlock(&_mutex);
-    } else {
-        // Defer removal to avoid contention over endpoints list
-        pthread_mutex_lock(&_deferredMutex);
-        if ( !self.deferredRemovals ) {
-            self.deferredRemovals =
-                [[NSHashTable alloc] initWithOptions:NSPointerFunctionsOpaqueMemory|NSPointerFunctionsObjectPointerPersonality
-                                            capacity:8];
-        }
-        [self.deferredRemovals addObject:endpoint];
-        semaphore_signal(_semaphore);
-        pthread_mutex_unlock(&_deferredMutex);
+    // Endpoints are removed when they are deallocated (as we store weak references)
+    // Because we keep a strong reference during servicing in main, they will never happen during servicing,
+    // so we should never actually get lock contention.
+    pthread_mutex_lock(&_mutex);
+    [self.endpoints removeObject:endpoint];
+    if ( self.endpoints.count == 0 ) {
+        __sharedThread = nil;
+        [self cancel];
     }
+    pthread_mutex_unlock(&_mutex);
 }
 
 - (void)main {
     pthread_setname_np("AEMainThreadEndpoint");
     
     while ( 1 ) {
-        pthread_mutex_lock(&_mutex);
-        if ( self.cancelled ) {
-            pthread_mutex_unlock(&_mutex);
-            break;
-        }
         @autoreleasepool {
-            // Keep strong reference to endpoint to avoid deallocation during servicing
-            for ( __strong AEMainThreadEndpoint * endpoint in self.endpoints ) {
+            pthread_mutex_lock(&_mutex);
+            if ( self.cancelled ) {
+                pthread_mutex_unlock(&_mutex);
+                break;
+            }
+            
+            // Keep strong reference to all endpoints to avoid deallocation during servicing
+            NSArray * endpoints = self.endpoints.allObjects;
+            for ( AEMainThreadEndpoint * endpoint in endpoints ) {
                 [endpoint serviceMessages];
             }
-        }
         
-        if ( self.deferredRemovals || self.deferredAdditions ) {
-            // Apply deferred additions/removals (deferred to avoid contention over the endpoints list)
-            pthread_mutex_lock(&_deferredMutex);
-            for ( __unsafe_unretained AEMainThreadEndpoint * endpoint in self.deferredAdditions ) {
-                [self.endpoints addObject:endpoint];
+            if ( self.deferredAdditions ) {
+                // Apply deferred additions/removals (deferred to avoid contention over the endpoints list)
+                pthread_mutex_lock(&_deferredMutex);
+                for ( AEMainThreadEndpoint * endpoint in self.deferredAdditions ) {
+                    [self.endpoints addObject:endpoint];
+                }
+                self.deferredAdditions = nil;
+                pthread_mutex_unlock(&_deferredMutex);
             }
-            for ( __unsafe_unretained AEMainThreadEndpoint * endpoint in self.deferredRemovals ) {
-                [self.endpoints removeObject:endpoint];
-            }
-            self.deferredAdditions = self.deferredRemovals = nil;
-            pthread_mutex_unlock(&_deferredMutex);
+            
+            pthread_mutex_unlock(&_mutex);
         }
-        
-        pthread_mutex_unlock(&_mutex);
         
         if ( self.cancelled ) {
             // We'll be cancelled here if the endpoint was released during servicing, so exit
