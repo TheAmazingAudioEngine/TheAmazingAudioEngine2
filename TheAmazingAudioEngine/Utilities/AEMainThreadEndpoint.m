@@ -191,7 +191,11 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
     self.endpoints =
         [[NSHashTable alloc] initWithOptions:NSPointerFunctionsOpaqueMemory|NSPointerFunctionsObjectPointerPersonality
                                     capacity:8];
-    pthread_mutex_init(&_mutex, 0);
+    
+    pthread_mutexattr_t attr;
+    pthread_mutexattr_init(&attr);
+    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutex_init(&_mutex, &attr);
     pthread_mutex_init(&_deferredMutex, 0);
     return self;
 }
@@ -241,8 +245,9 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
     pthread_setname_np("AEMainThreadEndpoint");
     
     while ( 1 ) {
+        pthread_mutex_lock(&_mutex);
+        
         @autoreleasepool {
-            pthread_mutex_lock(&_mutex);
             if ( self.cancelled ) {
                 pthread_mutex_unlock(&_mutex);
                 break;
@@ -263,9 +268,9 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
                 self.deferredAdditions = nil;
                 pthread_mutex_unlock(&_deferredMutex);
             }
-            
-            pthread_mutex_unlock(&_mutex);
         }
+        
+        pthread_mutex_unlock(&_mutex);
         
         if ( self.cancelled ) {
             // We'll be cancelled here if the endpoint was released during servicing, so exit
