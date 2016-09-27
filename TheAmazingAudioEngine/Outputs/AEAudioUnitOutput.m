@@ -155,6 +155,10 @@ extern pthread_t AEManagedValueRealtimeThreadIdentifier;
 - (void)stop {
     if ( !self.ioUnit.audioUnit ) return;
     [self.ioUnit stop];
+    
+    #ifdef DEBUG
+    AEManagedValueRealtimeThreadIdentifier = nil;
+    #endif
 }
 
 - (AERenderer *)renderer {
