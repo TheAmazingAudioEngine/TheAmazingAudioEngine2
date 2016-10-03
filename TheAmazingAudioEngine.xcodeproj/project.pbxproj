@@ -285,6 +285,12 @@
 		4CE5F4D11CD3169C00322F03 /* AEAudioThreadEndpoint.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CE5F4CD1CD3169C00322F03 /* AEAudioThreadEndpoint.m */; };
 		4CE5F4D21CD3169C00322F03 /* AEAudioThreadEndpoint.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CE5F4CD1CD3169C00322F03 /* AEAudioThreadEndpoint.m */; };
 		4CE5F4D31CD3169C00322F03 /* AEAudioThreadEndpoint.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CE5F4CD1CD3169C00322F03 /* AEAudioThreadEndpoint.m */; };
+		B30958101DA2A59C00F07FB6 /* AEMeteringModule.h in Headers */ = {isa = PBXBuildFile; fileRef = B32E7E541DA2A15C00C91264 /* AEMeteringModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B30958111DA2A5A000F07FB6 /* AEMeteringModule.h in Headers */ = {isa = PBXBuildFile; fileRef = B32E7E541DA2A15C00C91264 /* AEMeteringModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B30958121DA2A5A400F07FB6 /* AEMeteringModule.h in Headers */ = {isa = PBXBuildFile; fileRef = B32E7E541DA2A15C00C91264 /* AEMeteringModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		B32E7E591DA2A15C00C91264 /* AEMeteringModule.m in Sources */ = {isa = PBXBuildFile; fileRef = B32E7E551DA2A15C00C91264 /* AEMeteringModule.m */; };
+		B32E7E5A1DA2A15C00C91264 /* AEMeteringModule.m in Sources */ = {isa = PBXBuildFile; fileRef = B32E7E551DA2A15C00C91264 /* AEMeteringModule.m */; };
+		B32E7E5B1DA2A15C00C91264 /* AEMeteringModule.m in Sources */ = {isa = PBXBuildFile; fileRef = B32E7E551DA2A15C00C91264 /* AEMeteringModule.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -435,6 +441,8 @@
 		4CE5F4CA1CD3135800322F03 /* AECrossThreadMessagingTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AECrossThreadMessagingTests.m; sourceTree = "<group>"; };
 		4CE5F4CC1CD3169C00322F03 /* AEAudioThreadEndpoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAudioThreadEndpoint.h; sourceTree = "<group>"; };
 		4CE5F4CD1CD3169C00322F03 /* AEAudioThreadEndpoint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEAudioThreadEndpoint.m; sourceTree = "<group>"; };
+		B32E7E541DA2A15C00C91264 /* AEMeteringModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEMeteringModule.h; sourceTree = "<group>"; };
+		B32E7E551DA2A15C00C91264 /* AEMeteringModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEMeteringModule.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -475,6 +483,8 @@
 			children = (
 				4C94E2A31CAE6AFF006EB497 /* AEAudioFileRecorderModule.h */,
 				4C94E2A41CAE6AFF006EB497 /* AEAudioFileRecorderModule.m */,
+				B32E7E541DA2A15C00C91264 /* AEMeteringModule.h */,
+				B32E7E551DA2A15C00C91264 /* AEMeteringModule.m */,
 			);
 			path = Taps;
 			sourceTree = "<group>";
@@ -695,6 +705,7 @@
 				4CB2F2EE1D49ABC6008F745F /* AEManagedValue.h in Headers */,
 				4CE5F4C51CD30A1900322F03 /* AEMainThreadEndpoint.h in Headers */,
 				4C7756A11CD2E5E3004415A2 /* AECircularBuffer.h in Headers */,
+				B30958111DA2A5A000F07FB6 /* AEMeteringModule.h in Headers */,
 				4C9F0F561CB265F90032903E /* AEModule.h in Headers */,
 				4CBCF29F1CFBC3D200CA2EA0 /* AESplitterModule.h in Headers */,
 				4CB2F2E81D49ABC6008F745F /* AEBufferStack.h in Headers */,
@@ -745,6 +756,7 @@
 				4CB2F2EF1D49ABC6008F745F /* AEManagedValue.h in Headers */,
 				4CE5F4C61CD30A1900322F03 /* AEMainThreadEndpoint.h in Headers */,
 				4C7756A21CD2E5E3004415A2 /* AECircularBuffer.h in Headers */,
+				B30958121DA2A5A400F07FB6 /* AEMeteringModule.h in Headers */,
 				4C9F0F9F1CB269C30032903E /* AEModule.h in Headers */,
 				4CBCF2A01CFBC3D200CA2EA0 /* AESplitterModule.h in Headers */,
 				4CB2F2E91D49ABC6008F745F /* AEBufferStack.h in Headers */,
@@ -809,6 +821,7 @@
 				4CDCAD8E1CA5484D008AAEF1 /* AEReverbModule.h in Headers */,
 				4CDCAD531CA3D223008AAEF1 /* AEOscillatorModule.h in Headers */,
 				4CDCAD8A1CA5484D008AAEF1 /* AEParametricEqModule.h in Headers */,
+				B30958101DA2A59C00F07FB6 /* AEMeteringModule.h in Headers */,
 				4CB2F2ED1D49ABC6008F745F /* AEManagedValue.h in Headers */,
 				4CB2F2E11D49ABC6008F745F /* AEArray.h in Headers */,
 				4CDCAD801CA5484D008AAEF1 /* AEHighPassModule.h in Headers */,
@@ -986,6 +999,7 @@
 				4C9F0F3D1CB265F90032903E /* AEAudioUnitOutput.m in Sources */,
 				4C9F0F3E1CB265F90032903E /* AELowPassModule.m in Sources */,
 				4C9F0F3F1CB265F90032903E /* AEHighPassModule.m in Sources */,
+				B32E7E5A1DA2A15C00C91264 /* AEMeteringModule.m in Sources */,
 				4C9F0F401CB265F90032903E /* AEVarispeedModule.m in Sources */,
 				4C9F0F411CB265F90032903E /* AEBandpassModule.m in Sources */,
 				4C9F0F421CB265F90032903E /* AEAudioFileRecorderModule.m in Sources */,
@@ -1038,6 +1052,7 @@
 				4C9F0F871CB269C30032903E /* AEAudioUnitOutput.m in Sources */,
 				4C9F0F881CB269C30032903E /* AELowPassModule.m in Sources */,
 				4C9F0F891CB269C30032903E /* AEHighPassModule.m in Sources */,
+				B32E7E5B1DA2A15C00C91264 /* AEMeteringModule.m in Sources */,
 				4C9F0F8A1CB269C30032903E /* AEVarispeedModule.m in Sources */,
 				4C9F0F8B1CB269C30032903E /* AEBandpassModule.m in Sources */,
 				4C9F0F8C1CB269C30032903E /* AEAudioFileRecorderModule.m in Sources */,
@@ -1094,6 +1109,7 @@
 				4CDCAD911CA5484D008AAEF1 /* AEVarispeedModule.m in Sources */,
 				4CDCAD791CA5484D008AAEF1 /* AEBandpassModule.m in Sources */,
 				4C94E2A61CAE6AFF006EB497 /* AEAudioFileRecorderModule.m in Sources */,
+				B32E7E591DA2A15C00C91264 /* AEMeteringModule.m in Sources */,
 				4CDCADA11CA90FD3008AAEF1 /* AEAudioFilePlayerModule.m in Sources */,
 				4CDCAD481CA3C31C008AAEF1 /* AEUtilities.m in Sources */,
 				4CE5F4D11CD3169C00322F03 /* AEAudioThreadEndpoint.m in Sources */,
