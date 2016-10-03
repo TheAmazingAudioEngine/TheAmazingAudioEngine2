@@ -37,6 +37,7 @@
     
         XCTAssertEqualObjects(value.objectValue, @"2");
         XCTAssertEqualObjects((__bridge NSString*)AEManagedValueGetValue(value), @"2");
+        AEManagedValueCommitPendingUpdates();
     }
     
     // Allow release timer to run
@@ -45,8 +46,9 @@
     // Ensure prior value released
     XCTAssertNil(weakRef);
     
-    // Set two new values, verify
+    // Set new values, verify
     __weak id weakRef2 = nil;
+    __weak id weakRef3 = nil;
     @autoreleasepool {
         weakRef = value.objectValue;
         value.objectValue = [[NSMutableString alloc] initWithFormat:@"%d", 3];
@@ -59,14 +61,19 @@
         
         XCTAssertEqualObjects(value.objectValue, @"4");
         XCTAssertEqualObjects((__bridge NSString*)AEManagedValueGetValue(value), @"4");
+        
+        weakRef3 = value.objectValue;
+        value.objectValue = [[NSMutableString alloc] initWithFormat:@"%d", 5];
+        AEManagedValueCommitPendingUpdates();
     }
     
     // Run release timer
     [[NSRunLoop mainRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.2]];
     
-    // Make sure both old values released
+    // Make sure old values released
     XCTAssertNil(weakRef);
     XCTAssertNil(weakRef2);
+    XCTAssertNil(weakRef3);
     
     @autoreleasepool {
         weakRef = value.objectValue;
@@ -129,7 +136,7 @@
         XCTAssertEqual(*((int*)AEManagedValueGetValue(value3)), 3);
         
         // Now commit updates (this is normally done at the start of the main render loop)
-        AEManagedValueCommitPendingAtomicUpdates();
+        AEManagedValueCommitPendingUpdates();
         
         // After batch update, ensure new values present on C interface
         XCTAssertEqualObjects((__bridge NSString*)AEManagedValueGetValue(value1), @"4");
@@ -220,7 +227,7 @@
         XCTAssertEqual(*((int*)AEManagedValueGetValue(value3)), 6);
         
         // Commit updates
-        AEManagedValueCommitPendingAtomicUpdates();
+        AEManagedValueCommitPendingUpdates();
         
         // After batch update, ensure new values present on C interface
         XCTAssertEqualObjects((__bridge NSString*)AEManagedValueGetValue(value1), @"10");
@@ -246,7 +253,7 @@
         
     }];
     
-    AEManagedValueCommitPendingAtomicUpdates();
+    AEManagedValueCommitPendingUpdates();
 }
 
 @end

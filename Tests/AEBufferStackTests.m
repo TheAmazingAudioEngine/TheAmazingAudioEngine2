@@ -9,6 +9,7 @@
 #import <XCTest/XCTest.h>
 #import "AEBufferStack.h"
 #import "AETypes.h"
+#import "AEAudioBufferListUtilities.h"
 
 @interface AEBufferStackTests : XCTestCase
 
@@ -22,6 +23,9 @@
     UInt32 frames = 1024;
     AEBufferStackSetFrameCount(stack, frames);
     
+    AudioTimeStamp timestamp = { .mFlags = kAudioTimeStampSampleTimeValid, .mSampleTime = 1000 };
+    AEBufferStackSetTimeStamp(stack, &timestamp);
+    
     // Push a buffer, verify
     const AudioBufferList * item1 = AEBufferStackPush(stack, 1);
     XCTAssertNotEqual(item1, NULL);
@@ -29,6 +33,7 @@
     XCTAssertEqual(item1->mBuffers[0].mDataByteSize, frames * AEAudioDescription.mBytesPerFrame);
     XCTAssertEqual(item1->mBuffers[1].mDataByteSize, frames * AEAudioDescription.mBytesPerFrame);
     XCTAssertEqual(item1, AEBufferStackGet(stack, 0));
+    XCTAssertEqual(memcmp(&timestamp, AEBufferStackGetTimeStampForBuffer(stack, 0), sizeof(AudioTimeStamp)), 0);
     XCTAssertEqual(AEBufferStackCount(stack), 1);
     
     // Make note of the mData pointers, and set some values
@@ -123,8 +128,26 @@
     XCTAssertEqual(AEBufferStackGet(stack, 4), NULL);
     XCTAssertEqual(AEBufferStackCount(stack), 4);
     
-    // Pop 3 items at once
-    AEBufferStackPop(stack, 3);
+    // Push an external buffer
+    AudioBufferList * external
+        = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(2, 0), frames);
+    const AudioBufferList * externalPushed = AEBufferStackPushExternal(stack, external);
+    
+    // Verify
+    XCTAssertEqual(AEBufferStackGet(stack, 0)->mBuffers[0].mData, external->mBuffers[0].mData);
+    XCTAssertEqual(AEBufferStackGet(stack, 0)->mBuffers[1].mData, external->mBuffers[1].mData);
+    
+    // Swap
+    AEBufferStackSwap(stack);
+    
+    // Verify
+    XCTAssertEqual(AEBufferStackGet(stack, 0), item5);
+    XCTAssertEqual(AEBufferStackGet(stack, 1), externalPushed);
+    XCTAssertEqual(AEBufferStackGet(stack, 1)->mBuffers[0].mData, external->mBuffers[0].mData);
+    XCTAssertEqual(AEBufferStackGet(stack, 1)->mBuffers[1].mData, external->mBuffers[1].mData);
+    
+    // Pop 4 items at once
+    AEBufferStackPop(stack, 4);
     
     // Verify stack contents
     XCTAssertEqual(AEBufferStackCount(stack), 1);
@@ -132,6 +155,7 @@
     XCTAssertEqual(AEBufferStackGet(stack, 1), NULL);
     
     AEBufferStackFree(stack);
+    AEAudioBufferListFree(external);
 }
 
 static inline float valueForChannelOfBuffer(int channel, int buffer) {
@@ -144,12 +168,15 @@ static inline float valueForChannelOfBuffer(int channel, int buffer) {
     UInt32 frames = 128;
     AEBufferStackSetFrameCount(stack, frames);
     
-    // Push a bunch of stacks, with varying channel counts
+    AudioBufferList * external
+        = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(2, 0), frames);
+    
+    // Push a bunch of buffers, with varying channel counts
     AEBufferStackPushWithChannels(stack, 1, 1);
     AEBufferStackPushWithChannels(stack, 1, 2);
     AEBufferStackPushWithChannels(stack, 1, 4);
     AEBufferStackPushWithChannels(stack, 1, 1);
-    AEBufferStackPushWithChannels(stack, 1, 2);
+    AEBufferStackPushExternal(stack, external);
     AEBufferStackPushWithChannels(stack, 1, 1);
     
     // Verify channel counts for each buffer
@@ -160,15 +187,7 @@ static inline float valueForChannelOfBuffer(int channel, int buffer) {
     XCTAssertEqual(AEBufferStackGet(stack, 1)->mNumberBuffers, 2);
     XCTAssertEqual(AEBufferStackGet(stack, 0)->mNumberBuffers, 1);
     
-    // Seed values: channel k of buffer i has value 10*(i+1) + k
-    for ( int i=0; i<AEBufferStackCount(stack); i++ ) {
-        const AudioBufferList * abl = AEBufferStackGet(stack, i);
-        for ( int j=0; j<frames; j++ ) {
-            for ( int k=0; k<abl->mNumberBuffers; k++ ) {
-                ((float*)abl->mBuffers[k].mData)[j] = valueForChannelOfBuffer(k, i);
-            }
-        }
-    }
+    [self seedBufferValues:stack];
     
     // Mix top two buffers (mono + stereo = stereo)
     const AudioBufferList * abl = AEBufferStackMixWithGain(stack, 2, (float[]){3.0, 5.0});
@@ -275,6 +294,116 @@ static inline float valueForChannelOfBuffer(int channel, int buffer) {
     }
     
     AEBufferStackFree(stack);
+    AEAudioBufferListFree(external);
+}
+
+- (void)testMixToOutput {
+    AEBufferStack * stack = AEBufferStackNew(0);
+    
+    UInt32 frames = 128;
+    AEBufferStackSetFrameCount(stack, frames);
+    
+    // Push a few buffers, with varying channel counts
+    AEBufferStackPushWithChannels(stack, 1, 1);
+    AEBufferStackPushWithChannels(stack, 1, 2);
+    [self seedBufferValues:stack];
+    
+    // Mix both buffers to a mono output
+    AudioBufferList * abl = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(1, 0), frames);
+    AEAudioBufferListSilence(abl, 0, frames);
+    AEBufferStackMixToBufferList(stack, 0, abl);
+    
+    BOOL matching = YES;
+    for ( int i=0; i<frames && matching; i++ ) {
+        for ( int j=0; j<abl->mNumberBuffers; j++ ) {
+            float value = ((float*)abl->mBuffers[j].mData)[i];
+            float expected = valueForChannelOfBuffer(0, 1) +
+                             valueForChannelOfBuffer(0, 0) +
+                             valueForChannelOfBuffer(1, 0);
+            if ( value != expected ) {
+                XCTAssertEqual(value, expected);
+                matching = NO;
+                break;
+            }
+        }
+    }
+    
+    // Mix both buffers to a stereo output
+    abl = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(2, 0), frames);
+    AEAudioBufferListSilence(abl, 0, frames);
+    AEBufferStackMixToBufferList(stack, 0, abl);
+    
+    matching = YES;
+    for ( int i=0; i<frames && matching; i++ ) {
+        for ( int j=0; j<abl->mNumberBuffers; j++ ) {
+            float value = ((float*)abl->mBuffers[j].mData)[i];
+            float expected = valueForChannelOfBuffer(0, 1) +
+                             valueForChannelOfBuffer(j, 0);
+            if ( value != expected ) {
+                XCTAssertEqual(value, expected);
+                matching = NO;
+                break;
+            }
+        }
+    }
+    
+    // Mix both buffers to 3rd channel of a 4 channel output
+    abl = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(4, 0), frames);
+    AEAudioBufferListSilence(abl, 0, frames);
+    AEBufferStackMixToBufferListChannels(stack, 0, AEChannelSetMake(2, 2), abl);
+    
+    matching = YES;
+    for ( int i=0; i<frames && matching; i++ ) {
+        for ( int j=0; j<abl->mNumberBuffers; j++ ) {
+            float value = ((float*)abl->mBuffers[j].mData)[i];
+            float expected = j == 2 ? valueForChannelOfBuffer(0, 1) +
+                                      valueForChannelOfBuffer(0, 0) +
+                                      valueForChannelOfBuffer(1, 0) : 0;
+            if ( value != expected ) {
+                XCTAssertEqual(value, expected);
+                matching = NO;
+                break;
+            }
+        }
+    }
+    
+    // Mix both buffers to 3rd+4th channel of a 4 channel output
+    abl = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(4, 0), frames);
+    AEAudioBufferListSilence(abl, 0, frames);
+    AEBufferStackMixToBufferListChannels(stack, 0, AEChannelSetMake(2, 3), abl);
+    
+    matching = YES;
+    for ( int i=0; i<frames && matching; i++ ) {
+        for ( int j=0; j<abl->mNumberBuffers; j++ ) {
+            float value = ((float*)abl->mBuffers[j].mData)[i];
+            float expected = j == 2 ? valueForChannelOfBuffer(0, 1) +
+                                      valueForChannelOfBuffer(0, 0)
+                           : j == 3 ? valueForChannelOfBuffer(0, 1) +
+                                      valueForChannelOfBuffer(1, 0) : 0;
+            if ( value != expected ) {
+                XCTAssertEqual(value, expected);
+                matching = NO;
+                break;
+            }
+        }
+    }
+    
+    AEBufferStackFree(stack);
+}
+
+#pragma mark -
+
+- (void)seedBufferValues:(AEBufferStack *)stack {
+    // Seed values: channel k of buffer i has value 10*(i+1) + k
+    UInt32 frames = AEBufferStackGetFrameCount(stack);
+    for ( int i=0; i<AEBufferStackCount(stack); i++ ) {
+        const AudioBufferList * abl = AEBufferStackGet(stack, i);
+        for ( int j=0; j<frames; j++ ) {
+            for ( int k=0; k<abl->mNumberBuffers; k++ ) {
+                ((float*)abl->mBuffers[k].mData)[j] = valueForChannelOfBuffer(k, i);
+            }
+        }
+    }
 }
 
 @end

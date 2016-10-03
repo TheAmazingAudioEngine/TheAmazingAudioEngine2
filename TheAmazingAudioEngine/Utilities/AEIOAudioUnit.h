@@ -24,8 +24,12 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@import Foundation;
-@import AudioToolbox;
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
+#import <Foundation/Foundation.h>
+#import <AudioToolbox/AudioToolbox.h>
 #import "AETime.h"
 
 /*!
@@ -41,6 +45,15 @@
 typedef void (^AEIOAudioUnitRenderBlock)(AudioBufferList * _Nonnull ioData,
                                          UInt32 frames,
                                          const AudioTimeStamp * _Nonnull timestamp);
+
+/*!
+ * Setup notification
+ *
+ *  This is broadcast when the unit is setup, or re-setup after changing parameters
+ *  or after a media services reset. After this notification is sent, the audioUnit
+ *  property will be non-NULL.
+ */
+extern NSString * const _Nonnull AEIOAudioUnitDidSetupNotification;
 
 /*!
  * Stream update notification
@@ -105,7 +118,7 @@ AudioUnit _Nullable AEIOAudioUnitGetAudioUnit(__unsafe_unretained AEIOAudioUnit 
  *  from the input.
  *
  * @param unit The unit instance
- * @param audio The audio buffer list
+ * @param buffer The audio buffer list
  * @param frames Number of frames
  */
 OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull unit,
@@ -159,36 +172,45 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 
 #endif
 
-//! The audio unit
+//! The audio unit. Will be NULL until setup: is called.
 @property (nonatomic, readonly) AudioUnit _Nullable audioUnit;
 
 //! The sample rate at which to run, or zero to track the hardware sample rate
 @property (nonatomic) double sampleRate;
 
-//! The current sample rate in use (key-value observable)
+//! The current sample rate in use
 @property (nonatomic, readonly) double currentSampleRate;
 
 //! Whether unit is currently active
 @property (nonatomic, readonly) BOOL running;
 
-//! Whether output is enabled
+//! Whether output is enabled. Note that changing this value will cause the audio unit to be uninitialized,
+//! reconfigured, and initialized again, temporarily interrupting audio rendering.
 @property (nonatomic) BOOL outputEnabled;
 
-//! The block to call when rendering output
+//! The block to call when rendering output. May be changed at any time.
 @property (nonatomic, copy) AEIOAudioUnitRenderBlock _Nullable renderBlock;
 
-//! The current number of output channels (key-value observable)
-@property (nonatomic, readonly) int outputChannels;
+//! The current number of output channels
+@property (nonatomic, readonly) int numberOfOutputChannels;
 
-
-//! Whether input is enabled
+//! Whether input is enabled. Note that changing this value will cause the audio unit to be uninitialized,
+//! reconfigured, and initialized again, temporarily interrupting audio rendering.
 @property (nonatomic) BOOL inputEnabled;
 
-//! The max number of input channels to support, or zero for unlimited
-@property (nonatomic) int maxInputChannels;
+//! The microphone gain, as power ratio. If the current audio session permits, this will be applied
+//! using AVAudioSession's gain controls. Otherwise, it will be applied by affecting the input signal directly.
+@property (nonatomic) double inputGain;
 
-//! The current number of input channels in use (key-value observable)
-@property (nonatomic, readonly) int inputChannels;
+//! The maximum number of input channels to support, or zero for unlimited
+@property (nonatomic) int maximumInputChannels;
+
+//! The current number of input channels in use
+@property (nonatomic, readonly) int numberOfInputChannels;
+
+//! The IO buffer duration.
+//! On iOS, this is fetched from AVAudioSession; on the Mac, this is taken from HAL
+@property (nonatomic) AESeconds IOBufferDuration;
 
 #if TARGET_OS_IPHONE
 
@@ -197,3 +219,7 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 
 #endif
 @end
+
+#ifdef __cplusplus
+}
+#endif

@@ -24,12 +24,16 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@import Foundation;
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#import <Foundation/Foundation.h>
 #import "AEAudioUnitModule.h"
 
 @interface AEBandpassModule : AEAudioUnitModule
 
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer;
 
 //! range is from 20Hz to ($SAMPLERATE/2)Hz. Default is 5000Hz.
 @property (nonatomic) double centerFrequency;
@@ -38,3 +42,7 @@
 @property (nonatomic) double bandwidth;
 
 @end
+
+#ifdef __cplusplus
+}
+#endif

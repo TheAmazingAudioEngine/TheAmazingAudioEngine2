@@ -24,16 +24,22 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@import Foundation;
-@import AudioToolbox;
-#import "AETime.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#import <Foundation/Foundation.h>
+#import <AudioToolbox/AudioToolbox.h>
+#import "AETime.h"
+
 @class AERenderer;
 @class AEAudioUnitInputModule;
+    
+//! Notification posted when the sample rate changes
+extern NSString * const _Nonnull AEAudioUnitOutputDidChangeSampleRateNotification;
+
+//! Notification posted when the number of output channels changes
+extern NSString * const _Nonnull AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification;
 
 /*!
  * Audio unit output
@@ -48,6 +54,18 @@ extern "C" {
  * @param renderer Renderer to use to drive processing
  */
 - (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer;
+
+/*!
+ * Setup (optional)
+ *
+ *  You may call this method prior to @link start: @endlink to set up the rendering resources. Once this is
+ *  called, the audioUnit property will yield a valid audio unit instance. If you do not use
+ *  this method, it will be called automatically the first time @link start: @endlink is called.
+ *
+ * @param error If an error occured and this is not nil, it will be set to the error on output
+ * @return YES on success, NO on failure
+ */
+- (BOOL)setup:(NSError * __autoreleasing _Nullable * _Nullable)error;
 
 /*!
  * Start the audio unit
@@ -91,19 +109,19 @@ AESeconds AEAudioUnitOutputGetOutputLatency(__unsafe_unretained AEAudioUnitOutpu
 @property (nonatomic, strong) AERenderer * _Nullable renderer;
 
 //! The audio unit
-@property (nonatomic, readonly) AudioUnit _Nonnull audioUnit;
+@property (nonatomic, readonly) AudioUnit _Nullable audioUnit;
 
 //! The sample rate at which to run, or zero to track the hardware sample rate
 @property (nonatomic) double sampleRate;
 
-//! The current sample rate (key-value observable)
+//! The current sample rate
 @property (nonatomic, readonly) double currentSampleRate;
 
 //! Whether unit is currently active
 @property (nonatomic, readonly) BOOL running;
 
-//! The current number of output channels (key-value observable)
-@property (nonatomic, readonly) int outputChannels;
+//! The current number of output channels
+@property (nonatomic, readonly) int numberOfOutputChannels;
 
 #if TARGET_OS_IPHONE
 //! Whether to automatically perform latency compensation (default YES)
@@ -111,11 +129,17 @@ AESeconds AEAudioUnitOutputGetOutputLatency(__unsafe_unretained AEAudioUnitOutpu
 #endif
 
 /*!
- * A module that can be used to pull audio input from this unit, instead of using
- * AEAudioUnitInputModule. Use this particularly if you intend to implement an Inter-App Audio
- * effect node.
+ * The input module
  *
- * On the Mac, this just returns an instance that uses its own audio unit.
+ *  This is a module that can be used to pull audio input from this unit, instead of using
+ *  AEAudioUnitInputModule. Use this particularly if you intend to implement an Inter-App Audio
+ *  or Audiobus effect node.
+ *
+ *  On the Mac, this returns an instance that uses its own audio unit.
+ *
+ *  On iOS, this returns an instance that uses the output's audio unit. Note that starting and
+ *  stopping the returned module will cause the output's audio unit to be uninitialized, reconfigured
+ *  then reinitialized, temporarily interrupting audio rendering.
  */
 @property (nonatomic, strong, readonly) AEAudioUnitInputModule * _Nonnull inputModule;
 

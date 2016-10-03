@@ -34,12 +34,17 @@
 #import "AEManagedValue.h"
 #import "AEAudioBufferListUtilities.h"
 #import "AEAudioUnitInputModule.h"
-@import AVFoundation;
+#import <AVFoundation/AVFoundation.h>
+#import <pthread.h>
+
+NSString * const AEAudioUnitOutputDidChangeSampleRateNotification = @"AEAudioUnitOutputDidChangeSampleRateNotification";
+NSString * const AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification = @"AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification";
 
 #ifdef DEBUG
 static const AESeconds kRenderTimeReportInterval = 0.0;   // Seconds between render time reports; 0 = no reporting
 static const double kRenderBudgetWarningThreshold = 0.75; // Ratio of total buffer duration to hit before budget overrun warnings
 static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wait before warning about budget overrun
+extern pthread_t AEManagedValueRealtimeThreadIdentifier;
 #endif
 
 @interface AEAudioUnitInputModule ()
@@ -57,20 +62,20 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
 }
 @property (nonatomic, strong) AEIOAudioUnit * ioUnit;
 @property (nonatomic, strong) AEManagedValue * rendererValue;
+@property (nonatomic, strong, readwrite) AEAudioUnitInputModule * inputModule;
 @property (nonatomic, strong) id ioUnitStreamChangeObserverToken;
 @end
 
 @implementation AEAudioUnitOutput
-@dynamic renderer, audioUnit, sampleRate, currentSampleRate, running, outputChannels;
+@dynamic renderer, audioUnit, sampleRate, currentSampleRate, running, numberOfOutputChannels;
 #if TARGET_OS_IPHONE
-@dynamic latencyCompensation, inputModule;
+@dynamic latencyCompensation;
 #endif
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
     if ( !(self = [super init]) ) return nil;
     
     AEManagedValue * rendererValue = [AEManagedValue new];
-    rendererValue.objectValue = renderer;
     self.rendererValue = rendererValue;
     
     self.ioUnit = [AEIOAudioUnit new];
@@ -78,6 +83,11 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     
     __unsafe_unretained AEAudioUnitOutput * weakSelf = self;
     self.ioUnit.renderBlock = ^(AudioBufferList * _Nonnull ioData, UInt32 frames, const AudioTimeStamp * _Nonnull timestamp) {
+        #ifdef DEBUG
+        AEManagedValueRealtimeThreadIdentifier = pthread_self();
+        #endif
+        AEManagedValueCommitPendingUpdates();
+        
         __unsafe_unretained AERenderer * renderer = (__bridge AERenderer*)AEManagedValueGetValue(rendererValue);
         if ( renderer ) {
             #ifdef DEBUG
@@ -92,26 +102,35 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
                     (double)frames / AEIOAudioUnitGetSampleRate(weakSelf->_ioUnit));
             #endif
         } else {
-            AEAudioBufferListSilence(ioData, AEAudioDescription, 0, frames);
+            AEAudioBufferListSilence(ioData, 0, frames);
         }
     };
     
     self.ioUnitStreamChangeObserverToken =
     [[NSNotificationCenter defaultCenter] addObserverForName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self.ioUnit
-                                                       queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
+                                                       queue:NULL usingBlock:^(NSNotification * note) {
+        BOOL rateChanged = fabs(weakSelf.renderer.sampleRate - weakSelf.ioUnit.currentSampleRate) > DBL_EPSILON;
+        BOOL channelsChanged = weakSelf.renderer.numberOfOutputChannels != weakSelf.ioUnit.numberOfOutputChannels;
+        
         weakSelf.renderer.sampleRate = weakSelf.ioUnit.currentSampleRate;
-        weakSelf.renderer.outputChannels = weakSelf.ioUnit.outputChannels;
+        weakSelf.renderer.numberOfOutputChannels = weakSelf.ioUnit.numberOfOutputChannels;
+        
+        if ( rateChanged ) {
+           [[NSNotificationCenter defaultCenter]
+            postNotificationName:AEAudioUnitOutputDidChangeSampleRateNotification object:weakSelf];
+        }
+        
+        if ( channelsChanged ) {
+           [[NSNotificationCenter defaultCenter]
+            postNotificationName:AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification object:weakSelf];
+        }
     }];
-    
-    if ( ![self.ioUnit setup:NULL] ) return nil;
     
 #if TARGET_OS_IPHONE
     self.latencyCompensation = YES;
 #endif
     
     self.renderer = renderer;
-    self.renderer.sampleRate = self.ioUnit.currentSampleRate;
-    self.renderer.outputChannels = self.ioUnit.outputChannels;
     
     return self;
 }
@@ -121,12 +140,25 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     self.ioUnit = nil;
 }
 
+- (BOOL)setup:(NSError * __autoreleasing *)error {
+    return [self.ioUnit setup:error];
+}
+
 - (BOOL)start:(NSError *__autoreleasing *)error {
+    if ( !self.ioUnit.audioUnit ) {
+        if ( ![self.ioUnit setup:error] ) return NO;
+    }
+    
     return [self.ioUnit start:error];
 }
 
 - (void)stop {
+    if ( !self.ioUnit.audioUnit ) return;
     [self.ioUnit stop];
+    
+    #ifdef DEBUG
+    AEManagedValueRealtimeThreadIdentifier = nil;
+    #endif
 }
 
 - (AERenderer *)renderer {
@@ -134,10 +166,21 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
 }
 
 - (void)setRenderer:(AERenderer *)renderer {
+    renderer.sampleRate = self.ioUnit.currentSampleRate;
+    renderer.numberOfOutputChannels = self.ioUnit.numberOfOutputChannels;
+    renderer.isOffline = NO;
+    
     self.rendererValue.objectValue = renderer;
 }
 
 - (AudioUnit)audioUnit {
+    if ( !self.ioUnit.audioUnit ) {
+        NSError * error = nil;
+        if ( ![self.ioUnit setup:&error] ) {
+            NSLog(@"Unable to set up IO unit: %@", error);
+            return NULL;
+        }
+    }
     return self.ioUnit.audioUnit;
 }
 
@@ -157,16 +200,20 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     return self.ioUnit.running;
 }
 
-- (int)outputChannels {
-    return self.ioUnit.outputChannels;
+- (int)numberOfOutputChannels {
+    return self.ioUnit.numberOfOutputChannels;
 }
 
 - (AEAudioUnitInputModule *)inputModule {
+    if ( !_inputModule ) {
 #if TARGET_OS_IPHONE
-    return [[AEAudioUnitInputModule alloc] initWithRenderer:self.renderer audioUnit:self.ioUnit];
+        _inputModule = [[AEAudioUnitInputModule alloc] initWithRenderer:self.renderer audioUnit:self.ioUnit];
 #else
-    return [[AEAudioUnitInputModule alloc] initWithRenderer:self.renderer];
+        _inputModule = [[AEAudioUnitInputModule alloc] initWithRenderer:self.renderer];
 #endif
+    }
+    
+    return _inputModule;
 }
 
 #if TARGET_OS_IPHONE
@@ -213,7 +260,7 @@ static void AEAudioUnitOutputReportRenderTime(__unsafe_unretained AEAudioUnitOut
             AESeconds maximum = self->_maximumRenderDuration;
             
             dispatch_async(dispatch_get_main_queue(), ^{
-                AESeconds bufferDuration = [AVAudioSession sharedInstance].IOBufferDuration;
+                AESeconds bufferDuration = self.ioUnit.IOBufferDuration;
                 NSLog(@"Render time report: %lfs/%0.4lf%% average,\t%lfs/%0.4lf%% maximum",
                       average, (average/bufferDuration)*100.0, maximum, (maximum/bufferDuration)*100.0);
             });

@@ -24,17 +24,35 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@import Foundation;
-#import "AEBufferStack.h"
-#import "AERenderer.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#import <Foundation/Foundation.h>
+#import "AEBufferStack.h"
+#import "AERenderer.h"
 
 @class AEModule;
 
+/*!
+ * Invoke processing for a module
+ *
+ * @param module The module subclass
+ * @param context The rendering context
+ */
+void AEModuleProcess(__unsafe_unretained AEModule * _Nonnull module, const AERenderContext * _Nonnull context);
+
+/*!
+ * Determine whether module is active
+ *
+ *  If NO is returned by this method, processing may be skipped for this
+ *  module, as it is idle.
+ *
+ * @param module The module subclass
+ * @returns Whether the module is active
+ */
+BOOL AEModuleIsActive(__unsafe_unretained AEModule * _Nonnull module);
+    
 /*!
  * Processing function
  *
@@ -50,6 +68,19 @@ extern "C" {
 typedef void (*AEModuleProcessFunc)(__unsafe_unretained AEModule * _Nonnull self, const AERenderContext * _Nonnull context);
 
 /*!
+ * Active test function
+ *
+ *  Modules may set this property to the address of a function that
+ *  returns whether or not the module is currently active. If it returns
+ *  NO, the module is considered inactive and processing can be skipped
+ *  by client code.
+ *
+ * @param self A pointer to the module
+ * @returns YES if the module is active, NO otherwise
+ */
+typedef BOOL (*AEModuleIsActiveFunc)(__unsafe_unretained AEModule * _Nonnull self);
+    
+/*!
  * Module base class
  *
  *  Modules are the basic processing unit, and all provide a function to perform processing.
@@ -60,17 +91,11 @@ typedef void (*AEModuleProcessFunc)(__unsafe_unretained AEModule * _Nonnull self
 /*!
  * Initializer
  *
- * @param renderer The renderer
+ * @param renderer The renderer.
  */
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer NS_DESIGNATED_INITIALIZER;
 
-/*!
- * Invoke processing for a module
- *
- * @param module The module subclass
- * @param context The rendering context
- */
-void AEModuleProcess(__unsafe_unretained AEModule * _Nonnull module, const AERenderContext * _Nonnull context);
+- (instancetype _Nonnull)init NS_UNAVAILABLE;
 
 /*!
  * Notifies the module that the renderer's sample rate has changed
@@ -84,7 +109,7 @@ void AEModuleProcess(__unsafe_unretained AEModule * _Nonnull module, const AERen
  *
  *  Subclasses may override this method to react to channel count changes.
  */
-- (void)rendererDidChangeChannelCount;
+- (void)rendererDidChangeNumberOfChannels;
 
 /*!
  * Process function
@@ -95,9 +120,22 @@ void AEModuleProcess(__unsafe_unretained AEModule * _Nonnull module, const AERen
 @property (nonatomic) AEModuleProcessFunc _Nonnull processFunction;
 
 /*!
- * The renderer
+ * Active test function
+ *
+ *  Subclasses may set this property to the address of a function that 
+ *  returns whether or not the module is currently active. If it returns
+ *  NO, the module is considered inactive and processing can be skipped
+ *  by client code.
  */
-@property (nonatomic, weak, readonly) AERenderer * _Nullable renderer;
+@property (nonatomic) AEModuleIsActiveFunc _Nullable isActiveFunction;
+
+/*!
+ * The renderer
+ *
+ *  This may be re-assigned after initialization; the module will begin
+ *  tracking the parameters of the new renderer.
+ */
+@property (nonatomic, weak) AERenderer * _Nullable renderer;
 
 @end
 

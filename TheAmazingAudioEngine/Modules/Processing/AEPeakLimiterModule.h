@@ -24,13 +24,16 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@import Foundation;
-
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
+#import <Foundation/Foundation.h>
 #import "AEAudioUnitModule.h"
 
 @interface AEPeakLimiterModule : AEAudioUnitModule
 
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer;
 
 //! range is from 0.001 to 0.03 seconds. Default is 0.012 seconds.
 @property (nonatomic) double attackTime;
@@ -42,3 +45,7 @@
 @property (nonatomic) double preGain;
 
 @end
+
+#ifdef __cplusplus
+}
+#endif

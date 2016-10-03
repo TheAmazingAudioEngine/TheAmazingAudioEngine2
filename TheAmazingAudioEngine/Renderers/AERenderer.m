@@ -27,11 +27,14 @@
 #import "AERenderer.h"
 #import "AETypes.h"
 #import "AEManagedValue.h"
+#import "AEAudioBufferListUtilities.h"
 
 NSString * const AERendererDidChangeSampleRateNotification = @"AERendererDidChangeSampleRateNotification";
-NSString * const AERendererDidChangeChannelCountNotification = @"AERendererDidChangeChannelCountNotification";
+NSString * const AERendererDidChangeNumberOfOutputChannelsNotification = @"AERendererDidChangeNumberOfOutputChannelsNotification";
 
-@interface AERenderer ()
+@interface AERenderer () {
+    UInt32 _sampleTime;
+}
 @property (nonatomic, strong) AEManagedValue * blockValue;
 @property (nonatomic, readwrite) AEBufferStack * stack;
 @end
@@ -41,29 +44,47 @@ NSString * const AERendererDidChangeChannelCountNotification = @"AERendererDidCh
 
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
-    _outputChannels = 2;
+    _numberOfOutputChannels = 2;
     _sampleRate = 44100.0;
     self.blockValue = [AEManagedValue new];
     self.stack = AEBufferStackNew(0);
     return self;
 }
 
-void AERendererRun(__unsafe_unretained AERenderer * THIS, AudioBufferList * bufferList, UInt32 frames,
+- (void)dealloc {
+    AEBufferStackFree(self.stack);
+}
+
+void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList * bufferList, UInt32 frames,
                    const AudioTimeStamp * timestamp) {
     
-    // Reset the buffer stack, and set the frame count
+    // Reset the buffer stack, and set the frame count/timestamp
     AEBufferStackReset(THIS->_stack);
     AEBufferStackSetFrameCount(THIS->_stack, frames);
+    AEBufferStackSetTimeStamp(THIS->_stack, timestamp);
     
     // Clear the output buffer
-    for ( int i=0; i<bufferList->mNumberBuffers; i++ ) {
-        memset(bufferList->mBuffers[i].mData, 0, frames * AEAudioDescription.mBytesPerFrame);
-    }
+    AEAudioBufferListSilence(bufferList, 0, frames);
     
     // Run the block
     __unsafe_unretained AERenderLoopBlock block = (__bridge AERenderLoopBlock)AEManagedValueGetValue(THIS->_blockValue);
     if ( block ) {
-        AERenderContext context = { bufferList, frames, THIS->_sampleRate, timestamp, THIS->_stack };
+        
+        // Set our own sample time, to ensure continuity
+        AudioTimeStamp time = *timestamp;
+        time.mFlags |= kAudioTimeStampSampleTimeValid;
+        time.mSampleTime = THIS->_sampleTime;
+        THIS->_sampleTime += frames;
+        
+        AERenderContext context = {
+            .output = bufferList,
+            .frames = frames,
+            .sampleRate = THIS->_sampleRate,
+            .timestamp = &time,
+            .offlineRendering = THIS->_isOffline,
+            .stack = THIS->_stack
+        };
+        
         block(&context);
     }
 }
@@ -83,11 +104,11 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, AudioBufferList * buff
     [[NSNotificationCenter defaultCenter] postNotificationName:AERendererDidChangeSampleRateNotification object:self];
 }
 
-- (void)setOutputChannels:(int)outputChannels {
-    if ( _outputChannels == outputChannels ) return;
-    _outputChannels = outputChannels;
+- (void)setNumberOfOutputChannels:(int)numberOfOutputChannels {
+    if ( _numberOfOutputChannels == numberOfOutputChannels ) return;
+    _numberOfOutputChannels = numberOfOutputChannels;
     
-    [[NSNotificationCenter defaultCenter] postNotificationName:AERendererDidChangeChannelCountNotification object:self];
+    [[NSNotificationCenter defaultCenter] postNotificationName:AERendererDidChangeNumberOfOutputChannelsNotification object:self];
 }
 
 @end

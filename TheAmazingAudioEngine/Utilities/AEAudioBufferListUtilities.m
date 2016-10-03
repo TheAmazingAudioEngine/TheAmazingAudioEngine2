@@ -26,7 +26,11 @@
 
 #import "AEAudioBufferListUtilities.h"
 
-AudioBufferList *AEAudioBufferListCreate(AudioStreamBasicDescription audioFormat, int frameCount) {
+AudioBufferList *AEAudioBufferListCreate(int frameCount) {
+    return AEAudioBufferListCreateWithFormat(AEAudioDescription, frameCount);
+}
+
+AudioBufferList *AEAudioBufferListCreateWithFormat(AudioStreamBasicDescription audioFormat, int frameCount) {
     int numberOfBuffers = audioFormat.mFormatFlags & kAudioFormatFlagIsNonInterleaved ? audioFormat.mChannelsPerFrame : 1;
     int channelsPerBuffer = audioFormat.mFormatFlags & kAudioFormatFlagIsNonInterleaved ? 1 : audioFormat.mChannelsPerFrame;
     int bytesPerBuffer = audioFormat.mBytesPerFrame * frameCount;
@@ -80,42 +84,91 @@ void AEAudioBufferListFree(AudioBufferList *bufferList ) {
     free(bufferList);
 }
 
-UInt32 AEAudioBufferListGetLength(const AudioBufferList *bufferList,
-                                  AudioStreamBasicDescription audioFormat,
-                                  int *oNumberOfChannels) {
-    int channelCount = audioFormat.mFormatFlags & kAudioFormatFlagIsNonInterleaved
-        ? bufferList->mNumberBuffers : bufferList->mBuffers[0].mNumberChannels;
-    if ( oNumberOfChannels ) {
-        *oNumberOfChannels = channelCount;
-    }
-    return bufferList->mBuffers[0].mDataByteSize / ((audioFormat.mBitsPerChannel/8) * channelCount);
+UInt32 AEAudioBufferListGetLength(const AudioBufferList *bufferList, int *oNumberOfChannels) {
+    return AEAudioBufferListGetLengthWithFormat(bufferList, AEAudioDescription, oNumberOfChannels);
 }
 
-void AEAudioBufferListSetLength(AudioBufferList *bufferList,
-                                AudioStreamBasicDescription audioFormat,
-                                UInt32 frames) {
+UInt32 AEAudioBufferListGetLengthWithFormat(const AudioBufferList *bufferList,
+                                            AudioStreamBasicDescription audioFormat,
+                                            int *oNumberOfChannels) {
+    if ( oNumberOfChannels ) {
+        *oNumberOfChannels = audioFormat.mFormatFlags & kAudioFormatFlagIsNonInterleaved
+            ? bufferList->mNumberBuffers : bufferList->mBuffers[0].mNumberChannels;
+    }
+    return bufferList->mBuffers[0].mDataByteSize / audioFormat.mBytesPerFrame;
+}
+
+void AEAudioBufferListSetLength(AudioBufferList *bufferList, UInt32 frames) {
+    return AEAudioBufferListSetLengthWithFormat(bufferList, AEAudioDescription, frames);
+}
+
+void AEAudioBufferListSetLengthWithFormat(AudioBufferList *bufferList,
+                                          AudioStreamBasicDescription audioFormat,
+                                          UInt32 frames) {
     for ( int i=0; i<bufferList->mNumberBuffers; i++ ) {
         bufferList->mBuffers[i].mDataByteSize = frames * audioFormat.mBytesPerFrame;
     }
 }
 
-void AEAudioBufferListOffset(AudioBufferList *bufferList,
-                             AudioStreamBasicDescription audioFormat,
-                             UInt32 frames) {
+void AEAudioBufferListOffset(AudioBufferList *bufferList, UInt32 frames) {
+    return AEAudioBufferListOffsetWithFormat(bufferList, AEAudioDescription, frames);
+}
+
+void AEAudioBufferListOffsetWithFormat(AudioBufferList *bufferList,
+                                       AudioStreamBasicDescription audioFormat,
+                                       UInt32 frames) {
     for ( int i=0; i<bufferList->mNumberBuffers; i++ ) {
         bufferList->mBuffers[i].mData = (char*)bufferList->mBuffers[i].mData + frames * audioFormat.mBytesPerFrame;
         bufferList->mBuffers[i].mDataByteSize -= frames * audioFormat.mBytesPerFrame;
     }
 }
 
-void AEAudioBufferListSilence(const AudioBufferList *bufferList,
-                              AudioStreamBasicDescription audioFormat,
-                              UInt32 offset,
-                              UInt32 length) {
+void AEAudioBufferListAssign(AudioBufferList * target, const AudioBufferList * source, UInt32 offset, UInt32 length) {
+    AEAudioBufferListAssignWithFormat(target, source, AEAudioDescription, offset, length);
+}
+
+void AEAudioBufferListAssignWithFormat(AudioBufferList * target, const AudioBufferList * source,
+                                       AudioStreamBasicDescription audioFormat, UInt32 offset, UInt32 length) {
+    target->mNumberBuffers = source->mNumberBuffers;
+    for ( int i=0; i<source->mNumberBuffers; i++ ) {
+        target->mBuffers[i].mNumberChannels = source->mBuffers[i].mNumberChannels;
+        target->mBuffers[i].mData = source->mBuffers[i].mData + (offset * audioFormat.mBytesPerFrame);
+        target->mBuffers[i].mDataByteSize = length * audioFormat.mBytesPerFrame;
+    }
+}
+
+void AEAudioBufferListSilence(const AudioBufferList *bufferList, UInt32 offset, UInt32 length) {
+    return AEAudioBufferListSilenceWithFormat(bufferList, AEAudioDescription, offset, length);
+}
+
+void AEAudioBufferListSilenceWithFormat(const AudioBufferList *bufferList,
+                                        AudioStreamBasicDescription audioFormat,
+                                        UInt32 offset,
+                                        UInt32 length) {
     for ( int i=0; i<bufferList->mNumberBuffers; i++ ) {
         memset((char*)bufferList->mBuffers[i].mData + offset * audioFormat.mBytesPerFrame,
                0,
-               length ? length * audioFormat.mBytesPerFrame
-                      : bufferList->mBuffers[i].mDataByteSize - offset * audioFormat.mBytesPerFrame);
+               length * audioFormat.mBytesPerFrame);
+    }
+}
+
+void AEAudioBufferListCopyContents(const AudioBufferList * target,
+                                   const AudioBufferList * source,
+                                   UInt32 targetOffset,
+                                   UInt32 sourceOffset,
+                                   UInt32 length) {
+    AEAudioBufferListCopyContentsWithFormat(target, source, AEAudioDescription, targetOffset, sourceOffset, length);
+}
+
+void AEAudioBufferListCopyContentsWithFormat(const AudioBufferList * target,
+                                             const AudioBufferList * source,
+                                             AudioStreamBasicDescription audioFormat,
+                                             UInt32 targetOffset,
+                                             UInt32 sourceOffset,
+                                             UInt32 length) {
+    for ( int i=0; i<MIN(target->mNumberBuffers, source->mNumberBuffers); i++ ) {
+        memcpy(target->mBuffers[i].mData + (targetOffset * audioFormat.mBytesPerFrame),
+               source->mBuffers[i].mData + (sourceOffset * audioFormat.mBytesPerFrame),
+               length * audioFormat.mBytesPerFrame);
     }
 }

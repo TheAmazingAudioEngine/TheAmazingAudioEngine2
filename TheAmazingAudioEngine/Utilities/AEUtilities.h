@@ -24,13 +24,13 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@import Foundation;
-@import AudioToolbox;
-#import "AETypes.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#import <Foundation/Foundation.h>
+#import <AudioToolbox/AudioToolbox.h>
+#import "AETypes.h"
 
 /*!
  * Create an AudioComponentDescription structure
@@ -51,6 +51,13 @@ AudioComponentDescription AEAudioComponentDescriptionMake(OSType manufacturer, O
 BOOL AERateLimit(void);
 
 /*!
+ * An error occurred within AECheckOSStatus
+ *
+ *  Create a symbolic breakpoint with this function name to break on errors.
+ */
+void AEError(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line);
+
+/*!
  * Check an OSStatus condition
  *
  * @param result The result
@@ -59,14 +66,7 @@ BOOL AERateLimit(void);
 #define AECheckOSStatus(result,operation) (_AECheckOSStatus((result),(operation),strrchr(__FILE__, '/')+1,__LINE__))
 static inline BOOL _AECheckOSStatus(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line) {
     if ( result != noErr ) {
-        if ( AERateLimit() ) {
-            int fourCC = CFSwapInt32HostToBig(result);
-            if ( isascii(((char*)&fourCC)[0]) && isascii(((char*)&fourCC)[1]) && isascii(((char*)&fourCC)[2]) ) {
-                NSLog(@"%s:%d: %s: '%4.4s' (%d)", file, line, operation, (char*)&fourCC, (int)result);
-            } else {
-                NSLog(@"%s:%d: %s: %d", file, line, operation, (int)result);
-            }
-        }
+        AEError(result, operation, file, line);
         return NO;
     }
     return YES;
@@ -84,14 +84,34 @@ static inline BOOL _AECheckOSStatus(OSStatus result, const char * _Nonnull opera
  *  Use this function only on the main thread.
  *
  * @param url URL to the file to write to
- * @param type The type of the file to write
+ * @param fileType The type of the file to write
  * @param sampleRate Sample rate to use for input & output
  * @param channelCount Number of channels for input & output
  * @param error If not NULL, the error on output
  * @return The initialized ExtAudioFileRef, or NULL on error
  */
-ExtAudioFileRef _Nullable AEExtAudioFileRefCreate(NSURL * _Nonnull url, AEAudioFileType fileType, double sampleRate,
-                                                  int channelCount, NSError * _Nullable * _Nullable error);
+ExtAudioFileRef _Nullable AEExtAudioFileCreate(NSURL * _Nonnull url, AEAudioFileType fileType, double sampleRate,
+                                               int channelCount, NSError * _Nullable * _Nullable error);
+
+    
+/*!
+ * Open an audio file for reading
+ * 
+ *  This utility creates a new reader instance, and returns the reader, the client format AudioStreamBasicDescription
+ *  used for reading, and the total length in frames, both usually useful for operating on files.
+ *
+ *  It will be configured to use the standard AEAudioDescription format, with the channel count and sample rate
+ *  determined by the file format - this configured format is returned via the outAudioDescription parameter.
+ *  Use kExtAudioFileProperty_ClientDataFormat to change this if required.
+ *
+ * @param url URL to the file to read from
+ * @param outAudioDescription On output, the AEAudioDescription-derived stream format for reading (the client format)
+ * @param outLengthInFrames On output, the total length in frames
+ * @param error If not NULL, the error on output
+ * @return The initialized ExtAudioFileRef, or NULL on error
+ */
+ExtAudioFileRef _Nullable AEExtAudioFileOpen(NSURL * _Nonnull url, AudioStreamBasicDescription * _Nullable outAudioDescription,
+                                             UInt64 * _Nullable outLengthInFrames, NSError * _Nullable * _Nullable error);
 
 #ifdef __cplusplus
 }

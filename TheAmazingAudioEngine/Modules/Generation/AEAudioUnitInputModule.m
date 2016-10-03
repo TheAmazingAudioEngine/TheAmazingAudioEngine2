@@ -30,17 +30,17 @@
 #import "AEUtilities.h"
 #import "AEBufferStack.h"
 #import "AEAudioBufferListUtilities.h"
-@import AVFoundation;
+#import <AVFoundation/AVFoundation.h>
 
 @interface AEAudioUnitInputModule ()
-@property (nonatomic, strong) AEIOAudioUnit * ioUnit;
-@property (nonatomic, readwrite) int inputChannels;
+@property (nonatomic, weak) AEIOAudioUnit * ioUnit;
+@property (nonatomic, readwrite) int numberOfInputChannels;
 @property (nonatomic, strong) id ioUnitStreamChangeObserverToken;
 @property (nonatomic) BOOL ownsIOUnit;
 @end
 
 @implementation AEAudioUnitInputModule
-@dynamic audioUnit, running;
+@dynamic audioUnit, running, inputGain;
 #if TARGET_OS_IPHONE
 @dynamic latencyCompensation;
 #endif
@@ -54,28 +54,24 @@
     
     if ( audioUnit ) {
         self.ioUnit = audioUnit;
-        self.ioUnit.inputEnabled = YES;
     } else {
-        self.ioUnit = [AEIOAudioUnit new];
+        // We need to add a bridging retain, because the property is weak
+        self.ioUnit = (__bridge AEIOAudioUnit*) CFBridgingRetain([AEIOAudioUnit new]);
         self.ioUnit.inputEnabled = YES;
         self.ioUnit.sampleRate = self.renderer.sampleRate;
         self.ownsIOUnit = YES;
     }
     
-    self.ioUnit.maxInputChannels = AEBufferStackGetMaximumChannelsPerBuffer(self.renderer.stack);
+    self.ioUnit.maximumInputChannels = AEBufferStackGetMaximumChannelsPerBuffer(self.renderer.stack);
     
-    __weak AEAudioUnitInputModule * weakSelf = self;
+    __weak typeof(self) weakSelf = self;
     self.ioUnitStreamChangeObserverToken =
     [[NSNotificationCenter defaultCenter] addObserverForName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self.ioUnit
                                                        queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
-        weakSelf.inputChannels = weakSelf.ioUnit.inputChannels;
+        weakSelf.numberOfInputChannels = weakSelf.ioUnit.numberOfInputChannels;
     }];
     
-    if ( self.ownsIOUnit ) {
-        if ( ![self.ioUnit setup:NULL] ) return nil;
-    }
-    
-    self.inputChannels = self.ioUnit.inputChannels;
+    self.numberOfInputChannels = self.ioUnit.numberOfInputChannels;
     self.processFunction = AEAudioUnitInputModuleProcess;
     
 #if TARGET_OS_IPHONE
@@ -86,21 +82,62 @@
 }
 
 - (void)dealloc {
+    if ( self.ownsIOUnit ) {
+        // Add a bridging release, because we manually retained the audio unit
+        CFBridgingRelease((__bridge CFTypeRef)self.ioUnit);
+    }
     [[NSNotificationCenter defaultCenter] removeObserver:self.ioUnitStreamChangeObserverToken];
 }
 
 - (BOOL)running {
-    return self.ioUnit.running;
+    return self.ioUnit.running && self.ioUnit.inputEnabled;
+}
+
+- (BOOL)setup:(NSError * _Nullable __autoreleasing *)error {
+    if ( !self.ownsIOUnit ) return YES;
+    return [self.ioUnit setup:error];
 }
 
 - (BOOL)start:(NSError *__autoreleasing *)error {
-    if ( !self.ownsIOUnit ) return YES;
-    return [self.ioUnit start:error];
+    if ( self.ownsIOUnit ) {
+        if ( !self.ioUnit.audioUnit ) {
+            if ( ![self.ioUnit setup:error] ) {
+                return NO;
+            }
+        }
+        return [self.ioUnit start:error];
+        
+    } else {
+        self.ioUnit.inputEnabled = YES;
+        return YES;
+    }
 }
 
 - (void)stop {
-    if ( !self.ownsIOUnit ) return;
-    [self.ioUnit stop];
+    if ( self.ownsIOUnit ) {
+        [self.ioUnit stop];
+    } else {
+        self.ioUnit.inputEnabled = NO;
+    }
+}
+
+- (AudioUnit)audioUnit {
+    if ( !self.ioUnit.audioUnit ) {
+        NSError * error = nil;
+        if ( ![self.ioUnit setup:&error] ) {
+            NSLog(@"Unable to set up IO unit: %@", error);
+            return NULL;
+        }
+    }
+    return self.ioUnit.audioUnit;
+}
+
+- (void)setInputGain:(double)inputGain {
+    self.ioUnit.inputGain = inputGain;
+}
+
+- (double)inputGain {
+    return self.ioUnit.inputGain;
 }
 
 #if TARGET_OS_IPHONE
@@ -123,23 +160,25 @@ AudioTimeStamp AEAudioUnitInputModuleGetInputTimestamp(__unsafe_unretained AEAud
 
 static void AEAudioUnitInputModuleProcess(__unsafe_unretained AEAudioUnitInputModule * self,
                                           const AERenderContext * _Nonnull context) {
-    if ( !self->_inputChannels ) {
+    if ( !self->_numberOfInputChannels ) {
         const AudioBufferList * abl = AEBufferStackPush(context->stack, 1);
-        AEAudioBufferListSilence(abl, AEAudioDescription, 0, context->frames);
+        AEAudioBufferListSilence(abl, 0, context->frames);
         return;
     }
     
-    const AudioBufferList * abl = AEBufferStackPushWithChannels(context->stack, 1, self->_inputChannels);
+    const AudioBufferList * abl = AEBufferStackPushWithChannels(context->stack, 1, self->_numberOfInputChannels);
     if ( !abl) return;
+    
+    *AEBufferStackGetTimeStampForBuffer(context->stack, 0) = AEIOAudioUnitGetInputTimestamp(self->_ioUnit);
     
     OSStatus status = AEIOAudioUnitRenderInput(self->_ioUnit, abl, context->frames);
     if ( status != noErr ) {
         if ( status == -1 || status == kAudioToolboxErr_CannotDoInCurrentContext ) {
             // Ignore these errors silently
         } else {
-            AECheckOSStatus(status, "AudioUnitRender");
+            AECheckOSStatus(status, "AEIOAudioUnitRenderInput");
         }
-        AEAudioBufferListSilence(abl, AEAudioDescription, 0, context->frames);
+        AEAudioBufferListSilence(abl, 0, context->frames);
     }
 }
 

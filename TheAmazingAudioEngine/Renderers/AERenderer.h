@@ -24,40 +24,13 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@import Foundation;
-@import AudioToolbox;
-#import "AEBufferStack.h"
-
-@class AEMessageQueue;
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/*!
- * Render context
- *
- *  This structure is passed into the render loop block, and contains information about the
- *  current rendering environment, as well as providing access to the render's buffer stack.
- */
-typedef struct {
-    
-    //! The output buffer list. You should write to this to produce audio.
-    const AudioBufferList * _Nonnull output;
-    
-    //! The number of frames to render to the output
-    UInt32 frames;
-    
-    //! The current sample rate, in Hertz
-    double sampleRate;
-    
-    //! The current audio timestamp
-    const AudioTimeStamp * _Nonnull timestamp;
-    
-    //! The buffer stack. Use this as a workspace for generating and processing audio.
-    AEBufferStack * _Nonnull stack;
-    
-} AERenderContext;
+#import <Foundation/Foundation.h>
+#import <AudioToolbox/AudioToolbox.h>
+#import "AERenderContext.h"
 
 /*!
  * Render loop block
@@ -68,7 +41,7 @@ typedef struct {
  *  AEModule objects, which can perform a mix of pushing new buffers onto the stack, manipulating
  *  existing buffers, and popping buffers off the stack.
  *
- *  At the end of the render block, use @link AEBufferStackOutput @endlink to output buffers on the
+ *  At the end of the render block, use @link AERenderContextOutput @endlink to output buffers on the
  *  stack to the context's output bufferList.
  *
  * @param context The rendering context
@@ -83,7 +56,7 @@ extern NSString * const _Nonnull AERendererDidChangeSampleRateNotification;
 /*!
  * Channel count change notification
  */
-extern NSString * const _Nonnull AERendererDidChangeChannelCountNotification;
+extern NSString * const _Nonnull AERendererDidChangeNumberOfOutputChannelsNotification;
 
 
 /*!
@@ -112,13 +85,14 @@ extern NSString * const _Nonnull AERendererDidChangeChannelCountNotification;
  * @param timestamp The timestamp of the current period
  */
 void AERendererRun(__unsafe_unretained AERenderer * _Nonnull renderer,
-                   AudioBufferList * _Nonnull bufferList,
+                   const AudioBufferList * _Nonnull bufferList,
                    UInt32 frames,
                    const AudioTimeStamp * _Nonnull timestamp);
 
 @property (nonatomic, copy) AERenderLoopBlock _Nonnull block; //!< The output loop block. Assignment is thread-safe.
 @property (nonatomic) double sampleRate; //!< The sample rate
-@property (nonatomic) int outputChannels; //!< The number of output channels
+@property (nonatomic) int numberOfOutputChannels; //!< The number of output channels
+@property (nonatomic) BOOL isOffline; //!< Whether rendering is offline (faster than realtime), default NO
 @property (nonatomic, readonly) AEBufferStack * _Nonnull stack; //!< Buffer stack
 @end
 

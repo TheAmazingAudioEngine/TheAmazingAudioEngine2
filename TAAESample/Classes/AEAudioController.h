@@ -8,8 +8,11 @@
 // Strictly for educational purposes only. No part of TAAESample is to be distributed
 // in any form other than as source code within the TAAE2 repository.
 
-@import Foundation;
+#import <Foundation/Foundation.h>
 #import <TheAmazingAudioEngine/TheAmazingAudioEngine.h>
+
+extern NSString * _Nonnull const AEAudioControllerInputEnabledChangedNotification;
+extern NSString * _Nonnull const AEAudioControllerInputPermissionErrorNotification;
 
 @interface AEAudioController : NSObject
 - (BOOL)start:(NSError * _Nullable * _Nullable)error;
@@ -38,5 +41,6 @@
 @property (nonatomic, readonly) BOOL recording;
 @property (nonatomic, readonly) NSURL * _Nonnull recordingPath;
 @property (nonatomic, readonly) BOOL playingRecording;
+@property (nonatomic) double recordingPlaybackPosition;
 @property (nonatomic) BOOL inputEnabled;
 @end

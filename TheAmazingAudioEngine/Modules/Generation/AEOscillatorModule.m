@@ -35,7 +35,7 @@
 @implementation AEOscillatorModule
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
-    if ( !(self = [super init]) ) return nil;
+    if ( !(self = [super initWithRenderer:renderer]) ) return nil;
     self.frequency = 440;
     self.processFunction = AEOscillatorModuleProcess;
     return self;

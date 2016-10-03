@@ -53,7 +53,18 @@ BOOL AERateLimit(void) {
     return YES;
 }
 
-ExtAudioFileRef AEExtAudioFileRefCreate(NSURL * url, AEAudioFileType fileType, double sampleRate, int channelCount,
+void AEError(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line) {
+    if ( AERateLimit() ) {
+        int fourCC = CFSwapInt32HostToBig(result);
+        if ( isascii(((char*)&fourCC)[0]) && isascii(((char*)&fourCC)[1]) && isascii(((char*)&fourCC)[2]) ) {
+            NSLog(@"%s:%d: %s: '%4.4s' (%d)", file, line, operation, (char*)&fourCC, (int)result);
+        } else {
+            NSLog(@"%s:%d: %s: %d", file, line, operation, (int)result);
+        }
+    }
+}
+
+ExtAudioFileRef AEExtAudioFileCreate(NSURL * url, AEAudioFileType fileType, double sampleRate, int channelCount,
                                         NSError ** error) {
     
     AudioStreamBasicDescription asbd = {
@@ -91,12 +102,18 @@ ExtAudioFileRef AEExtAudioFileRefCreate(NSURL * url, AEAudioFileType fileType, d
     } else {
         // 16-bit signed integer
         asbd.mFormatID = kAudioFormatLinearPCM;
-        asbd.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagIsBigEndian;
+        asbd.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked |
+                            (fileType == AEAudioFileTypeAIFFInt16 ? kAudioFormatFlagIsBigEndian : 0);
         asbd.mBitsPerChannel = 16;
         asbd.mBytesPerPacket = asbd.mChannelsPerFrame * 2;
         asbd.mBytesPerFrame = asbd.mBytesPerPacket;
         asbd.mFramesPerPacket = 1;
-        fileTypeID = kAudioFileAIFFType;
+        
+        if ( fileType == AEAudioFileTypeAIFFInt16 ) {
+            fileTypeID = kAudioFileAIFFType;
+        } else {
+            fileTypeID = kAudioFileWAVEType;
+        }
     }
     
     // Open the file
@@ -113,10 +130,11 @@ ExtAudioFileRef AEExtAudioFileRefCreate(NSURL * url, AEAudioFileType fileType, d
     }
     
     // Set the client format
+    asbd = AEAudioDescriptionWithChannelsAndRate(channelCount, sampleRate);
     status = ExtAudioFileSetProperty(audioFile,
                                      kExtAudioFileProperty_ClientDataFormat,
-                                     sizeof(AudioStreamBasicDescription),
-                                     &AEAudioDescription);
+                                     sizeof(asbd),
+                                     &asbd);
     if ( !AECheckOSStatus(status, "ExtAudioFileSetProperty") ) {
         ExtAudioFileDispose(audioFile);
         if ( error )
@@ -129,3 +147,75 @@ ExtAudioFileRef AEExtAudioFileRefCreate(NSURL * url, AEAudioFileType fileType, d
     
     return audioFile;
 }
+
+ExtAudioFileRef _Nullable AEExtAudioFileOpen(NSURL * url, AudioStreamBasicDescription * outAudioDescription,
+                                             UInt64 * outLengthInFrames, NSError ** error) {
+         
+    // Open the file
+    ExtAudioFileRef reader;
+    OSStatus result = ExtAudioFileOpenURL((__bridge CFURLRef)url, &reader);
+    if ( !AECheckOSStatus(result, "ExtAudioFileOpenURL") ) {
+        if ( error )
+        *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
+                                 userInfo:@{NSLocalizedDescriptionKey: @"Couldn't open source file"}];
+        return NULL;
+    }
+    
+    // Get the file data format
+    AudioStreamBasicDescription fileDescription;
+    UInt32 size = sizeof(fileDescription);
+    result = ExtAudioFileGetProperty(reader, kExtAudioFileProperty_FileDataFormat, &size, &fileDescription);
+    if ( !AECheckOSStatus(result, "ExtAudioFileGetProperty(kExtAudioFileProperty_FileDataFormat)") ) {
+        ExtAudioFileDispose(reader);
+        if ( error )
+        *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
+                                 userInfo:@{NSLocalizedDescriptionKey: @"Couldn't read source file"}];
+        return NULL;
+    }
+    
+    if ( outLengthInFrames ) {
+        // Determine length in frames
+        UInt64 fileLengthInFrames;
+        AudioFilePacketTableInfo packetInfo;
+        UInt32 size = sizeof(packetInfo);
+        result = ExtAudioFileGetProperty(reader, kExtAudioFileProperty_PacketTable, &size, &packetInfo);
+        if ( result != noErr ) {
+            size = 0;
+        }
+        
+        if ( size > 0 ) {
+            fileLengthInFrames = packetInfo.mNumberValidFrames;
+        } else {
+            UInt64 frameCount;
+            size = sizeof(frameCount);
+            result = ExtAudioFileGetProperty(reader, kExtAudioFileProperty_FileLengthFrames, &size, &frameCount);
+            if ( !AECheckOSStatus(result, "ExtAudioFileGetProperty(kExtAudioFileProperty_FileLengthFrames)") ) {
+                ExtAudioFileDispose(reader);
+                if ( error )
+                *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
+                                         userInfo:@{NSLocalizedDescriptionKey: @"Couldn't read source file"}];
+                return NULL;
+            }
+            fileLengthInFrames = frameCount;
+        }
+        
+        *outLengthInFrames = fileLengthInFrames;
+    }
+    
+    // Set the client format
+    AudioStreamBasicDescription clientFormat =
+        AEAudioDescriptionWithChannelsAndRate(fileDescription.mChannelsPerFrame, fileDescription.mSampleRate);
+    result = ExtAudioFileSetProperty(reader, kExtAudioFileProperty_ClientDataFormat, sizeof(clientFormat), &clientFormat);
+    if ( !AECheckOSStatus(result, "ExtAudioFileGetProperty(kExtAudioFileProperty_ClientDataFormat)") ) {
+        ExtAudioFileDispose(reader);
+        if ( error )
+            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
+                                     userInfo:@{NSLocalizedDescriptionKey: @"Couldn't configure file for reading"}];
+        return NULL;
+    }
+    
+    if ( outAudioDescription ) *outAudioDescription = clientFormat;
+    
+    return reader;
+}
+

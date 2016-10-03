@@ -24,12 +24,12 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-#import "AEModule.h"
-#import "AETime.h"
-
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#import "AEModule.h"
+#import "AETime.h"
 
 /*!
  * Audio input module
@@ -37,7 +37,7 @@ extern "C" {
  *  This module receives audio input from the system audio hardware, and pushes
  *  a buffer onto the stack containing the received audio. The pushed buffer has
  *  the same channel count as the currently-attached audio hardware, accessible
- *  via the "inputChannels" property.
+ *  via the "numberOfInputChannels" property.
  *
  *  It's recommended that you do not create an instance of this class directly; instead,
  *  use the instance returned from AEAudioUnitOutput's 
@@ -45,6 +45,20 @@ extern "C" {
  *  same underlying audio unit instance as the output.
  */
 @interface AEAudioUnitInputModule : AEModule
+
+/*!
+ * Setup (optional)
+ *
+ *  You may call this method prior to @link start: @endlink to set up the rendering resources. Once this is
+ *  called, the audioUnit property will yield a valid audio unit instance. If you do not use
+ *  this method, it will be called automatically the first time @link start: @endlink is called.
+ *
+ *  Note that if this module was retrieved from AEAudioUnitOutput, this will do nothing.
+ *
+ * @param error If an error occured and this is not nil, it will be set to the error on output
+ * @return YES on success, NO on failure
+ */
+- (BOOL)setup:(NSError * __autoreleasing _Nullable * _Nullable)error;
 
 /*!
  * Start the audio unit
@@ -96,9 +110,10 @@ AESeconds AEAudioUnitInputModuleGetInputLatency(__unsafe_unretained AEAudioUnitI
 
 #endif
 
-@property (nonatomic, readonly) AudioUnit _Nonnull audioUnit; //!< The audio unit
+@property (nonatomic, readonly) AudioUnit _Nullable audioUnit; //!< The audio unit
 @property (nonatomic, readonly) BOOL running; //!< Whether unit is currently active
-@property (nonatomic, readonly) int inputChannels; //!< The current number of input channels (key-value observable)
+@property (nonatomic, readonly) int numberOfInputChannels; //!< The current number of input channels (key-value observable)
+@property (nonatomic) double inputGain; //!< The input gain level (as power ratio)
 
 #if TARGET_OS_IPHONE
 @property (nonatomic) BOOL latencyCompensation; //!< Whether to automatically perform latency compensation (default YES)

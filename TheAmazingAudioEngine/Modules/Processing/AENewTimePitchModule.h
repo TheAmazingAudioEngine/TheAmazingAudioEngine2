@@ -24,24 +24,31 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@import Foundation;
-
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
+#import <Foundation/Foundation.h>
 #import "AEAudioUnitModule.h"
 
 @interface AENewTimePitchModule : AEAudioUnitModule
 
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer subrenderer:(AERenderer * _Nonnull)subrenderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer subrenderer:(AERenderer * _Nonnull)subrenderer;
 
 //! range is from 1/32 to 32.0. Default is 1.0.
 @property (nonatomic) double rate;
 
-//! range is from -2400 cents to 2400 cents. Default is 1.0 cents.
+//! range is from -2400 cents to 2400 cents. Default is 0.0 cents.
 @property (nonatomic) double pitch;
 
 //! range is from 3.0 to 32.0. Default is 8.0.
 @property (nonatomic) double overlap;
 
-//! value is either 0 or 1. Default is 1.
-@property (nonatomic) double enablePeakLocking;
+//! value is either YES or NO. Default is YES.
+@property (nonatomic) BOOL enablePeakLocking;
 
 @end
+
+#ifdef __cplusplus
+}
+#endif

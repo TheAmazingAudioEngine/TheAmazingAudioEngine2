@@ -9,7 +9,10 @@
 // in any form other than as source code within the TAAE2 repository.
 
 #import "AEAudioController.h"
-@import AVFoundation;
+#import <AVFoundation/AVFoundation.h>
+
+NSString * const AEAudioControllerInputEnabledChangedNotification = @"AEAudioControllerInputEnabledChangedNotification";
+NSString * const AEAudioControllerInputPermissionErrorNotification = @"AEAudioControllerInputPermissionErrorNotification";
 
 static const AESeconds kCountInThreshold = 0.2;
 static const double kMicBandpassCenterFrequency = 2000.0;
@@ -34,9 +37,13 @@ static const double kMicBandpassCenterFrequency = 2000.0;
 @property (nonatomic, strong) AEManagedValue * playerValue;
 @property (nonatomic) BOOL playingThroughSpeaker;
 @property (nonatomic, strong) id routeChangeObserverToken;
+@property (nonatomic, strong) id audioInterruptionObserverToken;
 @end
 
 @implementation AEAudioController
+@dynamic recordingPlaybackPosition;
+
+#pragma mark - Life-cycle
 
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
@@ -52,18 +59,21 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     NSURL * url = [[NSBundle mainBundle] URLForResource:@"amen" withExtension:@"m4a"];
     AEAudioFilePlayerModule * drums = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
     drums.loop = YES;
+    drums.microfadeFrames = 32; // Microfade a little, to avoid clicks when turning on/off in the middle
     self.drums = drums;
     [players addObject:drums];
     
     url = [[NSBundle mainBundle] URLForResource:@"bass" withExtension:@"m4a"];
     AEAudioFilePlayerModule * bass = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
     bass.loop = YES;
+    bass.microfadeFrames = 32;
     self.bass = bass;
     [players addObject:bass];
     
     url = [[NSBundle mainBundle] URLForResource:@"piano" withExtension:@"m4a"];
     AEAudioFilePlayerModule * piano = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
     piano.loop = YES;
+    piano.microfadeFrames = 32;
     self.piano = piano;
     [players addObject:piano];
     
@@ -95,9 +105,9 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     self.hit = oneshot;
     [players addObject:oneshot];
     
-    // Create an array we can access on the render thread
-    AEArray * playersArray = [AEArray new];
-    [playersArray updateWithContentsOfArray:players];
+    // Create a mixer module to run the players
+    AEMixerModule * mixer = [[AEMixerModule alloc] initWithRenderer:subrenderer];
+    mixer.modules = players;
     
     // Setup mic input (we'll draw from the output's IO audio unit, on iOS; on the Mac, this has its own IO unit).
     AEAudioUnitInputModule * input = self.output.inputModule;
@@ -120,17 +130,11 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     // rules apply: No holding locks, no memory allocation, no Objective-C/Swift code.
     AEVarispeedModule * varispeed = [[AEVarispeedModule alloc] initWithRenderer:renderer subrenderer:subrenderer];
     subrenderer.block = ^(const AERenderContext * _Nonnull context) {
-        // Run all the players
-        AEArrayEnumerateObjects(playersArray, AEAudioFilePlayerModule *, player, {
-            if ( AEAudioFilePlayerModuleGetPlaying(player) ) {
-                // Process
-                AEModuleProcess(player, context);
-                
-                // Put on output
-                AEBufferStackMixToBufferList(context->stack, 0, 0, YES, context->output);
-                AEBufferStackPop(context->stack, 1);
-            }
-        });
+        // Run all the players, though the mixer
+        AEModuleProcess(mixer, context);
+        
+        // Put the resulting buffer on the output
+        AERenderContextOutput(context, 1);
     };
     self.varispeed = varispeed;
     
@@ -144,15 +148,12 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     
     // Setup top-level renderer. This is all performed on the audio thread, so the usual
     // rules apply: No holding locks, no memory allocation, no Objective-C/Swift code.
+    __unsafe_unretained AEAudioController * THIS = self;
     renderer.block = ^(const AERenderContext * _Nonnull context) {
         
-        // We're not actually using AEManagedValue's performAtomicBatchUpdate: method, but if we were,
-        // it's very important to include this commit at the start of the main render cycle.
-        AEManagedValueCommitPendingAtomicUpdates();
-        
         // See if we have an active recorder
-        __unsafe_unretained AEFileRecorderModule * recorder
-            = (__bridge AEFileRecorderModule *)AEManagedValueGetValue(recorderValue);
+        __unsafe_unretained AEAudioFileRecorderModule * recorder
+            = (__bridge AEAudioFileRecorderModule *)AEManagedValueGetValue(recorderValue);
         
         // See if we have an active player
         __unsafe_unretained AEAudioFilePlayerModule * player
@@ -166,12 +167,13 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         
         // Sweep balance
         float bal = 0.0;
-        if ( _balanceSweepRate > 0 ) {
-            bal = AEDSPGenerateOscillator((1.0/_balanceSweepRate) / (context->sampleRate/context->frames), &balanceLfo) * 2 - 1;
+        if ( THIS->_balanceSweepRate > 0 ) {
+            bal = AEDSPGenerateOscillator((1.0/THIS->_balanceSweepRate)
+                                          / (context->sampleRate/context->frames), &balanceLfo) * 2 - 1;
         } else {
             balanceLfo = 0.5;
         }
-        AEBufferStackApplyVolumeAndBalance(context->stack, 1, NULL, bal, &currentBalalance);
+        AEBufferStackApplyFaders(context->stack, 1, NULL, bal, &currentBalalance);
         
         if ( player ) {
             // If we're playing a recording, duck other output
@@ -179,9 +181,9 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         }
         
         // Put on output
-        AEBufferStackMixToBufferList(context->stack, 1, 0, YES, context->output);
+        AERenderContextOutput(context, 1);
         
-        if ( _inputEnabled ) {
+        if ( THIS->_inputEnabled ) {
             // Add audio input
             AEModuleProcess(input, context);
             
@@ -191,19 +193,19 @@ static const double kMicBandpassCenterFrequency = 2000.0;
             AEDSPApplyGain(AEBufferStackGet(context->stack, 0), 2.0, context->frames);
             
             // If it's safe to do so, put this on the output
-            if ( !_playingThroughSpeaker ) {
+            if ( !THIS->_playingThroughSpeaker ) {
                 if ( player ) {
                     // If we're playing a recording, duck first
                     AEDSPApplyGain(AEBufferStackGet(context->stack, 0), 0.1, context->frames);
                 }
                 
-                AEBufferStackMixToBufferList(context->stack, 1, 0, YES, context->output);
+                AERenderContextOutput(context, 1);
             }
         }
         
         // Run through recorder, if it's there
         if ( recorder && !player ) {
-            if ( _inputEnabled ) {
+            if ( THIS->_inputEnabled ) {
                 // We have a buffer from input to mix in
                 AEBufferStackMix(context->stack, 2);
             }
@@ -218,7 +220,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
             AEModuleProcess(player, context);
             
             // Put on output
-            AEBufferStackMixToBufferList(context->stack, 1, 0, YES, context->output);
+            AERenderContextOutput(context, 1);
         }
     };
     
@@ -230,6 +232,13 @@ static const double kMicBandpassCenterFrequency = 2000.0;
 }
 
 - (BOOL)start:(NSError *__autoreleasing *)error {
+    return [self start:error registerObservers:YES];
+}
+
+- (BOOL)start:(NSError *__autoreleasing *)error registerObservers:(BOOL)registerObservers {
+
+#if TARGET_OS_IPHONE
+    
     // Request a 128 frame hardware duration, for minimal latency
     AVAudioSession * session = [AVAudioSession sharedInstance];
     [session setPreferredIOBufferDuration:128.0/session.sampleRate error:NULL];
@@ -242,32 +251,46 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     // Work out if we're playing through the speaker (which affects whether we do input monitoring, to avoid feedback)
     [self updatePlayingThroughSpeaker];
     
-    // Watch for route changes, so we can keep track of whether we're playing through the speaker
-    [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionRouteChangeNotification
-        object:session queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
-        [self updatePlayingThroughSpeaker];
-    }];
+    if ( registerObservers ) {
+        // Watch for some important notifications
+        [self registerObservers];
+    }
     
-    // Start the output and input (note, starting the input actually a no-op on iOS)
+#endif
+    
+    // Start the output and input
     return [self.output start:error] && (!self.inputEnabled || [self.input start:error]);
 }
 
 - (void)stop {
-    // Stop, and deactive the audio session
+    [self stopAndRemoveObservers:YES];
+}
+
+- (void)stopAndRemoveObservers:(BOOL)removeObservers {
+    // Stop, and deactivate the audio session
     [self.output stop];
-    [self.input stop]; // (this is a no-op on iOS)
+    [self.input stop];
+    
+#if TARGET_OS_IPHONE
+
     [[AVAudioSession sharedInstance] setActive:NO error:NULL];
     
-    // Stop observing route changes
-    [[NSNotificationCenter defaultCenter] removeObserver:self.routeChangeObserverToken];
-    self.routeChangeObserverToken = nil;
+    if ( removeObservers ) {
+        // Remove our notification handlers
+        [self unregisterObservers];
+    }
+
+#endif
+
 }
+
+#pragma mark - Recording
 
 - (BOOL)beginRecordingAtTime:(AEHostTicks)time error:(NSError**)error {
     if ( self.recording ) return NO;
     
     // Create recorder
-    AEFileRecorderModule * recorder = [[AEFileRecorderModule alloc] initWithRenderer:self.output.renderer
+    AEAudioFileRecorderModule * recorder = [[AEAudioFileRecorderModule alloc] initWithRenderer:self.output.renderer
         URL:self.recordingPath type:AEAudioFileTypeM4A error:error];
     if ( !recorder ) {
         return NO;
@@ -286,7 +309,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     if ( !self.recording ) return;
     
     // End recording
-    AEFileRecorderModule * recorder = self.recorderValue.objectValue;
+    AEAudioFileRecorderModule * recorder = self.recorderValue.objectValue;
     __weak AEAudioController * weakSelf = self;
     [recorder stopRecordingAtTime:time completionBlock:^{
         weakSelf.recording = NO;
@@ -315,7 +338,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         
         // Go
         self.playingRecording = YES;
-        [player playAtTime:0];
+        [player playAtTime:AETimeStampNone];
     }
 }
 
@@ -324,13 +347,14 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     self.playerValue.objectValue = nil;
 }
 
+#pragma mark - Timing
+
 - (AEHostTicks)nextSyncTimeForPlayer:(AEAudioFilePlayerModule *)player {
     AEHostTicks now = AECurrentTimeInHostTicks();
-    AEHostTicks time = now;
     
     if ( player == self.sweep ) {
         // Instant play for this oneshot
-        return time;
+        return 0;
     }
     
     // Identify time-keeper
@@ -359,11 +383,11 @@ static const double kMicBandpassCenterFrequency = 2000.0;
             self.drums.duration / 4.0;
         
         // Work out how far into this interal the timekeeper is
-        AESeconds timeIntoInterval = fmod(AEAudioFilePlayerModuleGetPlayhead(timekeeper, time), intervalLength);
+        AESeconds timeIntoInterval = fmod(AEAudioFilePlayerModuleGetPlayhead(timekeeper, now), intervalLength);
         
         // Calculate time to next interval
         AEHostTicks nextIntervalTime
-            = time + AEHostTicksFromSeconds((intervalLength - timeIntoInterval)) / self.varispeed.playbackRate;
+            = now + AEHostTicksFromSeconds((intervalLength - timeIntoInterval)) / self.varispeed.playbackRate;
         
         // Offset, for the one-shots (for aesthetic reasons!)
         if ( player == self.sample1 ) {
@@ -385,20 +409,43 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         return nextIntervalTime;
     }
     
-    return time;
+    return 0;
 }
+
+#pragma mark - Accessors
 
 - (void)setInputEnabled:(BOOL)inputEnabled {
     if ( inputEnabled == _inputEnabled ) return;
     
     _inputEnabled = inputEnabled;
     
+#if TARGET_OS_IPHONE
+    
+    if ( _inputEnabled ) {
+        // See if we have record permissions
+        __weak AEAudioController * weakSelf = self;
+        [[AVAudioSession sharedInstance] requestRecordPermission:^(BOOL granted) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if ( granted ) {
+                    // All set!
+                } else {
+                    // We haven't been granted record permission. Send out a notification and disable input.
+                    [[NSNotificationCenter defaultCenter]
+                     postNotificationName:AEAudioControllerInputPermissionErrorNotification object:self];
+                    weakSelf.inputEnabled = NO;
+                }
+            });
+        }];
+    }
+    
     // Update audio session category
     if ( ![self setAudioSessionCategory:nil] ) {
         return;
     }
     
-    // Start or stop the input module (actually a no-op on iOS)
+#endif
+    
+    // Start or stop the input module
     if ( _inputEnabled ) {
         NSError * error;
         if ( ![self.input start:&error] ) {
@@ -407,6 +454,9 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     } else {
         [self.input stop];
     }
+    
+    // Tell observers our input enabled status has changed
+    [[NSNotificationCenter defaultCenter] postNotificationName:AEAudioControllerInputEnabledChangedNotification object:self];
 }
 
 - (void)setBandpassWetDry:(double)bandpassWetDry {
@@ -427,6 +477,24 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     NSURL * docs = [[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask].firstObject;
     return [docs URLByAppendingPathComponent:@"Recording.m4a"];
 }
+
+- (double)recordingPlaybackPosition {
+    AEAudioFilePlayerModule * player = self.playerValue.objectValue;
+    if ( !player ) return 0.0;
+    
+    return player.currentTime / player.duration;
+}
+
+- (void)setRecordingPlaybackPosition:(double)recordingPlaybackPosition {
+    AEAudioFilePlayerModule * player = self.playerValue.objectValue;
+    if ( !player ) return;
+    
+    player.currentTime = recordingPlaybackPosition * player.duration;
+}
+
+#pragma mark - Helpers
+
+#if TARGET_OS_IPHONE
 
 - (void)updatePlayingThroughSpeaker {
     AVAudioSession * session = [AVAudioSession sharedInstance];
@@ -449,5 +517,48 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     }
     return YES;
 }
+
+- (void)registerObservers {
+    AVAudioSession * session = [AVAudioSession sharedInstance];
+    __weak AEAudioController * weakSelf = self;
+    
+    // Watch for route changes, so we can keep track of whether we're playing through the speaker
+    self.routeChangeObserverToken =
+        [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionRouteChangeNotification
+            object:session queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
+        
+        // Determine if we're playing through the speaker now
+        [weakSelf updatePlayingThroughSpeaker];
+    }];
+    
+    // Watch for audio session interruptions. Test this by setting a timer
+    self.audioInterruptionObserverToken =
+        [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionInterruptionNotification
+            object:session queue:NULL usingBlock:^(NSNotification * _Nonnull note) {
+                
+        // Stop at the beginning of the interruption, resume after
+        if ( [note.userInfo[AVAudioSessionInterruptionTypeKey] intValue] == AVAudioSessionInterruptionTypeBegan ) {
+            [weakSelf stopAndRemoveObservers:NO];
+        } else {
+            NSError * error = nil;
+            if ( ![weakSelf start:&error registerObservers:NO] ) {
+                NSLog(@"Couldn't restart after interruption: %@", error);
+            }
+        }
+    }];
+}
+
+- (void)unregisterObservers {
+    if ( self.routeChangeObserverToken ) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self.routeChangeObserverToken];
+        self.routeChangeObserverToken = nil;
+    }
+    if( self.audioInterruptionObserverToken ) {
+        [[NSNotificationCenter defaultCenter] removeObserver:self.audioInterruptionObserverToken];
+        self.audioInterruptionObserverToken = nil;
+    }
+}
+
+#endif
 
 @end

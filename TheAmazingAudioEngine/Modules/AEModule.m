@@ -27,15 +27,14 @@
 #import "AEModule.h"
 #import "AERenderer.h"
 
-@interface AEModule ()
-@property (nonatomic, weak, readwrite) AERenderer * renderer;
-@end
-
 @implementation AEModule
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
     if ( !(self = [super init]) ) return nil;
-    self.renderer = renderer;
+    _renderer = renderer;
+    if ( _renderer ) {
+        [self startObservingRenderer];
+    }
     return self;
 }
 
@@ -44,41 +43,54 @@
 }
 
 - (void)setRenderer:(AERenderer *)renderer {
-    if ( _renderer ) {
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:AERendererDidChangeSampleRateNotification
-                                                      object:_renderer];
-        [[NSNotificationCenter defaultCenter] removeObserver:self name:AERendererDidChangeChannelCountNotification
-                                                      object:_renderer];
-    }
+    if ( _renderer == renderer ) return;
     
-    BOOL hadRenderer = _renderer != nil;
+    if ( _renderer ) {
+        [self stopObservingRenderer];
+    }
     
     _renderer = renderer;
     
     if ( _renderer ) {
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rendererDidChangeSampleRate)
-                                                     name:AERendererDidChangeSampleRateNotification object:_renderer];
-        [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rendererDidChangeChannelCount)
-                                                     name:AERendererDidChangeChannelCountNotification object:_renderer];
-        
-        if ( hadRenderer ) {
-            [self rendererDidChangeSampleRate];
-            [self rendererDidChangeChannelCount];
-        }
+        [self startObservingRenderer];
+        [self rendererDidChangeSampleRate];
+        [self rendererDidChangeNumberOfChannels];
     }
+}
+
+- (void)startObservingRenderer {
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rendererDidChangeSampleRate)
+                                                 name:AERendererDidChangeSampleRateNotification object:_renderer];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rendererDidChangeNumberOfChannels)
+                                                 name:AERendererDidChangeNumberOfOutputChannelsNotification object:_renderer];
+}
+
+- (void)stopObservingRenderer {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:AERendererDidChangeSampleRateNotification
+                                                  object:_renderer];
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:AERendererDidChangeNumberOfOutputChannelsNotification
+                                                  object:_renderer];
 }
 
 - (void)rendererDidChangeSampleRate {
     
 }
 
-- (void)rendererDidChangeChannelCount {
+- (void)rendererDidChangeNumberOfChannels {
     
 }
 
 void AEModuleProcess(__unsafe_unretained AEModule * module, const AERenderContext * _Nonnull context) {
     if ( module->_processFunction ) {
         module->_processFunction(module, context);
+    }
+}
+
+BOOL AEModuleIsActive(__unsafe_unretained AEModule * _Nonnull module) {
+    if ( module->_isActiveFunction ) {
+        return module->_isActiveFunction(module);
+    } else {
+        return YES;
     }
 }
 

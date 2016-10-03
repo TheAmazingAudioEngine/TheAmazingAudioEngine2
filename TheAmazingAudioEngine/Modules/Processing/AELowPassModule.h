@@ -24,13 +24,16 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@import Foundation;
-
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
+#import <Foundation/Foundation.h>
 #import "AEAudioUnitModule.h"
 
 @interface AELowPassModule : AEAudioUnitModule
 
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer;
 
 //! range is from 10Hz to ($SAMPLERATE/2) Hz. Default is 6900 Hz.
 @property (nonatomic) double cutoffFrequency;
@@ -39,3 +42,7 @@
 @property (nonatomic) double resonance;
 
 @end
+
+#ifdef __cplusplus
+}
+#endif

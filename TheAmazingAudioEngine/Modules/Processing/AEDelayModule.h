@@ -24,13 +24,16 @@
 //  3. This notice may not be removed or altered from any source distribution.
 //
 
-@import Foundation;
-
+#ifdef __cplusplus
+extern "C" {
+#endif
+    
+#import <Foundation/Foundation.h>
 #import "AEAudioUnitModule.h"
 
 @interface AEDelayModule : AEAudioUnitModule
 
-- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer;
+- (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer;
 
 //! range is from 0 to 100 (percentage). Default is 50.
 @property (nonatomic) double wetDryMix;
@@ -45,3 +48,7 @@
 @property (nonatomic) double lopassCutoff;
 
 @end
+
+#ifdef __cplusplus
+}
+#endif
