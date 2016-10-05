@@ -88,7 +88,7 @@ typedef struct __audio_meters_t {
     free(metersStruct.chanAverage);
 }
 
-- (void)rendererDidChangeChannelCount {
+- (void)rendererDidChangeNumberOfChannels {
     int newChannelCount = self.renderer.numberOfOutputChannels;
     if ( newChannelCount <= metersStruct.capacity ) {
         metersStruct.maxChannel = newChannelCount;
