@@ -215,6 +215,11 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
         weakSelf.inputLatency = [AVAudioSession sharedInstance].inputLatency;
         weakSelf.inputGain = weakSelf.inputGain;
     }];
+    
+    // Register callback to watch for Inter-App Audio connections
+    AECheckOSStatus(AudioUnitAddPropertyListener(_audioUnit, kAudioUnitProperty_IsInterAppConnected,
+                                                 AEIOAudioUnitIAAConnectionChanged, (__bridge void*)self),
+                    "AudioUnitAddPropertyListener(kAudioUnitProperty_IsInterAppConnected)");
 #endif
     
     // Notify
@@ -563,9 +568,39 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
     });
 }
 
+#if TARGET_OS_IPHONE
+static void AEIOAudioUnitIAAConnectionChanged(void *inRefCon, AudioUnit inUnit, AudioUnitPropertyID inID,
+                                              AudioUnitScope inScope, AudioUnitElement inElement) {
+    AEIOAudioUnit * self = (__bridge AEIOAudioUnit *)inRefCon;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self updateStreamFormat];
+    });
+}
+#endif
+
 - (void)updateStreamFormat {
     BOOL stoppedUnit = NO;
     BOOL hasChanges = NO;
+    BOOL iaaInput = NO;
+    BOOL iaaOutput = NO;
+    
+#if TARGET_OS_IPHONE
+    UInt32 iaaConnected = NO;
+    UInt32 size = sizeof(iaaConnected);
+    if ( AECheckOSStatus(AudioUnitGetProperty(_audioUnit, kAudioUnitProperty_IsInterAppConnected,
+                                              kAudioUnitScope_Global, 0, &iaaConnected, &size),
+                         "AudioUnitGetProperty(kAudioUnitProperty_IsInterAppConnected)") && iaaConnected ) {
+        AudioComponentDescription componentDescription;
+        size = sizeof(componentDescription);
+        if ( AECheckOSStatus(AudioUnitGetProperty(_audioUnit, kAudioOutputUnitProperty_NodeComponentDescription,
+                                                  kAudioUnitScope_Global, 0, &componentDescription, &size),
+                             "AudioUnitGetProperty(kAudioOutputUnitProperty_NodeComponentDescription)") ) {
+            iaaOutput = YES;
+            iaaInput = componentDescription.componentType == kAudioUnitType_RemoteEffect
+                || componentDescription.componentType == kAudioUnitType_RemoteMusicEffect;
+        }
+    }
+#endif
     
     if ( self.outputEnabled ) {
         // Get the current output sample rate and number of output channels
@@ -574,6 +609,10 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
         AECheckOSStatus(AudioUnitGetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 0,
                                              &asbd, &size),
                         "AudioUnitGetProperty(kAudioUnitProperty_StreamFormat)");
+        
+        if ( iaaOutput ) {
+            asbd.mChannelsPerFrame = 2;
+        }
         
         double priorSampleRate = self.currentSampleRate;
         self.currentSampleRate = self.sampleRate == 0 ? asbd.mSampleRate : self.sampleRate;
@@ -607,6 +646,10 @@ static void AEIOAudioUnitStreamFormatChanged(void *inRefCon, AudioUnit inUnit, A
         AECheckOSStatus(AudioUnitGetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input,
                                              1, &asbd, &size),
                         "AudioUnitGetProperty(kAudioUnitProperty_StreamFormat)");
+        
+        if ( iaaInput ) {
+            asbd.mChannelsPerFrame = 2;
+        }
         
         int channels = MIN(asbd.mChannelsPerFrame, self.maximumInputChannels);
         if ( _numberOfInputChannels != (int)channels ) {
