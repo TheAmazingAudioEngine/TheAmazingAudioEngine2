@@ -334,6 +334,8 @@
 
 /* Begin PBXFileReference section */
 		2236604F1D96E34800CFA5B8 /* AENewTimePitchModuleTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AENewTimePitchModuleTests.m; sourceTree = "<group>"; };
+		4C2BCEE11DACB33E00AD7A8D /* AEAudiobusInputModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAudiobusInputModule.h; sourceTree = "<group>"; };
+		4C2BCEE21DACB33E00AD7A8D /* AEAudiobusInputModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEAudiobusInputModule.m; sourceTree = "<group>"; };
 		4C31830E1CDDEFDE0085634F /* AEMixerModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEMixerModule.h; sourceTree = "<group>"; };
 		4C31830F1CDDEFDE0085634F /* AEMixerModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEMixerModule.m; sourceTree = "<group>"; };
 		4C3183161CDEC6560085634F /* AEAudioFileOutput.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAudioFileOutput.h; sourceTree = "<group>"; };
@@ -635,6 +637,8 @@
 				4C31830F1CDDEFDE0085634F /* AEMixerModule.m */,
 				4CBCF29C1CFBC3D200CA2EA0 /* AESplitterModule.h */,
 				4CBCF29D1CFBC3D200CA2EA0 /* AESplitterModule.m */,
+				4C2BCEE11DACB33E00AD7A8D /* AEAudiobusInputModule.h */,
+				4C2BCEE21DACB33E00AD7A8D /* AEAudiobusInputModule.m */,
 			);
 			path = Generation;
 			sourceTree = "<group>";
