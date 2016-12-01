@@ -54,6 +54,7 @@ extern "C" {
 #import <TheAmazingAudioEngine/AEAudioFileRecorderModule.h>
 #if TARGET_OS_IPHONE
 #import <TheAmazingAudioEngine/AEReverbModule.h>
+#import <TheAmazingAudioEngine/AEAudioPasteboard.h>
 #endif
 
 #import <TheAmazingAudioEngine/AERenderer.h>
