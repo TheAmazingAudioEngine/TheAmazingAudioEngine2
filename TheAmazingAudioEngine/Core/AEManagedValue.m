@@ -194,6 +194,12 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
 }
 
 - (void)setValue:(void *)value {
+    #ifdef DEBUG
+    if ( !pthread_main_np() ) {
+        NSLog(@"Warning: %@ %@ called from outside main thread", NSStringFromClass([self class]), NSStringFromSelector(_cmd));
+    }
+    #endif
+    
     if ( value == _value ) return;
     
     // Assign new value
