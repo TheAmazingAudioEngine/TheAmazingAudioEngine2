@@ -622,6 +622,9 @@ static void AEIOAudioUnitIAAConnectionChanged(void *inRefCon, AudioUnit inUnit, 
         if ( rateChanged && running ) {
             AECheckOSStatus(AudioOutputUnitStop(_audioUnit), "AudioOutputUnitStop");
             stoppedUnit = YES;
+        }
+
+        if ( rateChanged ) {
             hasChanges = YES;
         }
         
