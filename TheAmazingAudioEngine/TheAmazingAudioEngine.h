@@ -52,6 +52,7 @@ extern "C" {
 #import <TheAmazingAudioEngine/AEPeakLimiterModule.h>
 #import <TheAmazingAudioEngine/AEVarispeedModule.h>
 #import <TheAmazingAudioEngine/AEAudioFileRecorderModule.h>
+#import <TheAmazingAudioEngine/AEAudioMeteringModule.h>
 #if TARGET_OS_IPHONE
 #import <TheAmazingAudioEngine/AEReverbModule.h>
 #import <TheAmazingAudioEngine/AEAudioPasteboard.h>
