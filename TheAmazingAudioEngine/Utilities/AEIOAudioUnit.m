@@ -122,22 +122,24 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
                                   0, &AEBufferStackMaxFramesPerSlice, sizeof(AEBufferStackMaxFramesPerSlice));
     AECheckOSStatus(result, "AudioUnitSetProperty(kAudioUnitProperty_MaximumFramesPerSlice)");
     
-    // Enable/disable input
-    UInt32 flag = self.inputEnabled ? 1 : 0;
-    result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input, 1, &flag, sizeof(flag));
-    if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_EnableIO)") ) {
-        if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
-                                              userInfo:@{ NSLocalizedDescriptionKey: @"Unable to enable/disable input" }];
-        return NO;
-    }
-    
-    // Enable/disable output
-    flag = self.outputEnabled ? 1 : 0;
-    result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, 0, &flag, sizeof(flag));
-    if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_EnableIO)") ) {
-        if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
-                                              userInfo:@{ NSLocalizedDescriptionKey: @"Unable to enable/disable output" }];
-        return NO;
+    if ( TARGET_OS_IPHONE || !self.outputEnabled ) {
+        // Enable/disable input
+        UInt32 flag = self.inputEnabled ? 1 : 0;
+        result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input, 1, &flag, sizeof(flag));
+        if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_EnableIO)") ) {
+            if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
+                                                  userInfo:@{ NSLocalizedDescriptionKey: @"Unable to enable/disable input" }];
+            return NO;
+        }
+        
+        // Enable/disable output
+        flag = self.outputEnabled ? 1 : 0;
+        result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Output, 0, &flag, sizeof(flag));
+        if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_EnableIO)") ) {
+            if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
+                                                  userInfo:@{ NSLocalizedDescriptionKey: @"Unable to enable/disable output" }];
+            return NO;
+        }
     }
     
     // Set the render callback
@@ -149,17 +151,19 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
                                               userInfo:@{ NSLocalizedDescriptionKey: @"Unable to configure output render" }];
         return NO;
     }
-
-    // Set the input callback
-    AURenderCallbackStruct inRenderProc;
-    inRenderProc.inputProc = &AEIOAudioUnitInputCallback;
-    inRenderProc.inputProcRefCon = (__bridge void *)self;
-    result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_SetInputCallback, kAudioUnitScope_Global,
-                                  0, &inRenderProc, sizeof(inRenderProc));
-    if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_SetInputCallback)") ) {
-        if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
-                                              userInfo:@{ NSLocalizedDescriptionKey: @"Unable to configure input process" }];
-        return NO;
+    
+    if ( TARGET_OS_IPHONE || !self.outputEnabled ) {
+        // Set the input callback
+        AURenderCallbackStruct inRenderProc;
+        inRenderProc.inputProc = &AEIOAudioUnitInputCallback;
+        inRenderProc.inputProcRefCon = (__bridge void *)self;
+        result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_SetInputCallback, kAudioUnitScope_Global,
+                                      0, &inRenderProc, sizeof(inRenderProc));
+        if ( !AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_SetInputCallback)") ) {
+            if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
+                                                  userInfo:@{ NSLocalizedDescriptionKey: @"Unable to configure input process" }];
+            return NO;
+        }
     }
     
     // Initialize
