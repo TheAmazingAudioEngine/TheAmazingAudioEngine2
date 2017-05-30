@@ -193,8 +193,12 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
                 [weakSelf stop];
             }
         } else {
-            if ( wasRunning ) {
-                [weakSelf start:NULL];
+            NSUInteger optionFlags =
+                [notification.userInfo[AVAudioSessionInterruptionOptionKey] unsignedIntegerValue];
+            if (optionFlags & AVAudioSessionInterruptionOptionShouldResume) {
+                if ( wasRunning ) {
+                    [weakSelf start:NULL];
+                }
             }
         }
     }];
