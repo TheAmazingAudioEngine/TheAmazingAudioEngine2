@@ -192,9 +192,10 @@ void AEBufferStackSwap(AEBufferStack * stack);
 /*!
  * Pop one or more buffers from the stack
  *
- *  The popped buffer remains valid until another buffer is pushed. A newly pushed buffer
- *  will use the same memory regions as the old one, and thus a pop followed by a push is
- *  essentially a no-op, given the same number of channels in each.
+ *  The popped buffer remains valid until another buffer is pushed. Unless the popped buffer was
+ *  pushed with AEBufferStackPushExternal, a newly pushed buffer will use the same memory regions
+ *  as the old one, and thus a pop followed by a push is essentially a no-op, given the same number
+ *  of channels in each.
  *
  * @param stack The stack
  * @param count Number of buffers to pop, or 0 for all
@@ -302,6 +303,15 @@ void AEBufferStackMixToBufferListChannels(AEBufferStack * stack,
  * @return The timestamp that corresponds to the buffer at the given index
  */
 AudioTimeStamp * AEBufferStackGetTimeStampForBuffer(AEBufferStack * stack, int index);
+    
+/*!
+ * Determine whether the buffer at the given index is external
+ *
+ * @param stack The stack
+ * @param index The buffer index
+ * @return YES if the buffer was pushed using AEBufferStackPushExternal
+ */
+BOOL AEBufferStackGetIsExternalBuffer(AEBufferStack * stack, int index);
 
 /*!
  * Reset the stack

@@ -46,6 +46,7 @@ typedef struct {
 typedef struct {
     AudioTimeStamp timestamp;
     AudioBufferList audioBufferList;
+    BOOL external;
 } AEBufferStackBuffer;
 
 struct AEBufferStack {
@@ -164,6 +165,7 @@ const AudioBufferList * AEBufferStackPushWithChannels(AEBufferStack * stack, int
         if ( !first ) first = buffer;
         
         buffer->timestamp = stack->timeStamp;
+        buffer->external = NO;
         buffer->audioBufferList.mNumberBuffers = channelCount;
         for ( int i=0; i<channelCount; i++ ) {
             buffer->audioBufferList.mBuffers[i].mNumberChannels = 1;
@@ -211,6 +213,7 @@ const AudioBufferList * AEBufferStackPushExternal(AEBufferStack * stack, const A
         = (AEBufferStackBuffer *)AEBufferStackPoolGetNextFreeBuffer(&stack->bufferListPool);
     assert(newBuffer);
     newBuffer->timestamp = stack->timeStamp;
+    newBuffer->external = YES;
     memcpy(&newBuffer->audioBufferList, buffer, AEAudioBufferListGetStructSize(buffer));
     
     stack->stackCount++;
@@ -359,6 +362,17 @@ void AEBufferStackMixToBufferListChannels(AEBufferStack * stack, int bufferCount
 AudioTimeStamp * AEBufferStackGetTimeStampForBuffer(AEBufferStack * stack, int index) {
     if ( index >= stack->stackCount ) return NULL;
     return &((AEBufferStackBuffer*)AEBufferStackPoolGetUsedBufferAtIndex(&stack->bufferListPool, index))->timestamp;
+}
+
+BOOL AEBufferStackGetIsExternalBuffer(AEBufferStack * stack, int index) {
+    if ( index >= stack->stackCount ) return NO;
+    
+    AEBufferStackBuffer * buffer = (AEBufferStackBuffer *)AEBufferStackPoolGetUsedBufferAtIndex(&stack->bufferListPool, index);
+    if ( !buffer ) {
+        return NO;
+    }
+    
+    return buffer->external;
 }
 
 void AEBufferStackReset(AEBufferStack * stack) {
