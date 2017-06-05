@@ -35,6 +35,7 @@
 @interface AEAudioUnitModule () {
     const AERenderContext * _currentContext;
     BOOL _pushBuffer;
+    int _channelCount;
     BOOL _isClean;
 }
 @property (nonatomic, readwrite) AudioComponentDescription componentDescription;
@@ -72,6 +73,7 @@
     self.processFunction = AEAudioUnitModuleProcess;
     _wetDry = 1.0;
     _pushBuffer = self.audioUnitModuleShouldPushBufferOnProcess;
+    _channelCount = [self numberOfChannels];
     if ( subrenderer ) {
         subrenderer.sampleRate = renderer.sampleRate;
         self.subrendererValue = [AEManagedValue new];
@@ -137,16 +139,18 @@ static void AEAudioUnitModuleProcess(__unsafe_unretained AEAudioUnitModule * sel
     
     self->_isClean = NO;
     
-    if ( self->_hasInput && abl->mNumberBuffers == 1 ) {
-        // Get a buffer with 2 channels
+    if ( self->_hasInput && abl->mNumberBuffers != self->_channelCount && !AEBufferStackGetIsExternalBuffer(context->stack, 0) ) {
+        // Get a buffer with self->_channelCount channels
         AEBufferStackPop(context->stack, 1);
-        abl = AEBufferStackPushWithChannels(context->stack, 1, 2);
+        abl = AEBufferStackPushWithChannels(context->stack, 1, self->_channelCount);
         if ( !abl ) {
             // Restore prior buffer and bail
             AEBufferStackPushWithChannels(context->stack, 1, 1);
             return;
         }
-        memcpy(abl->mBuffers[1].mData, abl->mBuffers[0].mData, context->frames * AEAudioDescription.mBytesPerFrame);
+        for ( int i=1; i<self->_channelCount; i++ ) {
+            memcpy(abl->mBuffers[i].mData, abl->mBuffers[0].mData, context->frames * AEAudioDescription.mBytesPerFrame);
+        }
     }
     
     if ( self->_hasInput && self->_wetDry < 1.0-DBL_EPSILON ) {
@@ -159,7 +163,25 @@ static void AEAudioUnitModuleProcess(__unsafe_unretained AEAudioUnitModule * sel
     
     AudioUnitRenderActionFlags flags = 0;
     self->_currentContext = context;
-    AEAudioBufferListCopyOnStack(mutableAbl, abl, 0);
+    
+    AEAudioBufferListCreateOnStackWithFormat(mutableAbl, AEAudioDescriptionWithChannelsAndRate(self->_channelCount, 0));
+    memcpy(mutableAbl, abl, MIN(AEAudioBufferListGetStructSize(mutableAbl), AEAudioBufferListGetStructSize(abl)));
+    if ( mutableAbl->mNumberBuffers != self->_channelCount ) {
+        // If channel count doesn't match, then pad it out (we'll discard the extra channels)
+        int extra = self->_channelCount - mutableAbl->mNumberBuffers;
+        const AudioBufferList * extraAbl = NULL;
+        if ( extra > 0 ) {
+            extraAbl = AEBufferStackPushWithChannels(context->stack, 1, extra);
+        }
+        mutableAbl->mNumberBuffers = self->_channelCount;
+        for ( int i=0; i<extra; i++ ) {
+            memcpy(&mutableAbl->mBuffers[abl->mNumberBuffers+i], &extraAbl->mBuffers[i], sizeof(AudioBuffer));
+        }
+        if ( extra > 0 ) {
+            AEBufferStackPop(context->stack, 1);
+        }
+    }
+    
     if ( !AECheckOSStatus(AudioUnitRender(self->_audioUnit, &flags, context->timestamp, 0, context->frames, mutableAbl),
                           "AudioUnitRender") ) {
         if ( !self->_hasInput ) {
@@ -196,10 +218,11 @@ static OSStatus audioUnitRenderCallback(void                       *inRefCon,
         const AERenderContext * context = self->_currentContext;
         const AudioBufferList * abl =
             AEBufferStackGet(context->stack, self->_hasInput && self->_wetDry < 1.0-DBL_EPSILON ? 1 : 0);
+        assert(abl->mBuffers[0].mDataByteSize >= inNumberFrames * AEAudioDescription.mBytesPerFrame);
         
         for ( int i=0; i<ioData->mNumberBuffers; i++ ) {
-            assert(abl->mBuffers[i].mDataByteSize >= inNumberFrames * AEAudioDescription.mBytesPerFrame);
-            memcpy(ioData->mBuffers[i].mData, abl->mBuffers[i].mData, inNumberFrames * AEAudioDescription.mBytesPerFrame);
+            memcpy(ioData->mBuffers[i].mData, abl->mBuffers[MIN(abl->mNumberBuffers-1, i)].mData,
+                   inNumberFrames * AEAudioDescription.mBytesPerFrame);
         }
     }
     
