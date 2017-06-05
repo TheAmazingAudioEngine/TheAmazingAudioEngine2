@@ -166,9 +166,16 @@ void AEAudioBufferListCopyContentsWithFormat(const AudioBufferList * target,
                                              UInt32 targetOffset,
                                              UInt32 sourceOffset,
                                              UInt32 length) {
-    for ( int i=0; i<MIN(target->mNumberBuffers, source->mNumberBuffers); i++ ) {
+
+    for ( int i=0; i<target->mNumberBuffers; i++ ) {
+        int sourceBuffer = i;
+        if ( sourceBuffer >= source->mNumberBuffers ) {
+            if ( i > 2 ) break;
+            sourceBuffer = source->mNumberBuffers-1;
+        }
+        
         memcpy(target->mBuffers[i].mData + (targetOffset * audioFormat.mBytesPerFrame),
-               source->mBuffers[i].mData + (sourceOffset * audioFormat.mBytesPerFrame),
+               source->mBuffers[sourceBuffer].mData + (sourceOffset * audioFormat.mBytesPerFrame),
                length * audioFormat.mBytesPerFrame);
     }
 }

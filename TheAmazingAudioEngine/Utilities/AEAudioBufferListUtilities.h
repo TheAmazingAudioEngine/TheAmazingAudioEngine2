@@ -304,6 +304,8 @@ void AEAudioBufferListSilenceWithFormat(const AudioBufferList *bufferList,
 /*!
  * Copy the contents of one AudioBufferList to another, with the default audio format
  *
+ *  If the source is a mono buffer and the target stereo, the channel will be duplicated.
+ *
  * @param target Target buffer list, to copy to
  * @param source Source buffer list, to copy from
  * @param targetOffset Offset into target buffer
