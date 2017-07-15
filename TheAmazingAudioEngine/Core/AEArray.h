@@ -32,47 +32,6 @@ extern "C" {
 
 typedef const void * AEArrayToken; //!< Token for real-thread use
 
-/*!
- * Block for mapping between objects and opaque pointer values
- *
- *  Pass a block matching this type to AEArray's initializer in order to map
- *  between objects in the array and an arbitrary data block; this can be a pointer
- *  to an allocated C structure, for example, or any other collection of bytes.
- *
- *  The block is invoked on the main thread whenever a new item is added to the array
- *  during an update. You should allocate the memory you need, set the contents, and
- *  return a pointer to this memory. It will be freed automatically once the item is 
- *  removed from the array, unless you provide a custom @link AEArray::releaseBlock releaseBlock @endlink.
- *
- * @param item The original object
- * @return Pointer to an allocated memory region
- */
-typedef void * _Nullable (^AEArrayCustomMappingBlock)(id _Nonnull item);
-
-/*!
- * Block for mapping between objects and opaque pointer values, for use with AEArray's
- * @link AEArray::updateWithContentsOfArray:customMapping: updateWithContentsOfArray:customMapping: @endlink 
- * method.
- *
- *  See documentation for AEArrayCustomMappingBlock for details.
- *
- * @param item The original object
- * @return Pointer to an allocated memory region
- */
-typedef void * _Nullable (^AEArrayIndexedCustomMappingBlock)(id _Nonnull item, int index);
-
-/*!
- * Block for releasing allocated values
- *
- *  Assign a block matching this type to AEArray's releaseBlock property to provide
- *  a custom release implementation. Use this if you are using a custom mapping block
- *  and need to perform extra cleanup tasks beyond simply freeing the returned pointer.
- *
- * @param item The original object
- * @param bytes The bytes originally returned from the custom mapping block
- */
-typedef void (^AEArrayReleaseBlock)(id _Nonnull item, void * _Nonnull bytes);
-
 // Some indirection macros required for AEArrayEnumerate
 #define __AEArrayVar2(x, y) x ## y
 #define __AEArrayVar(x, y) __AEArrayVar2(__ ## x ## _line_, y)
@@ -98,7 +57,49 @@ typedef void (^AEArrayReleaseBlock)(id _Nonnull item, void * _Nonnull bytes);
  *  audio thread if using this class to manage Objective-C objects, and only interact with such objects
  *  via C functions they provide, not via Objective-C methods.
  */
-@interface AEArray : NSObject <NSFastEnumeration>
+@interface AEArray<ObjectType> : NSObject <NSFastEnumeration>
+
+/*!
+ * Block for mapping between objects and opaque pointer values
+ *
+ *  Pass a block matching this type to AEArray's initializer in order to map
+ *  between objects in the array and an arbitrary data block; this can be a pointer
+ *  to an allocated C structure, for example, or any other collection of bytes.
+ *
+ *  The block is invoked on the main thread whenever a new item is added to the array
+ *  during an update. You should allocate the memory you need, set the contents, and
+ *  return a pointer to this memory. It will be freed automatically once the item is 
+ *  removed from the array, unless you provide a custom @link AEArray::releaseBlock releaseBlock @endlink.
+ *
+ * @param item The original object
+ * @return Pointer to an allocated memory region
+ */
+typedef void * _Nullable (^AEArrayCustomMappingBlock)(ObjectType _Nonnull item);
+
+/*!
+ * Block for mapping between objects and opaque pointer values, for use with AEArray's
+ * @link AEArray::updateWithContentsOfArray:customMapping: updateWithContentsOfArray:customMapping: @endlink 
+ * method.
+ *
+ *  See documentation for AEArrayCustomMappingBlock for details.
+ *
+ * @param item The original object
+ * @return Pointer to an allocated memory region
+ */
+typedef void * _Nullable (^AEArrayIndexedCustomMappingBlock)(ObjectType _Nonnull item, int index);
+
+/*!
+ * Block for releasing allocated values
+ *
+ *  Assign a block matching this type to AEArray's releaseBlock property to provide
+ *  a custom release implementation. Use this if you are using a custom mapping block
+ *  and need to perform extra cleanup tasks beyond simply freeing the returned pointer.
+ *
+ * @param item The original object
+ * @param bytes The bytes originally returned from the custom mapping block
+ */
+typedef void (^AEArrayReleaseBlock)(ObjectType _Nonnull item, void * _Nonnull bytes);
+
 
 /*!
  * Default initializer
@@ -136,7 +137,7 @@ typedef void (^AEArrayReleaseBlock)(id _Nonnull item, void * _Nonnull bytes);
  *
  * @param array Array of values
  */
-- (void)updateWithContentsOfArray:(NSArray * _Nonnull)array;
+- (void)updateWithContentsOfArray:(NSArray <ObjectType> * _Nonnull)array;
 
 /*!
  * Update the array, with custom mapping
@@ -155,7 +156,7 @@ typedef void (^AEArrayReleaseBlock)(id _Nonnull item, void * _Nonnull bytes);
  * @param array Array of values
  * @param block The block mapping between objects and stored information
  */
-- (void)updateWithContentsOfArray:(NSArray * _Nonnull)array customMapping:(AEArrayIndexedCustomMappingBlock _Nullable)block;
+- (void)updateWithContentsOfArray:(NSArray <ObjectType> * _Nonnull)array customMapping:(AEArrayIndexedCustomMappingBlock _Nullable)block;
 
 /*!
  * Get the pointer value at the given index of the C array, as seen by the audio thread
@@ -187,7 +188,7 @@ typedef void (^AEArrayReleaseBlock)(id _Nonnull item, void * _Nonnull bytes);
  * @param object The object
  * @return Pointer to the item corresponding to the object
  */
-- (void * _Nullable)pointerValueForObject:(id _Nonnull)object;
+- (void * _Nullable)pointerValueForObject:(ObjectType _Nonnull)object;
 
 /*!
  * Update the pointer value associated with the given object
@@ -202,12 +203,12 @@ typedef void (^AEArrayReleaseBlock)(id _Nonnull item, void * _Nonnull bytes);
  * @param value The new pointer value
  * @param object The associated object
  */
-- (void)updatePointerValue:(void * _Nullable)value forObject:(id _Nonnull)object;
+- (void)updatePointerValue:(void * _Nullable)value forObject:(ObjectType _Nonnull)object;
 
 /*!
  * Access objects using subscript syntax
  */
-- (id _Nullable)objectAtIndexedSubscript:(NSUInteger)idx;
+- (ObjectType _Nullable)objectAtIndexedSubscript:(NSUInteger)idx;
 
 /*!
  * Get the array token, for use on realtime audio thread
@@ -308,7 +309,7 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
 @property (nonatomic, readonly) int count;
 
 //! Current object values
-@property (nonatomic, strong, readonly) NSArray * _Nonnull allValues;
+@property (nonatomic, strong, readonly) NSArray <ObjectType> * _Nonnull allValues;
 
 //! Block to perform when deleting old items, on main thread. If not specified, will simply use
 //! free() to dispose bytes, if pointer differs from original Objective-C pointer.
