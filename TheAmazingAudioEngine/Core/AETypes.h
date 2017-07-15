@@ -87,6 +87,17 @@ static inline AEChannelSet AEChannelSetMake(int firstChannel, int lastChannel) {
 static inline int AEChannelSetGetNumberOfChannels(AEChannelSet set) {
     return set.lastChannel - set.firstChannel + 1;
 }
+    
+/*!
+ * Compare two channel sets
+ *
+ * @param a First channel set
+ * @param b Second channel set
+ * @return YES if both match
+ */
+static inline BOOL AEChannelSetEqualToSet(AEChannelSet a, AEChannelSet b) {
+    return a.firstChannel == b.firstChannel && a.lastChannel == b.lastChannel;
+}
 
 #ifdef __cplusplus
 }
