@@ -81,7 +81,7 @@ static inline AEChannelSet AEChannelSetMake(int firstChannel, int lastChannel) {
 /*!
  * Determine number of channels in an AEChannelSet
  *
- * @param channelSet The channel set
+ * @param set The channel set
  * @return The number of channels
  */
 static inline int AEChannelSetGetNumberOfChannels(AEChannelSet set) {
