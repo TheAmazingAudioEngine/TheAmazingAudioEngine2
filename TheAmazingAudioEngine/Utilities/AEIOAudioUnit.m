@@ -37,6 +37,7 @@
 NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUnitDidUpdateStreamFormatNotification";
 NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNotification";
 
+static const double kAVAudioSession0dBGain = 0.75;
 
 @interface AEIOAudioUnit ()
 @property (nonatomic, strong) AEManagedValue * renderBlockValue;
@@ -428,15 +429,15 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     
     // Try to set the hardware gain; zero seems to still be audible, though, so we'll bypass for that
     if ( audioSession.inputGainSettable && inputGain > 0 ) {
-        // AVAudioSession's gain seems to be logarithmic, so we'll do a little rough scaling on the input values (power ratio)
-        double gain = inputGain > 1.0-1.0e-5 ? 1.0 : 1.0 - (AEDSPRatioToDecibels(inputGain) / -30.0);
+        // AVAudioSession's gain seems to be logarithmic, so we'll do a little rough scaling on the input values (power ratio).
+        // The default gain is not 1.0, so we'll consider the default value kAVAudioSession0dBGain as the 0dB point
+        double gain = (inputGain > 1.0-1.0e-5 ? 1.0 : 1.0 - (AEDSPRatioToDecibels(inputGain) / -30.0)) * kAVAudioSession0dBGain;
         NSError * error = nil;
-        if ( ![audioSession setInputGain:gain error:&error] ) {
+        if ( ![audioSession setInputGain:MIN(1.0, gain) error:&error] ) {
             NSLog(@"Couldn't set input gain: %@", error);
-            [audioSession setInputGain:1.0 error:NULL];
             _needsInputGainScaling = YES;
         } else {
-            _needsInputGainScaling = inputGain > 1.0+1.0e-5;
+            _needsInputGainScaling = NO;
         }
     } else {
         _needsInputGainScaling = YES;
