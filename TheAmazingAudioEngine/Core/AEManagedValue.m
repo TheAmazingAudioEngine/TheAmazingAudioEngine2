@@ -32,6 +32,7 @@
 
 typedef struct __linkedlistitem_t {
     void * data;
+    __unsafe_unretained void (^completionBlock)(void *);
     struct __linkedlistitem_t * next;
 } linkedlistitem_t;
 
@@ -178,9 +179,13 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
 }
 
 - (void)setObjectValue:(id)objectValue {
+    [self setObjectValue:objectValue withCompletionBlock:nil];
+}
+
+- (void)setObjectValue:(id)objectValue withCompletionBlock:(void (^)(id))completionBlock {
     NSAssert(!_valueSet || _isObjectValue, @"You can use objectValue or pointerValue, but not both");
     _isObjectValue = YES;
-    [self setValue:(__bridge_retained void*)objectValue];
+    [self setValue:(__bridge_retained void*)objectValue completionBlock:(void (^)(void *))completionBlock];
 }
 
 - (void *)pointerValue {
@@ -189,11 +194,15 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
 }
 
 - (void)setPointerValue:(void *)pointerValue {
-    NSAssert(!_valueSet || !_isObjectValue, @"You can use objectValue or pointerValue, but not both");
-    [self setValue:pointerValue];
+    [self setPointerValue:pointerValue withCompletionBlock:nil];
 }
 
-- (void)setValue:(void *)value {
+- (void)setPointerValue:(void *)pointerValue withCompletionBlock:(void (^)(void *))completionBlock {
+    NSAssert(!_valueSet || !_isObjectValue, @"You can use objectValue or pointerValue, but not both");
+    [self setValue:pointerValue completionBlock:completionBlock];
+}
+
+- (void)setValue:(void *)value completionBlock:(void (^)(void *))completionBlock {
     #ifdef DEBUG
     if ( !pthread_main_np() ) {
         NSLog(@"Warning: %@ %@ called from outside main thread", NSStringFromClass([self class]), NSStringFromSelector(_cmd));
@@ -215,20 +224,26 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
         [__atomicUpdatedDeferredSyncValues addObject:self];
     }
     
-    if ( oldValue ) {
+    if ( oldValue || completionBlock ) {
         // Mark old value as pending release - it'll be transferred to the release queue by
         // AEManagedValueGetValue on the audio thread
         linkedlistitem_t * release = (linkedlistitem_t*)calloc(1, sizeof(linkedlistitem_t));
         release->data = oldValue;
+        if ( completionBlock ) {
+            release->completionBlock = (__bridge id)CFBridgingRetain([completionBlock copy]);
+        }
         
         OSAtomicEnqueue(&_pendingReleaseQueue, release, offsetof(linkedlistitem_t, next));
         _pendingReleaseCount++;
         
         if ( !self.pollTimer ) {
             // Start polling for pending releases
-            self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:0.1 target:[AEWeakRetainingProxy proxyWithTarget:self]
+            double interval = completionBlock ? 0.01 : 0.1;
+            self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:interval target:[AEWeakRetainingProxy proxyWithTarget:self]
                                                             selector:@selector(pollReleaseList) userInfo:nil repeats:YES];
-            self.pollTimer.tolerance = 0.5;
+            if ( !completionBlock ) {
+                self.pollTimer.tolerance = 0.5;
+            }
         }
         
         // Add self to the list of instances to service on the realtime thread within AEManagedValueCommitPendingUpdates
@@ -321,8 +336,14 @@ void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS
 - (void)pollReleaseList {
     linkedlistitem_t * release;
     while ( (release = OSAtomicDequeue(&_releaseQueue, offsetof(linkedlistitem_t, next))) ) {
-        NSAssert(release->data != _value, @"About to release value still in use");
-        [self releaseOldValue:release->data];
+        if ( release->completionBlock ) {
+            release->completionBlock(release->data);
+            CFBridgingRelease((__bridge CFTypeRef)release->completionBlock);
+        }
+        if ( release->data ) {
+            NSAssert(release->data != _value, @"About to release value still in use");
+            [self releaseOldValue:release->data];
+        }
         free(release);
         _pendingReleaseCount--;
     }

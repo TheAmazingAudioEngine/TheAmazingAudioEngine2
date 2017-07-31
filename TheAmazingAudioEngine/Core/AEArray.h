@@ -140,6 +140,17 @@ typedef void (^AEArrayReleaseBlock)(ObjectType _Nonnull item, void * _Nonnull by
 - (void)updateWithContentsOfArray:(NSArray <ObjectType> * _Nonnull)array;
 
 /*!
+ * Update the array, with a completion block
+ *
+ *  Completion block will be called once the old array value is about to be released.
+ *  At this point, it is safe to perform additional clean-ups.
+ *
+ * @param array Array of values
+ * @param completionBlock Block to be called upon completion of assignment
+ */
+- (void)updateWithContentsOfArray:(NSArray <ObjectType> * _Nonnull)array completionBlock:(void(^ _Nullable)())completionBlock;
+
+/*!
  * Update the array, with custom mapping
  *
  *  If you provide a custom mapping using this method, it will be used instead of the one
@@ -157,6 +168,20 @@ typedef void (^AEArrayReleaseBlock)(ObjectType _Nonnull item, void * _Nonnull by
  * @param block The block mapping between objects and stored information
  */
 - (void)updateWithContentsOfArray:(NSArray <ObjectType> * _Nonnull)array customMapping:(AEArrayIndexedCustomMappingBlock _Nullable)block;
+
+/*!
+ * Update the array, with a completion block
+ *
+ *  Completion block will be called once the old array value is about to be released.
+ *  At this point, it is safe to perform additional clean-ups.
+ *
+ * @param array Array of values
+ * @param block The block mapping between objects and stored information
+ * @param completionBlock Block to be called upon completion of assignment
+ */
+- (void)updateWithContentsOfArray:(NSArray <ObjectType> * _Nonnull)array
+                    customMapping:(AEArrayIndexedCustomMappingBlock _Nullable)block
+                  completionBlock:(void(^ _Nullable)())completionBlock;
 
 /*!
  * Get the pointer value at the given index of the C array, as seen by the audio thread

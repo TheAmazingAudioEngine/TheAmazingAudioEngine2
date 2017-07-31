@@ -142,10 +142,20 @@ typedef struct {
 }
 
 - (void)updateWithContentsOfArray:(NSArray *)array {
-    [self updateWithContentsOfArray:array customMapping:nil];
+    [self updateWithContentsOfArray:array customMapping:nil completionBlock:nil];
+}
+
+- (void)updateWithContentsOfArray:(NSArray *)array completionBlock:(void (^)())completionBlock {
+    [self updateWithContentsOfArray:array customMapping:nil completionBlock:completionBlock];
 }
 
 - (void)updateWithContentsOfArray:(NSArray *)array customMapping:(AEArrayIndexedCustomMappingBlock)block {
+    [self updateWithContentsOfArray:array customMapping:block completionBlock:nil];
+}
+
+- (void)updateWithContentsOfArray:(NSArray *)array
+                    customMapping:(AEArrayIndexedCustomMappingBlock)block
+                  completionBlock:(void (^)())completionBlock {
     array_t * currentArray = (array_t*)_value.pointerValue;
     if ( currentArray && currentArray->objects && [currentArray->objects isEqualToArray:array] ) {
         // Arrays are identical - skip
@@ -178,7 +188,13 @@ typedef struct {
         i++;
     }
     
-    _value.pointerValue = newArray;
+    if ( completionBlock ) {
+        [_value setPointerValue:newArray withCompletionBlock:^(void * _Nullable oldValue) {
+            completionBlock();
+        }];
+    } else {
+        _value.pointerValue = newArray;
+    }
 }
 
 #pragma mark - Realtime thread accessors

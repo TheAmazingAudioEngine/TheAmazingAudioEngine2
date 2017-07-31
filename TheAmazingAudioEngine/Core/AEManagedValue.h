@@ -106,6 +106,22 @@ void * _Nullable AEManagedValueGetValue(__unsafe_unretained AEManagedValue * _No
 void AEManagedValueCommitPendingUpdates();
 
 /*!
+ * Set object value with a completion block
+ *
+ * @property objectValue The object value
+ * @property completionBlock Block to perform once the old value is to be released
+ */
+- (void)setObjectValue:(id _Nullable )objectValue withCompletionBlock:(void(^_Nullable)(id _Nullable oldValue))completionBlock;
+
+/*!
+ * Set pointer value with a completion block
+ *
+ * @property pointerValue The pointer value
+ * @property completionBlock Block to perform once the old value is to be released
+ */
+- (void)setPointerValue:(void * _Nullable)pointerValue withCompletionBlock:(void(^_Nullable)(void * _Nullable oldValue))completionBlock;
+
+/*!
  * An object. You can set this property from the main thread. Note that you can use this property, 
  * or pointerValue, but not both.
  */
