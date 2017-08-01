@@ -27,6 +27,7 @@
 }
 @property (nonatomic, readwrite) int numberOfChannels;
 @property (nonatomic, readwrite) BOOL recording;
+@property (nonatomic, strong, readwrite) NSURL * outputFile;
 @property (nonatomic, strong) AEMainThreadEndpoint * stopRecordingNotificationEndpoint;
 @end
 
@@ -43,6 +44,8 @@
     if ( !(self = [super initWithRenderer:renderer]) ) return nil;
     
     if ( !(_audioFile = AEExtAudioFileCreate(url, type, self.renderer.sampleRate, numberOfChannels, error)) ) return nil;
+    
+    self.outputFile = url;
     
     // Prime async recording
     ExtAudioFileWriteAsync(_audioFile, 0, NULL);

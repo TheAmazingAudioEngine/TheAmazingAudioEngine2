@@ -91,6 +91,7 @@ typedef void (^AEAudioFileRecorderModuleCompletionBlock)();
  */
 - (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(AEAudioFileRecorderModuleCompletionBlock _Nullable)block;
 
+@property (nonatomic, strong, readonly) NSURL * _Nonnull outputFile; //!< URL to the output file
 @property (nonatomic, readonly) int numberOfChannels; //!< Number of channels that will be recorded
 @property (nonatomic, readonly) BOOL recording; //!< Whether recording is in progress
 @property (nonatomic, readonly) AESeconds recordedTime; //!< Current recording length, in seconds
