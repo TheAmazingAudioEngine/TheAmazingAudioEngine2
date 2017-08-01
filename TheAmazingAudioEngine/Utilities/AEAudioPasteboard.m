@@ -30,6 +30,7 @@ NSString * const AEAudioPasteboardErrorDomain = @"AEAudioPasteboardErrorDomain";
 typedef struct {
     __unsafe_unretained AEAudioPasteboardGeneratorBlock generator;
     AudioBufferList * sourceBuffer;
+    UInt32 sourceBufferLength;
     AudioStreamBasicDescription sourceFormat;
     BOOL finished;
 } input_proc_data_t;
@@ -248,7 +249,7 @@ typedef struct {
         while ( !finished ) {
             UInt32 block = processBlockFrames;
             AEAudioBufferListSetLengthWithFormat(targetBuffer, targetAudioDescription, block);
-            input_proc_data_t data = { generator, sourceBuffer, sourceAudioDescription };
+            input_proc_data_t data = { generator, sourceBuffer, processBlockFrames, sourceAudioDescription };
             status = AudioConverterFillComplexBuffer(converter, AEAudioPasteboardFillComplexBufferInputProc,
                                                      &data, &block, targetBuffer, NULL);
             if ( status != noErr ) {
@@ -324,6 +325,7 @@ static OSStatus AEAudioPasteboardFillComplexBufferInputProc(AudioConverterRef in
                                                             void * inUserData) {
     input_proc_data_t * data = (input_proc_data_t *)inUserData;
     data->finished = NO;
+    *ioNumberDataPackets = MIN(*ioNumberDataPackets, data->sourceBufferLength);
     AEAudioBufferListSetLengthWithFormat(data->sourceBuffer, data->sourceFormat, *ioNumberDataPackets);
     data->generator(data->sourceBuffer, ioNumberDataPackets, &data->finished);
     AEAudioBufferListSetLengthWithFormat(data->sourceBuffer, data->sourceFormat, *ioNumberDataPackets);
