@@ -56,6 +56,22 @@ AudioBufferList *AEAudioBufferListCreate(int frameCount);
 AudioBufferList *AEAudioBufferListCreateWithFormat(AudioStreamBasicDescription audioFormat, int frameCount);
 
 /*!
+ * Create a new buffer with the contents of the given file
+ *
+ *  Will synchronously read the entire contents of the file into memory. Note that this should
+ *  probably be performed in a background thread, and only on small files.
+ *
+ *  Note: Do not use this utility from within the Core Audio thread (such as inside a render
+ *  callback). It may cause the thread to block, inducing audio stutters.
+ *
+ *  If an error occurred, will return NULL.
+ *
+ * @param filePath The path to the audio file
+ * @param audioFormat The target audio format
+ */
+AudioBufferList *AEAudioBufferListCreateWithContentsOfFile(NSString * filePath, AudioStreamBasicDescription audioFormat);
+    
+/*!
  * Create an audio buffer list on the stack, using the default audio format.
  *
  *  This is useful for creating buffers for temporary use, without needing to perform any

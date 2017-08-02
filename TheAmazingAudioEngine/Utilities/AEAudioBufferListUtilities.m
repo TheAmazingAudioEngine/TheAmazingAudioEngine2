@@ -25,6 +25,7 @@
 //
 
 #import "AEAudioBufferListUtilities.h"
+#import "AEUtilities.h"
 
 AudioBufferList *AEAudioBufferListCreate(int frameCount) {
     return AEAudioBufferListCreateWithFormat(AEAudioDescription, frameCount);
@@ -55,6 +56,48 @@ AudioBufferList *AEAudioBufferListCreateWithFormat(AudioStreamBasicDescription a
         audio->mBuffers[i].mNumberChannels = channelsPerBuffer;
     }
     return audio;
+}
+
+AudioBufferList *AEAudioBufferListCreateWithContentsOfFile(NSString * filePath, AudioStreamBasicDescription audioFormat) {
+    AudioStreamBasicDescription fileFormat;
+    UInt64 length;
+    NSError * error = nil;
+    ExtAudioFileRef audioFile = AEExtAudioFileOpen([NSURL fileURLWithPath:filePath], &fileFormat, &length, &error);
+    
+    if ( !audioFile ) {
+        NSLog(@"Unable to open %@ for reading: %@", filePath, error.localizedDescription);
+        return NULL;
+    }
+    
+    if ( !audioFormat.mSampleRate ) audioFormat.mSampleRate = fileFormat.mSampleRate;
+    
+    if ( !AECheckOSStatus(ExtAudioFileSetProperty(audioFile, kExtAudioFileProperty_ClientDataFormat, sizeof(audioFormat), &audioFormat),
+                          "ExtAudioFileSetProperty") ) {
+        ExtAudioFileDispose(audioFile);
+        return NULL;
+    }
+    
+    UInt32 lengthAtTargetRate = (UInt32)ceil(((double)length / fileFormat.mSampleRate) * audioFormat.mSampleRate);
+    AudioBufferList * output = AEAudioBufferListCreateWithFormat(audioFormat, lengthAtTargetRate);
+    
+    UInt32 blockSize = 4096;
+    UInt32 remaining = lengthAtTargetRate;
+    UInt32 readFrames = 0;
+    while ( remaining > 0 ) {
+        UInt32 block = MIN(blockSize, remaining);
+        AEAudioBufferListCopyOnStackWithByteOffset(target, output, (readFrames * audioFormat.mBytesPerFrame));
+        AEAudioBufferListSetLength(target, block);
+        if ( !AECheckOSStatus(ExtAudioFileRead(audioFile, &block, target), "ExtAudioFileRead") ) {
+            break;
+        }
+        readFrames += block;
+        remaining -= block;
+    }
+    
+    ExtAudioFileDispose(audioFile);
+    
+    AEAudioBufferListSetLength(output, readFrames);
+    return output;
 }
 
 AudioBufferList *AEAudioBufferListCopy(const AudioBufferList *original) {
