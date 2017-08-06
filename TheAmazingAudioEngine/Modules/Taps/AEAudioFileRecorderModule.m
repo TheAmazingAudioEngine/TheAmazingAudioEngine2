@@ -27,25 +27,25 @@
 }
 @property (nonatomic, readwrite) int numberOfChannels;
 @property (nonatomic, readwrite) BOOL recording;
-@property (nonatomic, strong, readwrite) NSURL * outputFile;
+@property (nonatomic, strong, readwrite) NSString * path;
 @property (nonatomic, strong) AEMainThreadEndpoint * stopRecordingNotificationEndpoint;
 @end
 
 @implementation AEAudioFileRecorderModule
 
-- (instancetype)initWithRenderer:(AERenderer *)renderer URL:(NSURL *)url
+- (instancetype)initWithRenderer:(AERenderer *)renderer path:(NSString *)path
                             type:(AEAudioFileType)type error:(NSError **)error {
-    return [self initWithRenderer:renderer URL:url type:type numberOfChannels:2 error:error];
+    return [self initWithRenderer:renderer path:path type:type numberOfChannels:2 error:error];
 }
 
-- (instancetype)initWithRenderer:(AERenderer *)renderer URL:(NSURL *)url type:(AEAudioFileType)type
+- (instancetype)initWithRenderer:(AERenderer *)renderer path:(NSString *)path type:(AEAudioFileType)type
                 numberOfChannels:(int)numberOfChannels error:(NSError **)error {
     
     if ( !(self = [super initWithRenderer:renderer]) ) return nil;
     
-    if ( !(_audioFile = AEExtAudioFileCreate(url, type, self.renderer.sampleRate, numberOfChannels, error)) ) return nil;
+    if ( !(_audioFile = AEExtAudioFileCreate([NSURL fileURLWithPath:path], type, self.renderer.sampleRate, numberOfChannels, error)) ) return nil;
     
-    self.outputFile = url;
+    self.path = path;
     
     // Prime async recording
     ExtAudioFileWriteAsync(_audioFile, 0, NULL);

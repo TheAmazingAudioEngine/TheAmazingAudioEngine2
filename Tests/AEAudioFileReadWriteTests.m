@@ -18,11 +18,11 @@
 static const NSTimeInterval kTestFileLength = 0.5;
 
 @interface AEAudioFileReaderTests : XCTestCase
-@property (nonatomic, strong, readonly) NSURL * fileURL;
+@property (nonatomic, strong, readonly) NSString * file;
 @end
 
 @implementation AEAudioFileReaderTests
-@dynamic fileURL;
+@dynamic file;
 
 + (void)setUp {
     NSString * documentsFolder = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
@@ -33,7 +33,7 @@ static const NSTimeInterval kTestFileLength = 0.5;
 }
 
 - (void)tearDown {
-    [[NSFileManager defaultManager] removeItemAtURL:[self fileURL] error:NULL];
+    [[NSFileManager defaultManager] removeItemAtPath:[self file] error:NULL];
 }
 
 - (void)testWriting {
@@ -42,7 +42,7 @@ static const NSTimeInterval kTestFileLength = 0.5;
     
     AudioStreamBasicDescription asbd;
     UInt32 length;
-    BOOL result = [AEAudioFileReader infoForFileAtURL:self.fileURL
+    BOOL result = [AEAudioFileReader infoForFileAtPath:self.file
                                      audioDescription:&asbd length:&length error:NULL];
     XCTAssertTrue(result);
     
@@ -56,7 +56,7 @@ static const NSTimeInterval kTestFileLength = 0.5;
     
     __block AudioBufferList * buffer = NULL;
     __block UInt32 bufferLength = 0;
-    [AEAudioFileReader loadFileAtURL:self.fileURL
+    [AEAudioFileReader loadFileAtPath:self.file
               targetAudioDescription:AEAudioDescription
                      completionBlock:^(AudioBufferList * _Nullable audio, UInt32 length, NSError * _Nullable error) {
         bufferLength = length;
@@ -95,7 +95,7 @@ static const NSTimeInterval kTestFileLength = 0.5;
     __block float position = 0;
     __block UInt32 framesSeen = 0;
     __weak AEAudioFileReader * reader =
-    [AEAudioFileReader readFileAtURL:self.fileURL
+    [AEAudioFileReader readFileAtPath:self.file
               targetAudioDescription:AEAudioDescription
                            readBlock:^(const AudioBufferList * buffer, UInt32 length) {
                                XCTAssertEqual(length, MIN(512, (kTestFileLength*44100.0)-framesSeen));
@@ -129,15 +129,15 @@ static const NSTimeInterval kTestFileLength = 0.5;
 
 #pragma mark -
 
-- (NSURL *)fileURL {
-    return [NSURL fileURLWithPath:[NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject stringByAppendingPathComponent:@"AEAudioFileReaderTests.aiff"]];
+- (NSString *)file {
+    return [NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject stringByAppendingPathComponent:@"AEAudioFileReaderTests.aiff"];
 }
 
 - (NSError *)createTestFile {
     AERenderer * renderer = [AERenderer new];
     
     __block NSError * error = nil;
-    AEAudioFileOutput * output = [[AEAudioFileOutput alloc] initWithRenderer:renderer URL:self.fileURL type:AEAudioFileTypeAIFFInt16 sampleRate:44100.0 channelCount:1 error:&error];
+    AEAudioFileOutput * output = [[AEAudioFileOutput alloc] initWithRenderer:renderer path:self.file type:AEAudioFileTypeAIFFInt16 sampleRate:44100.0 channelCount:1 error:&error];
     if ( !output ) {
         return error;
     }

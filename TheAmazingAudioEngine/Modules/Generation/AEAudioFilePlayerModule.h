@@ -53,11 +53,11 @@ typedef void (^AEAudioFilePlayerModuleBlock)();
  * Default initialiser
  *
  * @param renderer The renderer
- * @param url URL to the file to load
+ * @param path Path to the file to load
  * @param error If not NULL, the error on output
  */
 - (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer
-                                       URL:(NSURL * _Nonnull)url
+                                      path:(NSString * _Nonnull)path
                                      error:(NSError * _Nullable * _Nullable)error;
 
 /*!
@@ -110,8 +110,8 @@ AESeconds AEAudioFilePlayerModuleGetPlayhead(__unsafe_unretained AEAudioFilePlay
  */
 BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModule * _Nonnull filePlayer);
 
-//! Original media URL
-@property (nonatomic, strong, readonly) NSURL * _Nullable url;
+//! Original media path
+@property (nonatomic, strong, readonly) NSString * _Nullable path;
 
 //! Length of audio file, in seconds
 @property (nonatomic, readonly) AESeconds duration;

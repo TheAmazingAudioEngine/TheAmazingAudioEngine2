@@ -31,7 +31,7 @@ static const UInt32 kDefaultReadSize = 4096;
 static const UInt32 kMaxAudioFileReadSize = 16384;
 
 @interface AEAudioFileReader ()
-@property (nonatomic, strong) NSURL *url;
+@property (nonatomic, strong) NSString * path;
 @property (nonatomic) AudioStreamBasicDescription targetAudioDescription;
 @property (nonatomic, copy) AEAudioFileReaderLoadBlock loadBlock;
 @property (nonatomic, copy) AEAudioFileReaderIncrementalReadBlock readBlock;
@@ -42,7 +42,7 @@ static const UInt32 kMaxAudioFileReadSize = 16384;
 
 @implementation AEAudioFileReader
 
-+ (BOOL)infoForFileAtURL:(NSURL*)url audioDescription:(AudioStreamBasicDescription*)audioDescription
++ (BOOL)infoForFileAtPath:(NSString *)path audioDescription:(AudioStreamBasicDescription*)audioDescription
                   length:(UInt32*)lengthInFrames error:(NSError**)error {
     
     if ( audioDescription ) memset(audioDescription, 0, sizeof(AudioStreamBasicDescription));
@@ -51,7 +51,7 @@ static const UInt32 kMaxAudioFileReadSize = 16384;
     OSStatus status;
     
     // Open file
-    status = ExtAudioFileOpenURL((__bridge CFURLRef)url, &audioFile);
+    status = ExtAudioFileOpenURL((__bridge CFURLRef)[NSURL fileURLWithPath:path], &audioFile);
     if ( !AECheckOSStatus(status, "ExtAudioFileOpenURL") ) {
         if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:status 
                                               userInfo:@{NSLocalizedDescriptionKey: NSLocalizedString(@"Couldn't open the audio file", @"")}];
@@ -88,10 +88,11 @@ static const UInt32 kMaxAudioFileReadSize = 16384;
     return YES;
 }
 
-+ (instancetype)loadFileAtURL:(NSURL *)url targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
-              completionBlock:(AEAudioFileReaderLoadBlock _Nonnull)block {
++ (instancetype)loadFileAtPath:(NSString *)path
+        targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
+               completionBlock:(AEAudioFileReaderLoadBlock _Nonnull)block {
     AEAudioFileReader * reader = [AEAudioFileReader new];
-    reader.url = url;
+    reader.path = path;
     reader.targetAudioDescription = targetAudioDescription;
     reader.loadBlock = block;
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
@@ -100,22 +101,22 @@ static const UInt32 kMaxAudioFileReadSize = 16384;
     return reader;
 }
 
-+ (instancetype)readFileAtURL:(NSURL *)url
-       targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
-                    readBlock:(AEAudioFileReaderIncrementalReadBlock)readBlock
-              completionBlock:(AEAudioFileReaderCompletionBlock)completionBlock {
++ (instancetype)readFileAtPath:(NSString *)path
+        targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
+                     readBlock:(AEAudioFileReaderIncrementalReadBlock)readBlock
+               completionBlock:(AEAudioFileReaderCompletionBlock)completionBlock {
 
-    return [self readFileAtURL:url targetAudioDescription:targetAudioDescription readBlock:readBlock
+    return [self readFileAtPath:path targetAudioDescription:targetAudioDescription readBlock:readBlock
                completionBlock:completionBlock blockSize:kDefaultReadSize];
 }
 
-+ (instancetype)readFileAtURL:(NSURL *)url
-       targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
-                    readBlock:(AEAudioFileReaderIncrementalReadBlock)readBlock
-              completionBlock:(AEAudioFileReaderCompletionBlock)completionBlock
-                    blockSize:(UInt32)blockSize {
++ (instancetype)readFileAtPath:(NSString *)path
+        targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
+                     readBlock:(AEAudioFileReaderIncrementalReadBlock)readBlock
+               completionBlock:(AEAudioFileReaderCompletionBlock)completionBlock
+                     blockSize:(UInt32)blockSize {
     AEAudioFileReader * reader = [AEAudioFileReader new];
-    reader.url = url;
+    reader.path = path;
     reader.targetAudioDescription = targetAudioDescription;
     reader.readBlock = readBlock;
     reader.readCompletionBlock = completionBlock;
@@ -135,7 +136,7 @@ static const UInt32 kMaxAudioFileReadSize = 16384;
     OSStatus status;
     
     // Open file
-    status = ExtAudioFileOpenURL((__bridge CFURLRef)_url, &audioFile);
+    status = ExtAudioFileOpenURL((__bridge CFURLRef)[NSURL fileURLWithPath:self.path], &audioFile);
     if ( !AECheckOSStatus(status, "ExtAudioFileOpenURL") ) {
         [self reportError:[NSError errorWithDomain:NSOSStatusErrorDomain code:status
                            userInfo:@{NSLocalizedDescriptionKey:NSLocalizedString(@"Couldn't open the audio file", @"")}]];

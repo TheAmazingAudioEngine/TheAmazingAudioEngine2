@@ -49,12 +49,12 @@ typedef void (^AEAudioFileRecorderModuleCompletionBlock)();
  *  Records stereo audio.
  *
  * @param renderer The renderer
- * @param url URL to the file to write to
+ * @param path Path to the file to write to
  * @param type The type of the file to write
  * @param error If not NULL, the error on output
  */
 - (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer
-                                       URL:(NSURL * _Nonnull)url
+                                      path:(NSString * _Nonnull)path
                                       type:(AEAudioFileType)type
                                      error:(NSError * _Nullable * _Nullable)error;
 
@@ -62,13 +62,13 @@ typedef void (^AEAudioFileRecorderModuleCompletionBlock)();
  * Initialiser, with channel count
  *
  * @param renderer The renderer
- * @param url URL to the file to write to
+ * @param path Path to the file to write to
  * @param type The type of the file to write
  * @param numberOfChannels Number of channels to record (will mix down or double channels if input is different)
  * @param error If not NULL, the error on output
  */
 - (instancetype _Nullable)initWithRenderer:(AERenderer * _Nullable)renderer
-                                       URL:(NSURL * _Nonnull)url
+                                      path:(NSString * _Nonnull)path
                                       type:(AEAudioFileType)type
                           numberOfChannels:(int)numberOfChannels
                                      error:(NSError * _Nullable * _Nullable)error;
@@ -91,7 +91,7 @@ typedef void (^AEAudioFileRecorderModuleCompletionBlock)();
  */
 - (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(AEAudioFileRecorderModuleCompletionBlock _Nullable)block;
 
-@property (nonatomic, strong, readonly) NSURL * _Nonnull outputFile; //!< URL to the output file
+@property (nonatomic, strong, readonly) NSString * _Nonnull path; //!< Path to the output file
 @property (nonatomic, readonly) int numberOfChannels; //!< Number of channels that will be recorded
 @property (nonatomic, readonly) BOOL recording; //!< Whether recording is in progress
 @property (nonatomic, readonly) AESeconds recordedTime; //!< Current recording length, in seconds

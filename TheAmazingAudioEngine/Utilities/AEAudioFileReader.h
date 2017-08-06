@@ -75,16 +75,16 @@ typedef void (^AEAudioFileReaderCompletionBlock)(NSError * _Nullable error);
 /*!
  * Get info for a file
  *
- * @param url               URL to the file
- * @param audioDescription  On output, if not NULL, will be filled with the file's audio description
- * @param lengthInFrames    On output, if not NULL, will indicated the file length in frames
- * @param error             If not NULL, and an error occurs, this contains the error that occurred
+ * @param path Path to the file
+ * @param audioDescription On output, if not NULL, will be filled with the file's audio description
+ * @param lengthInFrames On output, if not NULL, will indicated the file length in frames
+ * @param error If not NULL, and an error occurs, this contains the error that occurred
  * @return YES if file info was loaded successfully
  */
-+ (BOOL)infoForFileAtURL:(NSURL * _Nonnull)url
-        audioDescription:(AudioStreamBasicDescription * _Nullable)audioDescription
-                  length:(UInt32 * _Nullable)lengthInFrames
-                   error:(NSError * _Nullable * _Nullable)error;
++ (BOOL)infoForFileAtPath:(NSString * _Nonnull)path
+         audioDescription:(AudioStreamBasicDescription * _Nullable)audioDescription
+                   length:(UInt32 * _Nullable)lengthInFrames
+                    error:(NSError * _Nullable * _Nullable)error;
 
 /*!
  * Load a file into memory all at once
@@ -95,13 +95,13 @@ typedef void (^AEAudioFileReaderCompletionBlock)(NSError * _Nullable error);
  *  Note that this is not suitable for large audio files, as the entire file
  *  will be loaded into memory.
  *
- * @param url URL to the file to load
+ * @param path Path to the file to load
  * @param targetAudioDescription The audio description for the loaded audio (e.g. AEAudioDescription)
  * @param block Block to call when load has finished
  */
-+ (instancetype _Nonnull)loadFileAtURL:(NSURL * _Nonnull)url
-                targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
-                       completionBlock:(AEAudioFileReaderLoadBlock _Nonnull)block;
++ (instancetype _Nonnull)loadFileAtPath:(NSString * _Nonnull)path
+                 targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
+                        completionBlock:(AEAudioFileReaderLoadBlock _Nonnull)block;
 
 /*!
  * Read file incrementally, with a read block
@@ -109,12 +109,12 @@ typedef void (^AEAudioFileReaderCompletionBlock)(NSError * _Nullable error);
  *  Will load the file incrementally, calling the reader block with fixed-size 
  *  pieces of audio.
  *
- * @param url URL to the file to load
+ * @param path Path to the file to load
  * @param targetAudioDescription The audio description for the loaded audio (e.g. AEAudioDescription)
  * @param readBlock Block to call for each segment of the file; will be called on a background thread
  * @param completionBlock Block to call on main thread when read operation has completed, or an error occurs
  */
-+ (instancetype _Nonnull)readFileAtURL:(NSURL * _Nonnull)url
++ (instancetype _Nonnull)readFileAtPath:(NSString * _Nonnull)path
                 targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
                              readBlock:(AEAudioFileReaderIncrementalReadBlock _Nullable)readBlock
                        completionBlock:(AEAudioFileReaderCompletionBlock _Nonnull)completionBlock;
@@ -125,17 +125,17 @@ typedef void (^AEAudioFileReaderCompletionBlock)(NSError * _Nullable error);
  *  Will load the file incrementally, calling the reader block with fixed-size
  *  pieces of audio that match the block size.
  *
- * @param url URL to the file to load
+ * @param path Path to the file to load
  * @param targetAudioDescription The audio description for the loaded audio (e.g. AEAudioDescription)
  * @param readBlock Block to call for each segment of the file; will be called on a background thread
  * @param completionBlock Block to call on main thread when read operation has completed, or an error occurs
  * @param blockSize The size of blocks to receive
  */
-+ (instancetype _Nonnull)readFileAtURL:(NSURL * _Nonnull)url
-                targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
-                             readBlock:(AEAudioFileReaderIncrementalReadBlock _Nullable)readBlock
-                       completionBlock:(AEAudioFileReaderCompletionBlock _Nonnull)completionBlock
-                             blockSize:(UInt32)blockSize;
++ (instancetype _Nonnull)readFileAtPath:(NSString * _Nonnull)path
+                 targetAudioDescription:(AudioStreamBasicDescription)targetAudioDescription
+                              readBlock:(AEAudioFileReaderIncrementalReadBlock _Nullable)readBlock
+                        completionBlock:(AEAudioFileReaderCompletionBlock _Nonnull)completionBlock
+                              blockSize:(UInt32)blockSize;
 
 
 /*!

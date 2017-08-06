@@ -53,20 +53,20 @@ static const UInt32 kNoValue = -1;
     UInt32      _remainingMicrofadeInFrames;
     UInt32      _remainingMicrofadeOutFrames;
 }
-@property (nonatomic, strong, readwrite) NSURL * url;
+@property (nonatomic, strong, readwrite) NSString * path;
 @property (nonatomic, strong) AEManagedValue * mainThreadEndpointValue;
 @property (nonatomic, copy) void(^beginBlock)();
 @end
 
 @implementation AEAudioFilePlayerModule
 
-- (instancetype)initWithRenderer:(AERenderer *)renderer URL:(NSURL *)url error:(NSError *__autoreleasing *)error {
+- (instancetype)initWithRenderer:(AERenderer *)renderer path:(NSString *)path error:(NSError *__autoreleasing *)error {
     if ( !(self = [super initWithRenderer:renderer componentDescription:
                    AEAudioComponentDescriptionMake(kAudioUnitManufacturer_Apple,
                                                    kAudioUnitType_Generator,
                                                    kAudioUnitSubType_AudioFilePlayer)]) ) return nil;
     
-    if ( ![self loadAudioFileWithURL:url error:error] ) {
+    if ( ![self loadAudioFileWithPath:path error:error] ) {
         return nil;
     }
     
@@ -250,11 +250,11 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
     }];
 }
 
-- (BOOL)loadAudioFileWithURL:(NSURL*)url error:(NSError**)error {
+- (BOOL)loadAudioFileWithPath:(NSString *)path error:(NSError**)error {
     OSStatus result;
     
     // Open the file
-    result = AudioFileOpenURL((__bridge CFURLRef)url, kAudioFileReadPermission, 0, &_audioFile);
+    result = AudioFileOpenURL((__bridge CFURLRef)[NSURL fileURLWithPath:path], kAudioFileReadPermission, 0, &_audioFile);
     if ( !AECheckOSStatus(result, "AudioFileOpenURL") ) {
         if ( error )
         *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
@@ -316,7 +316,7 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
     _lengthInFrames = (UInt32)fileLengthInFrames;
     _regionStartTime = 0;
     _regionDuration = (double)_lengthInFrames / _fileSampleRate;
-    self.url = url;
+    self.path = path;
     
     return YES;
 }

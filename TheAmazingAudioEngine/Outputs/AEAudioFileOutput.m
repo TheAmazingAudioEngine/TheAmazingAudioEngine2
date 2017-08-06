@@ -18,20 +18,20 @@
 }
 @property (nonatomic, readwrite) double sampleRate;
 @property (nonatomic, readwrite) int numberOfChannels;
-@property (nonatomic, strong, readwrite) NSURL * fileURL;
+@property (nonatomic, strong, readwrite) NSString * path;
 @property (nonatomic, readwrite) UInt64 numberOfFramesRecorded;
 @end
 
 @implementation AEAudioFileOutput
 
-- (instancetype)initWithRenderer:(AERenderer *)renderer URL:(NSURL *)url type:(AEAudioFileType)type
+- (instancetype)initWithRenderer:(AERenderer *)renderer path:(NSString *)path type:(AEAudioFileType)type
                       sampleRate:(double)sampleRate channelCount:(int)channelCount
                            error:(NSError *__autoreleasing  _Nullable *)error {
     if ( !(self = [super init]) ) return nil;
 
-    if ( !(_audioFile = AEExtAudioFileCreate(url, type, sampleRate, channelCount, error)) ) return nil;
+    if ( !(_audioFile = AEExtAudioFileCreate([NSURL fileURLWithPath:path], type, sampleRate, channelCount, error)) ) return nil;
 
-    self.fileURL = url;
+    self.path = path;
     self.sampleRate = sampleRate;
     self.numberOfChannels = channelCount;
     self.renderer = renderer;
