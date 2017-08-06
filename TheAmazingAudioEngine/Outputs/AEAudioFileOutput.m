@@ -13,13 +13,13 @@
 #import "AEBufferStack.h"
 #import "AEAudioBufferListUtilities.h"
 
-@interface AEAudioFileOutput () {
-    ExtAudioFileRef _audioFile;
-}
+@interface AEAudioFileOutput ()
 @property (nonatomic, readwrite) double sampleRate;
 @property (nonatomic, readwrite) int numberOfChannels;
 @property (nonatomic, strong, readwrite) NSString * path;
+@property (nonatomic) ExtAudioFileRef audioFile;
 @property (nonatomic, readwrite) UInt64 numberOfFramesRecorded;
+@property (nonatomic) AudioTimeStamp timestamp;
 @end
 
 @implementation AEAudioFileOutput
@@ -35,7 +35,8 @@
     self.sampleRate = sampleRate;
     self.numberOfChannels = channelCount;
     self.renderer = renderer;
-
+    _timestamp.mFlags = kAudioTimeStampSampleTimeValid | kAudioTimeStampHostTimeValid;
+    
     return self;
 }
 
@@ -62,7 +63,6 @@
         AudioBufferList * abl
             = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(self.numberOfChannels, self.sampleRate),
                                                 AEBufferStackMaxFramesPerSlice);
-        AudioTimeStamp timestamp = { .mFlags = kAudioTimeStampSampleTimeValid, .mSampleTime = 0 };
         
         // Run for frame count
         UInt32 remainingFrames = round(duration * self.sampleRate);
@@ -72,7 +72,7 @@
             AEAudioBufferListSetLength(abl, frames);
             
             // Run renderer
-            AERendererRun(_renderer, abl, frames, &timestamp);
+            AERendererRun(_renderer, abl, frames, &_timestamp);
             
             // Write to file
             status = ExtAudioFileWrite(_audioFile, frames, abl);
@@ -81,7 +81,8 @@
             }
             
             remainingFrames -= frames;
-            timestamp.mSampleTime += frames;
+            _timestamp.mSampleTime += frames;
+            _timestamp.mHostTime += AEHostTicksFromSeconds((double)frames / self.sampleRate);
             _numberOfFramesRecorded += frames;
         }
         
@@ -109,7 +110,6 @@
         AudioBufferList * abl
             = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(self.numberOfChannels, self.sampleRate),
                                                 AEBufferStackMaxFramesPerSlice);
-        AudioTimeStamp timestamp = { .mFlags = kAudioTimeStampSampleTimeValid, .mSampleTime = 0 };
         
         // Run while not stopped by condition
         OSStatus status = noErr;
@@ -117,7 +117,7 @@
             UInt32 frames = AEBufferStackMaxFramesPerSlice;
             
             // Run renderer
-            AERendererRun(_renderer, abl, AEBufferStackMaxFramesPerSlice, &timestamp);
+            AERendererRun(_renderer, abl, AEBufferStackMaxFramesPerSlice, &_timestamp);
             
             // Write to file
             status = ExtAudioFileWrite(_audioFile, AEBufferStackMaxFramesPerSlice, abl);
@@ -125,7 +125,8 @@
                 break;
             }
             
-            timestamp.mSampleTime += frames;
+            _timestamp.mSampleTime += frames;
+            _timestamp.mHostTime += AEHostTicksFromSeconds((double)frames / self.sampleRate);
             _numberOfFramesRecorded += frames;
         }
         
