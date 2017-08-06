@@ -68,7 +68,7 @@ class ViewController: UIViewController {
         speedSlider.value = 1.0
         
         if traitCollection.horizontalSizeClass != UIUserInterfaceSizeClass.compact {
-            speedSlider.transform = CGAffineTransform(rotationAngle: CGFloat(-M_PI_2))
+            speedSlider.transform = CGAffineTransform(rotationAngle: CGFloat(-Double.pi/2))
         }
         
         let playTrackImage = UIImage(named: "Play Slider Track")?.resizableImage(withCapInsets: UIEdgeInsetsMake(0, 1, 0, 1))
@@ -107,7 +107,7 @@ class ViewController: UIViewController {
         if newCollection.horizontalSizeClass == UIUserInterfaceSizeClass.compact {
             speedSlider.transform = CGAffineTransform.identity
         } else {
-            speedSlider.transform = CGAffineTransform(rotationAngle: CGFloat(-M_PI_2))
+            speedSlider.transform = CGAffineTransform(rotationAngle: CGFloat(-Double.pi/2))
         }
     }
     
@@ -221,7 +221,7 @@ class ViewController: UIViewController {
                     // Add a little animation to show recording is active
                     recordButton.isSelected = true
                     let animation = CABasicAnimation(keyPath: "transform.rotation.z")
-                    animation.byValue = 2.0*M_PI
+                    animation.byValue = 2.0*Double.pi
                     animation.duration = 2.0
                     animation.repeatCount = Float.infinity
                     recordButton.layer.add(animation, forKey: nil)
@@ -445,7 +445,7 @@ private extension ViewController {
     func updateFileActionsEnabled() {
         if let audio = audio {
             let fileManager = FileManager.default
-            exportButton.isEnabled = fileManager.fileExists(atPath: audio.recordingPath.path)
+            exportButton.isEnabled = fileManager.fileExists(atPath: audio.recordingPath)
             playButton.isEnabled = exportButton.isEnabled;
         }
     }

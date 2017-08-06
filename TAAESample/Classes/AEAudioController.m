@@ -56,50 +56,50 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     NSMutableArray * players = [NSMutableArray array];
     
     // Setup loops
-    NSURL * url = [[NSBundle mainBundle] URLForResource:@"amen" withExtension:@"m4a"];
-    AEAudioFilePlayerModule * drums = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
+    NSString * path = [[NSBundle mainBundle] pathForResource:@"amen" ofType:@"m4a"];
+    AEAudioFilePlayerModule * drums = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer path:path error:NULL];
     drums.loop = YES;
     drums.microfadeFrames = 32; // Microfade a little, to avoid clicks when turning on/off in the middle
     self.drums = drums;
     [players addObject:drums];
     
-    url = [[NSBundle mainBundle] URLForResource:@"bass" withExtension:@"m4a"];
-    AEAudioFilePlayerModule * bass = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
+    path = [[NSBundle mainBundle] pathForResource:@"bass" ofType:@"m4a"];
+    AEAudioFilePlayerModule * bass = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer path:path error:NULL];
     bass.loop = YES;
     bass.microfadeFrames = 32;
     self.bass = bass;
     [players addObject:bass];
     
-    url = [[NSBundle mainBundle] URLForResource:@"piano" withExtension:@"m4a"];
-    AEAudioFilePlayerModule * piano = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
+    path = [[NSBundle mainBundle] pathForResource:@"piano" ofType:@"m4a"];
+    AEAudioFilePlayerModule * piano = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer path:path error:NULL];
     piano.loop = YES;
     piano.microfadeFrames = 32;
     self.piano = piano;
     [players addObject:piano];
     
     // Setup one-shots
-    url = [[NSBundle mainBundle] URLForResource:@"sample1" withExtension:@"m4a"];
-    AEAudioFilePlayerModule * oneshot = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
+    path = [[NSBundle mainBundle] pathForResource:@"sample1" ofType:@"m4a"];
+    AEAudioFilePlayerModule * oneshot = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer path:path error:NULL];
     self.sample1 = oneshot;
     [players addObject:oneshot];
     
-    url = [[NSBundle mainBundle] URLForResource:@"sample2" withExtension:@"m4a"];
-    oneshot = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
+    path = [[NSBundle mainBundle] pathForResource:@"sample2" ofType:@"m4a"];
+    oneshot = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer path:path error:NULL];
     self.sample2 = oneshot;
     [players addObject:oneshot];
     
-    oneshot = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
+    oneshot = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer path:path error:NULL];
     oneshot.regionStartTime = 1.832;
     self.sample3 = oneshot;
     [players addObject:oneshot];
     
-    url = [[NSBundle mainBundle] URLForResource:@"sweep" withExtension:@"m4a"];
-    oneshot = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
+    path = [[NSBundle mainBundle] pathForResource:@"sweep" ofType:@"m4a"];
+    oneshot = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer path:path error:NULL];
     self.sweep = oneshot;
     [players addObject:oneshot];
     
-    url = [[NSBundle mainBundle] URLForResource:@"amen" withExtension:@"m4a"];
-    oneshot = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer URL:url error:NULL];
+    path = [[NSBundle mainBundle] pathForResource:@"amen" ofType:@"m4a"];
+    oneshot = [[AEAudioFilePlayerModule alloc] initWithRenderer:subrenderer path:path error:NULL];
     oneshot.regionDuration = drums.regionDuration / 32;
     oneshot.loop = YES;
     self.hit = oneshot;
@@ -291,7 +291,7 @@ static const double kMicBandpassCenterFrequency = 2000.0;
     
     // Create recorder
     AEAudioFileRecorderModule * recorder = [[AEAudioFileRecorderModule alloc] initWithRenderer:self.output.renderer
-        URL:self.recordingPath type:AEAudioFileTypeM4A error:error];
+        path:self.recordingPath type:AEAudioFileTypeM4A error:error];
     if ( !recorder ) {
         return NO;
     }
@@ -319,12 +319,12 @@ static const double kMicBandpassCenterFrequency = 2000.0;
 }
 
 - (void)playRecordingWithCompletionBlock:(void (^)())block {
-    NSURL * url = self.recordingPath;
-    if ( [[NSFileManager defaultManager] fileExistsAtPath:url.path] ) {
+    NSString * path = self.recordingPath;
+    if ( [[NSFileManager defaultManager] fileExistsAtPath:path] ) {
         
         // Start player
         AEAudioFilePlayerModule * player =
-            [[AEAudioFilePlayerModule alloc] initWithRenderer:self.output.renderer URL:url error:NULL];
+            [[AEAudioFilePlayerModule alloc] initWithRenderer:self.output.renderer path:path error:NULL];
         if ( !player ) return;
         
         // Make player available to audio renderer
@@ -473,9 +473,9 @@ static const double kMicBandpassCenterFrequency = 2000.0;
         (self.bandpassCenterFrequency * self.bandpassWetDry) + (kMicBandpassCenterFrequency * (1.0 - self.bandpassWetDry));
 }
 
-- (NSURL *)recordingPath {
-    NSURL * docs = [[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask].firstObject;
-    return [docs URLByAppendingPathComponent:@"Recording.m4a"];
+- (NSString *)recordingPath {
+    NSString * docs = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES).firstObject;
+    return [docs stringByAppendingPathComponent:@"Recording.m4a"];
 }
 
 - (double)recordingPlaybackPosition {

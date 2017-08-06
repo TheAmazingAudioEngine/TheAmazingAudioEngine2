@@ -33,7 +33,7 @@ class PlayerButton: UIView {
             
             if newValue != 0 {
                 let animation = CABasicAnimation(keyPath: "transform.rotation.z")
-                animation.byValue = (newValue > 0 ? 1.0 : -1.0)*2.0*M_PI
+                animation.byValue = (newValue > 0 ? 1.0 : -1.0)*2.0*Double.pi
                 animation.duration = 60.0 / fabs(newValue);
                 animation.repeatCount = Float.infinity
                 animation.fillMode = kCAFillModeForwards
@@ -75,6 +75,6 @@ class PlayerButton: UIView {
     }
     
     fileprivate func positionForTime(_ time: CFTimeInterval, speed: Double) -> Double {
-        return offset + ((time - startTime) / (60.0 / speed)) * 2.0*M_PI;
+        return offset + ((time - startTime) / (60.0 / speed)) * 2.0*Double.pi;
     }
 }
