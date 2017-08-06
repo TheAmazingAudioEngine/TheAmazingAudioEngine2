@@ -56,8 +56,6 @@ static AEMainThreadEndpointThread * __sharedThread = nil;
 @implementation AEMainThreadEndpoint
 
 + (AEMainThreadEndpointThread *)sharedThread {
-    assert(pthread_main_np());
-    
     if ( !__sharedThread ) {
         __sharedThread = [AEMainThreadEndpointThread new];
         [__sharedThread start];

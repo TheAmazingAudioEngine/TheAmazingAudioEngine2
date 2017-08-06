@@ -203,11 +203,6 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
 }
 
 - (void)setValue:(void *)value completionBlock:(void (^)(void *))completionBlock {
-    #ifdef DEBUG
-    if ( !pthread_main_np() ) {
-        NSLog(@"Warning: %@ %@ called from outside main thread", NSStringFromClass([self class]), NSStringFromSelector(_cmd));
-    }
-    #endif
     
     if ( value == _value ) return;
     
@@ -319,12 +314,6 @@ void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
 }
 
 void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS) {
-    #ifdef DEBUG
-    if ( AEManagedValueRealtimeThreadIdentifier && AEManagedValueRealtimeThreadIdentifier != pthread_self() ) {
-        if ( AERateLimit() ) printf("%p: %s called from outside realtime thread\n", THIS, __FUNCTION__);
-    }
-    #endif
-    
     linkedlistitem_t * release;
     while ( (release = OSAtomicDequeue(&THIS->_pendingReleaseQueue, offsetof(linkedlistitem_t, next))) ) {
         OSAtomicEnqueue(&THIS->_releaseQueue, release, offsetof(linkedlistitem_t, next));
