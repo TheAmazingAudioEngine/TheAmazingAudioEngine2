@@ -13,6 +13,8 @@
 #import "AEBufferStack.h"
 #import "AEAudioBufferListUtilities.h"
 
+const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
+
 @interface AEAudioFileOutput ()
 @property (nonatomic, readwrite) double sampleRate;
 @property (nonatomic, readwrite) int numberOfChannels;

@@ -32,6 +32,8 @@ extern "C" {
 #import <AudioToolbox/AudioToolbox.h>
 #import "AETime.h"
 #import "AETypes.h"
+    
+extern const AEHostTicks AEAudioFileOutputInitialHostTicksValue; //!< Initial host ticks value for time zero
 
 @class AERenderer;
 
