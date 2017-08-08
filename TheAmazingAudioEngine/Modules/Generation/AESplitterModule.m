@@ -28,17 +28,25 @@
 #import "AEAudioBufferListUtilities.h"
 #import "AEBufferStack.h"
 #import "AEUtilities.h"
+#import "AEDSPUtilities.h"
+#import <Accelerate/Accelerate.h>
+
+static const float kAvgFalloffPerAnalysis = 0.1;
+static const float kPeakFalloffPerAnalysis = 0.01;
 
 @interface AESplitterModule () {
     AudioBufferList * _buffer;
     AudioTimeStamp _timestamp;
     UInt64 _bufferedTime;
     UInt32 _bufferedFrames;
+    float _average;
+    float _peak;
 }
 @property (nonatomic, strong, readwrite) AEModule * module;
 @end
 
 @implementation AESplitterModule
+@dynamic average, peak;
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer module:(AEModule *)module {
     if ( !(self = [super initWithRenderer:renderer]) ) return nil;
@@ -57,16 +65,25 @@
                                                 AEBufferStackMaxFramesPerSlice);
 }
 
-static void AESplitterModuleProcess(__unsafe_unretained AESplitterModule * self, const AERenderContext * _Nonnull context) {
+- (double)peak {
+    return AEDSPRatioToDecibels(_peak);
+}
+
+- (double)average {
+    return AEDSPRatioToDecibels(_average);
+}
+
+
+static void AESplitterModuleProcess(__unsafe_unretained AESplitterModule * THIS, const AERenderContext * _Nonnull context) {
     
-    if ( (UInt64)context->timestamp->mSampleTime != self->_bufferedTime ) {
+    if ( (UInt64)context->timestamp->mSampleTime != THIS->_bufferedTime ) {
         
         // Run module, cache result
         #ifdef DEBUG
         int priorStackDepth = AEBufferStackCount(context->stack);
         #endif
         
-        AEModuleProcess(self->_module, context);
+        AEModuleProcess(THIS->_module, context);
         
         #ifdef DEBUG
         if ( AEBufferStackCount(context->stack) != priorStackDepth+1 ) {
@@ -77,22 +94,32 @@ static void AESplitterModuleProcess(__unsafe_unretained AESplitterModule * self,
         }
         #endif
         
-        self->_timestamp = *AEBufferStackGetTimeStampForBuffer(context->stack, 0);
-        self->_bufferedTime = (UInt64)context->timestamp->mSampleTime;
-        self->_bufferedFrames = context->frames;
-        AEAudioBufferListCopyContents(self->_buffer, AEBufferStackGet(context->stack, 0), 0, 0, context->frames);
+        // Perform analysis
+        const AudioBufferList * buffer = AEBufferStackGet(context->stack, 0);
+        float max = 0;
+        for ( int i=0; i<buffer->mNumberBuffers; i++ ) {
+            vDSP_maxmgv((float*)buffer->mBuffers[i].mData, 1, &max, context->frames);
+        }
+        THIS->_average = (kAvgFalloffPerAnalysis * max) + ((1.0-kAvgFalloffPerAnalysis) * THIS->_average);
+        THIS->_peak = MAX(max, ((1.0-kPeakFalloffPerAnalysis) * THIS->_peak));
+        
+        
+        THIS->_timestamp = *AEBufferStackGetTimeStampForBuffer(context->stack, 0);
+        THIS->_bufferedTime = (UInt64)context->timestamp->mSampleTime;
+        THIS->_bufferedFrames = context->frames;
+        AEAudioBufferListCopyContents(THIS->_buffer, AEBufferStackGet(context->stack, 0), 0, 0, context->frames);
     } else {
         
         // Return cached result
         #ifdef DEBUG
-        if ( context->frames != self->_bufferedFrames && AERateLimit() ) {
+        if ( context->frames != THIS->_bufferedFrames && AERateLimit() ) {
             printf("AESplitterModule has been run with different frame counts. Are you using it from a variable-rate filter?\n");
         }
         #endif
         
-        AEBufferStackPushWithChannels(context->stack, 1, self->_numberOfChannels);
-        *AEBufferStackGetTimeStampForBuffer(context->stack, 0) = self->_timestamp;
-        AEAudioBufferListCopyContents(AEBufferStackGet(context->stack, 0), self->_buffer, 0, 0, context->frames);
+        AEBufferStackPushWithChannels(context->stack, 1, THIS->_numberOfChannels);
+        *AEBufferStackGetTimeStampForBuffer(context->stack, 0) = THIS->_timestamp;
+        AEAudioBufferListCopyContents(AEBufferStackGet(context->stack, 0), THIS->_buffer, 0, 0, context->frames);
     }
 }
 
