@@ -75,9 +75,9 @@ typedef struct {
         if ( *type == AEMessageQueueMainThreadMessage ) {
             const main_thread_message_t * message = (const main_thread_message_t *)data;
             id target = message->target;
-            const char * selectorString = data + sizeof(main_thread_message_t);
-            const void * arguments = data + sizeof(main_thread_message_t) + message->selectorLength;
-            const void * argumentEnd = data + length;
+            const char * selectorString = ((char *)data) + sizeof(main_thread_message_t);
+            const char * arguments = ((char *)data) + sizeof(main_thread_message_t) + message->selectorLength;
+            const char * argumentEnd = ((char *)data) + length;
             
             // Create invocation
             SEL selector = sel_registerName(selectorString);
@@ -91,7 +91,7 @@ typedef struct {
             
             // Fill in arguments
             for ( int i = 2; i < invocation.methodSignature.numberOfArguments && arguments < argumentEnd; i++ ) {
-                const main_thread_message_arg_t * arg = arguments;
+                const main_thread_message_arg_t * arg = (const main_thread_message_arg_t *)arguments;
                 
                 // Verify argument
                 NSUInteger argLength;
