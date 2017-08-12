@@ -54,7 +54,7 @@ AESeconds AECurrentTimeInSeconds(void) {
 AEHostTicks AEHostTicksFromSeconds(AESeconds seconds) {
     if ( !__secondsToHostTicks ) AETimeInit();
     assert(seconds >= 0);
-    return seconds * __secondsToHostTicks;
+    return round(seconds * __secondsToHostTicks);
 }
 
 AESeconds AESecondsFromHostTicks(AEHostTicks ticks) {
