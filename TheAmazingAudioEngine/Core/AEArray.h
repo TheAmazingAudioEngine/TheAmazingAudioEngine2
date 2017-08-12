@@ -231,6 +231,18 @@ typedef void (^AEArrayReleaseBlock)(ObjectType _Nonnull item, void * _Nonnull by
 - (void)updatePointerValue:(void * _Nullable)value forObject:(ObjectType _Nonnull)object;
 
 /*!
+ * Determine if object is present in array, optionally returning its equivalent pointer value
+ *
+ *  Treats object like an opaque pointer; this method will not crash if object is a dangling
+ *  pointer to a deallocated instance.
+ *
+ * @param object The object
+ * @param outPointerValue If not NULL, will be set to the pointer value, as returned by pointerValueForObject:
+ * @return YES if object is present in array
+ */
+- (BOOL)containsObject:(__unsafe_unretained ObjectType _Nullable)object pointerValue:(void *_Nullable*_Nullable)outPointerValue;
+    
+/*!
  * Access objects using subscript syntax
  */
 - (ObjectType _Nullable)objectAtIndexedSubscript:(NSUInteger)idx;

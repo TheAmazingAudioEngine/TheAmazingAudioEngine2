@@ -141,6 +141,20 @@ typedef struct {
     _value.pointerValue = newArray;
 }
 
+- (BOOL)containsObject:(__unsafe_unretained id)object pointerValue:(void **)outPointerValue {
+    array_t * array = (array_t*)_value.pointerValue;
+    if ( !array->objects ) return NO;
+    int index = 0;
+    for ( id entry in array->objects ) {
+        if ( entry == object ) {
+            if ( outPointerValue ) *outPointerValue = [self pointerValueAtIndex:index];
+            return YES;
+        }
+        index++;
+    }
+    return NO;
+}
+
 - (void)updateWithContentsOfArray:(NSArray *)array {
     [self updateWithContentsOfArray:array customMapping:nil completionBlock:nil];
 }
