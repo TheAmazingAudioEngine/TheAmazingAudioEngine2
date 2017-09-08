@@ -96,18 +96,25 @@ static void AESplitterModuleProcess(__unsafe_unretained AESplitterModule * THIS,
         
         // Perform analysis
         const AudioBufferList * buffer = AEBufferStackGet(context->stack, 0);
-        float max = 0;
-        for ( int i=0; i<buffer->mNumberBuffers; i++ ) {
-            vDSP_maxmgv((float*)buffer->mBuffers[i].mData, 1, &max, context->frames);
+        if ( buffer ) {
+            float max = 0;
+            for ( int i=0; i<buffer->mNumberBuffers; i++ ) {
+                vDSP_maxmgv((float*)buffer->mBuffers[i].mData, 1, &max, context->frames);
+            }
+            THIS->_average = (kAvgFalloffPerAnalysis * max) + ((1.0-kAvgFalloffPerAnalysis) * THIS->_average);
+            THIS->_peak = MAX(max, ((1.0-kPeakFalloffPerAnalysis) * THIS->_peak));
+            
+            
+            THIS->_timestamp = *AEBufferStackGetTimeStampForBuffer(context->stack, 0);
+            AEAudioBufferListCopyContents(THIS->_buffer, AEBufferStackGet(context->stack, 0), 0, 0, context->frames);
+        } else {
+            THIS->_average = THIS->_peak = 0;
+            THIS->_timestamp = *context->timestamp;
+            AEAudioBufferListSilence(THIS->_buffer, 0, context->frames);
         }
-        THIS->_average = (kAvgFalloffPerAnalysis * max) + ((1.0-kAvgFalloffPerAnalysis) * THIS->_average);
-        THIS->_peak = MAX(max, ((1.0-kPeakFalloffPerAnalysis) * THIS->_peak));
         
-        
-        THIS->_timestamp = *AEBufferStackGetTimeStampForBuffer(context->stack, 0);
         THIS->_bufferedTime = (UInt64)context->timestamp->mSampleTime;
         THIS->_bufferedFrames = context->frames;
-        AEAudioBufferListCopyContents(THIS->_buffer, AEBufferStackGet(context->stack, 0), 0, 0, context->frames);
     } else {
         
         // Return cached result
