@@ -38,8 +38,12 @@ typedef struct {
     array_entry_t * entries[1];
 } array_t;
 
+@interface AEArrayManagedValue : AEManagedValue
+@property (nonatomic, copy) AEArrayReleaseBlock arrayReleaseBlock;
+@end
+
 @interface AEArray ()
-@property (nonatomic, strong) AEManagedValue * value;
+@property (nonatomic, strong) AEArrayManagedValue * value;
 @property (nonatomic, strong, readwrite) NSArray * allValues;
 @property (nonatomic, copy) void*(^mappingBlock)(id item);
 @end
@@ -55,9 +59,7 @@ typedef struct {
     if ( !(self = [super init]) ) return nil;
     self.mappingBlock = block;
     
-    self.value = [AEManagedValue new];
-    __unsafe_unretained AEArray * weakSelf = self;
-    self.value.releaseBlock = ^(void * value) { [weakSelf releaseOldArray:(array_t*)value]; };
+    self.value = [AEArrayManagedValue new];
     
     array_t * array = (array_t*)calloc(1, sizeof(array_t));
     array->count = 0;
@@ -66,23 +68,9 @@ typedef struct {
     return self;
 }
 
-- (void)dealloc {
-#ifdef DEBUG
-    // Verify that value is deallocated correctly
-    __weak AEManagedValue * weakValue = nil;
-    @autoreleasepool {
-        weakValue = _value;
-        self.value = nil;
-    }
-    if ( weakValue ) {
-        NSLog(@"AEArray value leaked: %@", weakValue);
-        weakValue.releaseBlock = nil;
-    }
-#else
-    @autoreleasepool {
-        self.value = nil;
-    }
-#endif
+- (void)setReleaseBlock:(AEArrayReleaseBlock)releaseBlock {
+    _releaseBlock = releaseBlock;
+    self.value.arrayReleaseBlock = releaseBlock;
 }
 
 - (NSArray *)allValues {
@@ -225,22 +213,32 @@ void * AEArrayGetItem(AEArrayToken token, int index) {
     return ((array_t*)token)->entries[index]->pointer;
 }
 
-#pragma mark - Helpers
+@end
 
-- (void)releaseOldArray:(array_t *)array {
-    for ( int i=0; i<array->count; i++ ) {
-        array->entries[i]->referenceCount--;
-        if ( array->entries[i]->referenceCount == 0 ) {
-            if ( _releaseBlock ) {
-                _releaseBlock(array->objects[i], array->entries[i]->pointer);
-            } else if ( array->entries[i]->pointer && array->entries[i]->pointer != (__bridge void*)array->objects[i] ) {
-                free(array->entries[i]->pointer);
+@implementation AEArrayManagedValue
+
+- (instancetype)init {
+    if ( !(self = [super init]) ) return nil;
+    
+    __unsafe_unretained typeof(self) weakSelf = self;
+    self.releaseBlock = ^(void * value) {
+        array_t * array = (array_t *)value;
+        for ( int i=0; i<array->count; i++ ) {
+            array->entries[i]->referenceCount--;
+            if ( array->entries[i]->referenceCount == 0 ) {
+                if ( weakSelf.arrayReleaseBlock ) {
+                    weakSelf.arrayReleaseBlock(array->objects[i], array->entries[i]->pointer);
+                } else if ( array->entries[i]->pointer && array->entries[i]->pointer != (__bridge void*)array->objects[i] ) {
+                    free(array->entries[i]->pointer);
+                }
+                free(array->entries[i]);
             }
-            free(array->entries[i]);
         }
-    }
-    if ( array->objects ) CFBridgingRelease((__bridge CFTypeRef)array->objects);
-    free(array);
+        if ( array->objects ) CFBridgingRelease((__bridge CFTypeRef)array->objects);
+        free(array);
+    };
+    
+    return self;
 }
 
 @end
