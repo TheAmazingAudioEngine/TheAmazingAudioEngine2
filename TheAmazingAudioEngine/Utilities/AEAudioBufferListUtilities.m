@@ -77,7 +77,7 @@ AudioBufferList *AEAudioBufferListCreateWithContentsOfFile(NSString * filePath, 
         return NULL;
     }
     
-    UInt32 lengthAtTargetRate = (UInt32)ceil(((double)length / fileFormat.mSampleRate) * audioFormat.mSampleRate);
+    UInt32 lengthAtTargetRate = (UInt32)floor(((double)length / fileFormat.mSampleRate) * audioFormat.mSampleRate);
     AudioBufferList * output = AEAudioBufferListCreateWithFormat(audioFormat, lengthAtTargetRate);
     
     UInt32 blockSize = 4096;
@@ -87,7 +87,7 @@ AudioBufferList *AEAudioBufferListCreateWithContentsOfFile(NSString * filePath, 
         UInt32 block = MIN(blockSize, remaining);
         AEAudioBufferListCopyOnStackWithByteOffset(target, output, (readFrames * audioFormat.mBytesPerFrame));
         AEAudioBufferListSetLength(target, block);
-        if ( !AECheckOSStatus(ExtAudioFileRead(audioFile, &block, target), "ExtAudioFileRead") ) {
+        if ( !AECheckOSStatus(ExtAudioFileRead(audioFile, &block, target), "ExtAudioFileRead") || block == 0 ) {
             break;
         }
         readFrames += block;
