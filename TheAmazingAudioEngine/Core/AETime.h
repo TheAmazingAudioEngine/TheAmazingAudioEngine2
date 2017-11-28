@@ -39,7 +39,7 @@ extern const AudioTimeStamp AETimeStampNone; //!< An empty timestamp
 /*!
  * Initialize
  */
-void AETimeInit();
+void AETimeInit(void);
 
 /*!
  * Get current global timestamp, in host ticks

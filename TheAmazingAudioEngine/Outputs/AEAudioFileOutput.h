@@ -51,7 +51,7 @@ typedef void (^AEAudioFileOutputCompletionBlock)(NSError * _Nullable error);
  *
  * @returns Whether to stop (YES) or continue (NO)
  */
-typedef BOOL (^AEAudioFileOutputConditionBlock)();
+typedef BOOL (^AEAudioFileOutputConditionBlock)(void);
 
 /*!
  * File output

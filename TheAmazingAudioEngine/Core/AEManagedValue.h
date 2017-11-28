@@ -31,7 +31,7 @@ extern "C" {
 #import <Foundation/Foundation.h>
 
 //! Batch update block
-typedef void (^AEManagedValueUpdateBlock)();
+typedef void (^AEManagedValueUpdateBlock)(void);
 
 /*!
  * Release block
@@ -41,7 +41,7 @@ typedef void (^AEManagedValueUpdateBlock)();
 typedef void (^AEManagedValueReleaseBlock)(void * _Nonnull value);
 
 //! Release notification block
-typedef void (^AEManagedValueReleaseNotificationBlock)();
+typedef void (^AEManagedValueReleaseNotificationBlock)(void);
 
 /*!
  * Managed value
@@ -103,7 +103,7 @@ void * _Nullable AEManagedValueGetValue(__unsafe_unretained AEManagedValue * _No
  *  Important: Only call this function on the audio thread. If you call this on the main thread, you
  *  will see sporadic crashes on the audio thread.
  */
-void AEManagedValueCommitPendingUpdates();
+void AEManagedValueCommitPendingUpdates(void);
 
 /*!
  * Set object value with a completion block

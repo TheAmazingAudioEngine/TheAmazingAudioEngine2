@@ -97,7 +97,7 @@ extern AEArgument AEArgumentNone;
     (AEArgument) { NO, buffer, size }
 
 //! Block
-typedef void (^AEMessageQueueBlock)();
+typedef void (^AEMessageQueueBlock)(void);
 
 /*!
  * Message Queue

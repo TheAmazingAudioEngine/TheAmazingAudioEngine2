@@ -35,7 +35,7 @@ extern "C" {
 #import "AETime.h"
 
 //! Completion/begin block
-typedef void (^AEAudioFilePlayerModuleBlock)();
+typedef void (^AEAudioFilePlayerModuleBlock)(void);
 
 /*!
  * Audio file player module

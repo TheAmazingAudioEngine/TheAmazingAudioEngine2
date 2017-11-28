@@ -55,7 +55,7 @@ static const UInt32 kNoValue = -1;
 }
 @property (nonatomic, strong, readwrite) NSString * path;
 @property (nonatomic, strong) AEManagedValue * mainThreadEndpointValue;
-@property (nonatomic, copy) void(^beginBlock)();
+@property (nonatomic, copy) void(^beginBlock)(void);
 @end
 
 @implementation AEAudioFilePlayerModule
@@ -87,7 +87,7 @@ static const UInt32 kNoValue = -1;
     }
 }
 
-- (void)setCompletionBlock:(void (^)())completionBlock {
+- (void)setCompletionBlock:(void (^)(void))completionBlock {
     _completionBlock = completionBlock;
     
     if ( _completionBlock && !self.mainThreadEndpointValue.objectValue && !self.loop ) {

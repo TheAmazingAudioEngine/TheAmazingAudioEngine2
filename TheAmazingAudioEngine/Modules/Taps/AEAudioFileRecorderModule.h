@@ -33,7 +33,7 @@ extern "C" {
 #import "AETypes.h"
 
 //! Completion block
-typedef void (^AEAudioFileRecorderModuleCompletionBlock)();
+typedef void (^AEAudioFileRecorderModuleCompletionBlock)(void);
 
 /*!
  * Audio file recorder

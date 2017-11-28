@@ -148,7 +148,7 @@ typedef void (^AEArrayReleaseBlock)(ObjectType _Nonnull item, void * _Nonnull by
  * @param array Array of values
  * @param completionBlock Block to be called upon completion of assignment
  */
-- (void)updateWithContentsOfArray:(NSArray <ObjectType> * _Nonnull)array completionBlock:(void(^ _Nullable)())completionBlock;
+- (void)updateWithContentsOfArray:(NSArray <ObjectType> * _Nonnull)array completionBlock:(void(^ _Nullable)(void))completionBlock;
 
 /*!
  * Update the array, with custom mapping
@@ -181,7 +181,7 @@ typedef void (^AEArrayReleaseBlock)(ObjectType _Nonnull item, void * _Nonnull by
  */
 - (void)updateWithContentsOfArray:(NSArray <ObjectType> * _Nonnull)array
                     customMapping:(AEArrayIndexedCustomMappingBlock _Nullable)block
-                  completionBlock:(void(^ _Nullable)())completionBlock;
+                  completionBlock:(void(^ _Nullable)(void))completionBlock;
 
 /*!
  * Get the pointer value at the given index of the C array, as seen by the audio thread

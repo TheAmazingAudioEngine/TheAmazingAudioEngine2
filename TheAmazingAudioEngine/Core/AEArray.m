@@ -147,7 +147,7 @@ typedef struct {
     [self updateWithContentsOfArray:array customMapping:nil completionBlock:nil];
 }
 
-- (void)updateWithContentsOfArray:(NSArray *)array completionBlock:(void (^)())completionBlock {
+- (void)updateWithContentsOfArray:(NSArray *)array completionBlock:(void (^)(void))completionBlock {
     [self updateWithContentsOfArray:array customMapping:nil completionBlock:completionBlock];
 }
 
@@ -157,7 +157,7 @@ typedef struct {
 
 - (void)updateWithContentsOfArray:(NSArray *)array
                     customMapping:(AEArrayIndexedCustomMappingBlock)block
-                  completionBlock:(void (^)())completionBlock {
+                  completionBlock:(void (^)(void))completionBlock {
     array_t * currentArray = (array_t*)_value.pointerValue;
     if ( currentArray && currentArray->objects && [currentArray->objects isEqualToArray:array] ) {
         // Arrays are identical - skip
