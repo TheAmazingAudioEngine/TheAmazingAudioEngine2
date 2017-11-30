@@ -76,6 +76,7 @@ extern "C" {
 #import <TheAmazingAudioEngine/AEIOAudioUnit.h>
 #import <TheAmazingAudioEngine/AEAudioFileReader.h>
 #import <TheAmazingAudioEngine/AEWeakRetainingProxy.h>
+#import <TheAmazingAudioEngine/AELevelsAnalyzer.h>
 
 
 /*!
