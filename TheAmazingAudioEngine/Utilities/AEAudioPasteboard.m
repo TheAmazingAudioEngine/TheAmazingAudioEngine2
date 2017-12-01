@@ -11,11 +11,7 @@
 #import "AEUtilities.h"
 #import "AEAudioBufferListUtilities.h"
 #import <UIKit/UIKit.h>
-
-static const double kSampleRate = 44100;
-static const int kBitsPerSample = 16;
-static const int kWaveAudioFormatPCM = 1;
-static const OSStatus kFinishedStatus = -2222;
+#import <AVFoundation/AVFoundation.h>
 
 NSString * const AEAudioPasteboardInfoNumberOfChannelsKey = @"channels";
 NSString * const AEAudioPasteboardInfoLengthInFramesKey = @"length";
@@ -34,46 +30,6 @@ typedef struct {
     AudioStreamBasicDescription sourceFormat;
     BOOL finished;
 } input_proc_data_t;
-
-#pragma mark - WAVE data structures
-
-//! RIFF header chunk
-typedef struct {
-    char ID[4];
-    int32_t Size;
-    char Format[4];
-} wave_riff_chunk_t;
-
-//! RIFF format chunk
-typedef struct {
-    char ID[4];
-    int32_t Size;
-    int16_t AudioFormat;
-    int16_t NumChannels;
-    int32_t SampleRate;
-    int32_t ByteRate;
-    int16_t BlockAlign;
-    int16_t BitsPerSample;
-} wave_fmt_chunk_t;
-
-//! Wave chunk
-typedef struct {
-    char ID[4];
-    int32_t Size;
-} wave_chunk_t;
-
-//! Wave header; Assumes only RIFF header chunk followed by format chunk
-typedef struct {
-    wave_riff_chunk_t riff_chunk;
-    wave_fmt_chunk_t fmt_chunk;
-} wave_header_t;
-
-//! RIFF header chunk followed by format chunk, followed by data chunk
-typedef struct {
-    wave_riff_chunk_t riff_chunk;
-    wave_fmt_chunk_t fmt_chunk;
-    wave_chunk_t data_chunk;
-} wave_header_plus_data_t;
 
 #pragma mark -
 
@@ -102,32 +58,35 @@ typedef struct {
     });
 }
 
-+ (NSDictionary *)infoForGeneralPasteboardItem {
-
-    // Get pasteboard item
-    const wave_header_t *header;
-    const wave_chunk_t *dataChunk;
-    NSArray <NSData *> * blocks = [self getPasteboardBlocksWithHeader:&header dataChunk:&dataChunk];
-    if ( !blocks ) {
++ (NSDictionary *)infoForAudioPasteboardItem {
+    NSData * data = [self dataForAudioOnPasteboard];
+    if ( !data ) {
         return nil;
     }
     
-    UInt32 channelCount = CFSwapInt16LittleToHost(header->fmt_chunk.NumChannels);
-    UInt32 bytesPerSample = CFSwapInt16LittleToHost(header->fmt_chunk.BitsPerSample) / 8;
-    UInt32 frames = CFSwapInt32LittleToHost(dataChunk->Size) / (bytesPerSample * channelCount);
-    double sampleRate = CFSwapInt32LittleToHost(header->fmt_chunk.SampleRate);
-    double duration = (double)frames / sampleRate;
-    size_t size = 0;
-    for ( NSData * block in blocks ) {
-        size += block.length;
+    AudioFileID audioFile;
+    ExtAudioFileRef extAudioFile = [self extAudioFileForData:data forWriting:NO audioFile:&audioFile];
+    if ( !extAudioFile ) {
+        return nil;
     }
     
+    AudioStreamBasicDescription audioDescription;
+    UInt32 size = sizeof(audioDescription);
+    ExtAudioFileGetProperty(extAudioFile, kExtAudioFileProperty_FileDataFormat, &size, &audioDescription);
+    
+    SInt64 length;
+    size = sizeof(length);
+    ExtAudioFileGetProperty(extAudioFile, kExtAudioFileProperty_FileLengthFrames, &size, &length);
+    
+    ExtAudioFileDispose(extAudioFile);
+    AudioFileClose(audioFile);
+    
     return @{
-        AEAudioPasteboardInfoNumberOfChannelsKey: @(channelCount),
-        AEAudioPasteboardInfoLengthInFramesKey: @(frames),
-        AEAudioPasteboardInfoDurationInSecondsKey: @(duration),
-        AEAudioPasteboardInfoSampleRateKey: @(sampleRate),
-        AEAudioPasteboardInfoSizeInBytesKey: @(size)
+        AEAudioPasteboardInfoNumberOfChannelsKey: @(audioDescription.mChannelsPerFrame),
+        AEAudioPasteboardInfoLengthInFramesKey: @(length),
+        AEAudioPasteboardInfoDurationInSecondsKey: @(length / audioDescription.mSampleRate),
+        AEAudioPasteboardInfoSampleRateKey: @(audioDescription.mSampleRate),
+        AEAudioPasteboardInfoSizeInBytesKey: @(data.length)
     };
 }
 
@@ -135,7 +94,7 @@ typedef struct {
              channelCount:(int)channelCount completionBlock:(void (^)(NSError * errorOrNil))completionBlock {
     
     // Get reader
-    AEAudioPasteboardReader * reader = [AEAudioPasteboardReader readerForGeneralPasteboardItem];
+    AEAudioPasteboardReader * reader = [AEAudioPasteboardReader readerForAudioPasteboardItem];
     if ( !reader ) {
         completionBlock([NSError errorWithDomain:AEAudioPasteboardErrorDomain code:AEAudioPasteboardErrorCodeNoItem
                                         userInfo:nil]);
@@ -222,50 +181,40 @@ typedef struct {
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         
         NSMutableData * audioData = [NSMutableData data];
+        OSStatus status = noErr;
         
-        // Setup buffers and converter
-        const UInt32 processBlockFrames = 4096;
-        AudioStreamBasicDescription targetAudioDescription =
-            [self pasteboardAudioDescriptionWithChannels:sourceAudioDescription.mChannelsPerFrame sampleRate:kSampleRate];
-        AudioBufferList * targetBuffer = AEAudioBufferListCreateWithFormat(targetAudioDescription, processBlockFrames);
+        AudioFileID audioFile;
+        ExtAudioFileRef extAudioFile = [self extAudioFileForData:audioData forWriting:YES audioFile:&audioFile];
         
-        AudioConverterRef converter;
-        OSStatus status = AudioConverterNew(&sourceAudioDescription, &targetAudioDescription, &converter);
-        if ( !AECheckOSStatus(status, "AudioConverterNew") ) {
+        status = ExtAudioFileSetProperty(extAudioFile, kExtAudioFileProperty_ClientDataFormat, sizeof(sourceAudioDescription), &sourceAudioDescription);
+        if ( !AECheckOSStatus(status, "ExtAudioFileSetProperty") ) {
+            ExtAudioFileDispose(extAudioFile);
+            AudioFileClose(audioFile);
             dispatch_async(dispatch_get_main_queue(), ^{
                 completionBlock([NSError errorWithDomain:NSOSStatusErrorDomain code:status userInfo:nil]);
             });
-            return;
         }
         
-        AudioBufferList * sourceBuffer = AEAudioBufferListCreateWithFormat(sourceAudioDescription, processBlockFrames);
-        
-        // Add enough space for wave header
-        [audioData increaseLengthBy:sizeof(wave_header_plus_data_t)];
+        // Setup buffers
+        const UInt32 processBlockFrames = 4096;
+        AudioBufferList * buffer = AEAudioBufferListCreateWithFormat(sourceAudioDescription, processBlockFrames);
         
         // Process audio
         BOOL finished = NO;
-        UInt32 frameCount = 0;
         while ( !finished ) {
             UInt32 block = processBlockFrames;
-            AEAudioBufferListSetLengthWithFormat(targetBuffer, targetAudioDescription, block);
-            input_proc_data_t data = { generator, sourceBuffer, processBlockFrames, sourceAudioDescription };
-            status = AudioConverterFillComplexBuffer(converter, AEAudioPasteboardFillComplexBufferInputProc,
-                                                     &data, &block, targetBuffer, NULL);
-            if ( status != noErr ) {
-                break;
-            }
-            
-            [audioData appendBytes:targetBuffer->mBuffers[0].mData length:block * targetAudioDescription.mBytesPerFrame];
-            frameCount += block;
-            
-            if ( data.finished ) {
+            AEAudioBufferListSetLengthWithFormat(buffer, sourceAudioDescription, block);
+            generator(buffer, &block, &finished);
+            AEAudioBufferListSetLengthWithFormat(buffer, sourceAudioDescription, block);
+            status = ExtAudioFileWrite(extAudioFile, block, buffer);
+            if ( !AECheckOSStatus(status, "ExtAudioFileWrite") ) {
                 break;
             }
         }
         
-        AEAudioBufferListFree(sourceBuffer);
-        AEAudioBufferListFree(targetBuffer);
+        ExtAudioFileDispose(extAudioFile);
+        AudioFileClose(audioFile);
+        AEAudioBufferListFree(buffer);
         
         if ( !AECheckOSStatus(status, "AudioConverterFillComplexBuffer") ) {
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -273,10 +222,6 @@ typedef struct {
             });
             return;
         }
-        
-        // Populate wave header
-        wave_header_plus_data_t * header = audioData.mutableBytes;
-        AEAudioPasteboardPopulateWaveHeaderFields(header, targetAudioDescription.mChannelsPerFrame, frameCount);
         
         dispatch_async(dispatch_get_main_queue(), ^{
             // Assign to clipboard
@@ -289,147 +234,122 @@ typedef struct {
 
 #pragma mark - Helpers
 
-+ (NSArray <NSData *> *)getPasteboardBlocksWithHeader:(const wave_header_t **)header dataChunk:(const wave_chunk_t **)dataChunk {
-    UIPasteboard * generalPasteboard = [UIPasteboard generalPasteboard];
-    NSIndexSet * itemSet = [generalPasteboard itemSetWithPasteboardTypes:@[(NSString *)kUTTypeAudio]];
-    if ( itemSet.count == 0 ) {
-        return nil;
++ (NSData *)dataForAudioOnPasteboard {
+    UIPasteboard * pasteboard = [UIPasteboard generalPasteboard];
+    
+    NSArray * supportedTypes = @[(NSString *)kUTTypeAudio, AVFileTypeWAVE, AVFileTypeAIFC, AVFileTypeAIFF, AVFileTypeAppleM4A, AVFileTypeAC3, AVFileTypeMPEGLayer3, AVFileTypeCoreAudioFormat];
+    
+    if ( ![pasteboard containsPasteboardTypes:supportedTypes] ) {
+        return NULL;
     }
     
-    // Parse audio item
-    NSArray <NSData *> * blocks = [generalPasteboard dataForPasteboardType:(NSString*)kUTTypeAudio inItemSet:itemSet];
-    if ( !blocks || ![self findHeader:header dataChunk:dataChunk inData:blocks.firstObject] ) {
-        return nil;
+    for ( NSString * type in supportedTypes ) {
+        NSData * data = [pasteboard dataForPasteboardType:type];
+        if ( data ) {
+            return data;
+        }
     }
     
-    return blocks;
+    return NULL;
 }
 
-+ (AudioStreamBasicDescription)pasteboardAudioDescriptionWithChannels:(int)channels sampleRate:(double)sampleRate {
-    AudioStreamBasicDescription audioDescription = {};
-    audioDescription.mFormatID          = kAudioFormatLinearPCM;
-    audioDescription.mFormatFlags       = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagsNativeEndian;
-    audioDescription.mChannelsPerFrame  = channels;
-    audioDescription.mBytesPerPacket    = sizeof(SInt16)*audioDescription.mChannelsPerFrame;
-    audioDescription.mFramesPerPacket   = 1;
-    audioDescription.mBytesPerFrame     = sizeof(SInt16)*audioDescription.mChannelsPerFrame;
-    audioDescription.mBitsPerChannel    = 8 * sizeof(SInt16);
-    audioDescription.mSampleRate        = sampleRate;
-    return audioDescription;
++ (ExtAudioFileRef)extAudioFileForData:(NSData *)data forWriting:(BOOL)write audioFile:(AudioFileID *)outAudioFile {
+    *outAudioFile = NULL;
+    
+    if ( !data ) {
+        return NULL;
+    }
+    
+    AudioFileID audioFile = NULL;
+    if ( write ) {
+        AudioStreamBasicDescription audioDescription= {
+            .mFormatID          = kAudioFormatLinearPCM,
+            .mFormatFlags       = kAudioFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked | kAudioFormatFlagsNativeEndian,
+            .mChannelsPerFrame  = 2,
+            .mBytesPerPacket    = 2 * sizeof(SInt16),
+            .mFramesPerPacket   = 1,
+            .mBytesPerFrame     = 2 * sizeof(SInt16),
+            .mBitsPerChannel    = 8 * sizeof(SInt16),
+            .mSampleRate        = 44100.0,
+        };
+        if ( !AECheckOSStatus(
+                AudioFileInitializeWithCallbacks((__bridge void *)data,
+                                                 AEAudioPasteboardRead,
+                                                 AEAudioPasteboardWrite,
+                                                 AEAudioPasteboardGetSize,
+                                                 AEAudioPasteboardSetSize,
+                                                 kAudioFileWAVEType,
+                                                 &audioDescription,
+                                                 0,
+                                                 &audioFile), "AudioFileInitializeWithCallbacks") ) {
+            return NULL;
+        }
+    } else {
+        OSStatus status =
+            AudioFileOpenWithCallbacks((__bridge void *)data, AEAudioPasteboardRead, NULL,
+                                       AEAudioPasteboardGetSize, NULL, 0, &audioFile);
+        if ( status == kAudioFileStreamError_UnsupportedFileType ) {
+            status = AudioFileOpenWithCallbacks((__bridge void *)data, AEAudioPasteboardRead, NULL,
+                                                AEAudioPasteboardGetSize, NULL, kAudioFileWAVEType, &audioFile);
+        }
+        
+        if ( !AECheckOSStatus(status, "AudioFileOpenWithCallbacks") ) {
+            return NULL;
+        }
+    }
+    
+    ExtAudioFileRef extAudioFile;
+    if ( !AECheckOSStatus(ExtAudioFileWrapAudioFileID(audioFile, write, &extAudioFile), "ExtAudioFileWrapAudioFileID") ) {
+        AudioFileClose(audioFile);
+        return NULL;
+    }
+    
+    *outAudioFile = audioFile;
+    
+    return extAudioFile;
 }
 
-static OSStatus AEAudioPasteboardFillComplexBufferInputProc(AudioConverterRef inAudioConverter,
-                                                            UInt32 * ioNumberDataPackets,
-                                                            AudioBufferList * ioData,
-                                                            AudioStreamPacketDescription ** outDataPacketDescription,
-                                                            void * inUserData) {
-    input_proc_data_t * data = (input_proc_data_t *)inUserData;
-    data->finished = NO;
-    *ioNumberDataPackets = MIN(*ioNumberDataPackets, data->sourceBufferLength);
-    AEAudioBufferListSetLengthWithFormat(data->sourceBuffer, data->sourceFormat, *ioNumberDataPackets);
-    data->generator(data->sourceBuffer, ioNumberDataPackets, &data->finished);
-    AEAudioBufferListSetLengthWithFormat(data->sourceBuffer, data->sourceFormat, *ioNumberDataPackets);
-    memcpy(ioData, data->sourceBuffer, AEAudioBufferListGetStructSize(data->sourceBuffer));
+static OSStatus AEAudioPasteboardRead(void * inClientData, SInt64 inPosition, UInt32 requestCount, void * buffer, UInt32 * actualCount) {
+    NSData * data = (__bridge NSData *)inClientData;
+    *actualCount = MIN(requestCount, (UInt32)(data.length - inPosition));
+    [data getBytes:buffer range:NSMakeRange(inPosition, *actualCount)];
     return noErr;
 }
 
-#pragma mark - WAVE format helpers
-
-//! Determine whether a wave header is valid
-static BOOL AEAudioPasteboardWaveDataIsValid(const wave_header_t * header) {
-    return ( strncmp(header->riff_chunk.ID, "RIFF", 4)==0 
-            && strncmp(header->riff_chunk.Format, "WAVE", 4)==0 
-            && strncmp(header->fmt_chunk.ID, "fmt ", 4)==0 
-            && CFSwapInt16LittleToHost(header->fmt_chunk.AudioFormat) == kWaveAudioFormatPCM 
-            && CFSwapInt32LittleToHost(header->fmt_chunk.SampleRate) == kSampleRate 
-            && CFSwapInt16LittleToHost(header->fmt_chunk.BitsPerSample) == kBitsPerSample );
+static OSStatus AEAudioPasteboardWrite(void * inClientData, SInt64 inPosition, UInt32 requestCount, const void * buffer, UInt32 * actualCount) {
+    NSMutableData * data = (__bridge NSMutableData *)inClientData;
+    if ( data.length < inPosition+requestCount ) {
+        [data setLength:inPosition+requestCount];
+    }
+    [data replaceBytesInRange:NSMakeRange(inPosition, requestCount) withBytes:buffer length:requestCount];
+    *actualCount = requestCount;
+    return noErr;
 }
 
-//! Determine whether a fourCC value is valid
-static BOOL AEAudioPasteboardFourCCIsValid(const char * fourCC) {
-    for ( int i=0; i<4; i++ ) {
-        if ( !((fourCC[i] >= 'a' && fourCC[i] <= 'z') || (fourCC[i] >= 'A' && fourCC[i] <= 'Z') || fourCC[i] == ' ') ) {
-            return NO;
-        }
-    }
-    return YES;
+static SInt64 AEAudioPasteboardGetSize(void * inClientData) {
+    NSData * data = (__bridge NSData *)inClientData;
+    return data.length;
 }
 
-//! Find data chunk located after wave_header_t, before endOfFile
-static const wave_chunk_t * AEAudioPasteboardWaveDataFindDataChunk(const wave_header_t * header, const void * endOfFile) {
-    wave_chunk_t *chunk = (wave_chunk_t*)(header+1);
-    while ( (void*)(chunk+1) <= endOfFile ) {
-        if ( !AEAudioPasteboardFourCCIsValid(chunk->ID) ) {
-            // Correct for incorrectly-aligned blocks from naughty programs
-            if ( AEAudioPasteboardFourCCIsValid(((wave_chunk_t*)(((char*)chunk)+1))->ID) )
-                chunk = (wave_chunk_t*)(((char*)chunk)+1);
-            else if ( AEAudioPasteboardFourCCIsValid(((wave_chunk_t*)(((char*)chunk)-1))->ID) )
-                chunk = (wave_chunk_t*)(((char*)chunk)-1);
-        }
-        
-        if ( strncmp(chunk->ID, "data", 4) == 0 ) break;
-        chunk = (wave_chunk_t*)(((char*)chunk) + sizeof(wave_chunk_t) + CFSwapInt32LittleToHost(chunk->Size));
-    }
-    if ( (void*)chunk >= endOfFile ) return NULL;
-    
-    return chunk;
-}
-
-//! Fill in headers with the given details
-static void AEAudioPasteboardPopulateWaveHeaderFields(wave_header_plus_data_t *header, int channels, int lengthInFrames) {
-    memcpy(header->riff_chunk.ID, "RIFF", 4);
-    header->riff_chunk.Size = CFSwapInt32HostToLittle((lengthInFrames * sizeof(SInt16) * channels) + sizeof(wave_fmt_chunk_t)
-                                                      + sizeof(wave_chunk_t) + sizeof(header->riff_chunk.Format));
-    memcpy(header->riff_chunk.Format, "WAVE", 4);
-    
-    memcpy(header->fmt_chunk.ID, "fmt ", 4);
-    header->fmt_chunk.Size = CFSwapInt32HostToLittle(sizeof(wave_fmt_chunk_t) - sizeof(header->fmt_chunk.ID)
-                                                     - sizeof(header->fmt_chunk.Size));
-    header->fmt_chunk.AudioFormat = CFSwapInt16HostToLittle(kWaveAudioFormatPCM);
-    header->fmt_chunk.NumChannels = CFSwapInt16HostToLittle(channels);
-    header->fmt_chunk.SampleRate = CFSwapInt32HostToLittle(kSampleRate);
-    header->fmt_chunk.ByteRate = CFSwapInt32HostToLittle(kSampleRate * sizeof(SInt16) * channels);
-    header->fmt_chunk.BlockAlign = CFSwapInt16HostToLittle(sizeof(SInt16) * channels);
-    header->fmt_chunk.BitsPerSample = CFSwapInt16HostToLittle(sizeof(SInt16) * 8);
-    
-    memcpy(header->data_chunk.ID, "data", 4);
-    header->data_chunk.Size = CFSwapInt32HostToLittle(lengthInFrames * sizeof(SInt16) * channels);
-}
-
-//! Find the header and data chunk in the data
-+ (BOOL)findHeader:(const wave_header_t **)outHeader dataChunk:(const wave_chunk_t **)outDataChunk inData:(NSData *)data {
-    if ( data.length < sizeof(wave_header_t)+sizeof(wave_chunk_t)
-            || !AEAudioPasteboardWaveDataIsValid((const wave_header_t*)data.bytes) ) {
-        return NO;
-    }
-    
-    const wave_chunk_t * dataChunk =
-        AEAudioPasteboardWaveDataFindDataChunk((const wave_header_t*)data.bytes, ((const char*)data.bytes + data.length));
-    
-    if ( !dataChunk ) {
-        return NO;
-    }
-    
-    *outHeader = (const wave_header_t*)data.bytes;
-    *outDataChunk = dataChunk;
-    return YES;
+static OSStatus AEAudioPasteboardSetSize(void * inClientData, SInt64 inSize) {
+    NSMutableData * data = (__bridge NSMutableData *)inClientData;
+    [data setLength:inSize];
+    return noErr;
 }
 
 @end
 
 #pragma mark - Reader
 
-@interface AEAudioPasteboardReader () {
-    AudioConverterRef _converter;
-    size_t _index;
-    size_t _offset;
-}
-@property (nonatomic) NSArray <NSData *> * blocks;
+@interface AEAudioPasteboardReader ()
+@property (nonatomic, strong) NSData * data;
+@property (nonatomic) AudioFileID audioFile;
+@property (nonatomic) ExtAudioFileRef extAudioFile;
 @end
 
 @implementation AEAudioPasteboardReader
 
-+ (instancetype)readerForGeneralPasteboardItem {
++ (instancetype)readerForAudioPasteboardItem {
     return [AEAudioPasteboardReader new];
 }
 
@@ -439,7 +359,7 @@ static void AEAudioPasteboardPopulateWaveHeaderFields(wave_header_plus_data_t *h
     _clientFormat = AEAudioDescription;
     [self reset];
     
-    if ( !self.blocks ) {
+    if ( !self.data ) {
         return nil;
     }
     
@@ -447,8 +367,9 @@ static void AEAudioPasteboardPopulateWaveHeaderFields(wave_header_plus_data_t *h
 }
 
 - (void)dealloc {
-    if ( _converter ) {
-        AudioConverterDispose(_converter);
+    if ( self.extAudioFile ) {
+        ExtAudioFileDispose(self.extAudioFile);
+        AudioFileClose(self.audioFile);
     }
 }
 
@@ -457,86 +378,39 @@ static void AEAudioPasteboardPopulateWaveHeaderFields(wave_header_plus_data_t *h
     
     _clientFormat = clientFormat;
     
-    if ( _converter ) {
-        AudioConverterDispose(_converter);
-        _converter = NULL;
+    if ( self.extAudioFile ) {
+        AECheckOSStatus(ExtAudioFileSetProperty(self.extAudioFile, kExtAudioFileProperty_ClientDataFormat,  sizeof(_clientFormat), &_clientFormat),
+                        "ExtAudioFileSetProperty(kExtAudioFileProperty_ClientDataFormat)");
     }
 }
 
-- (void)readIntoBuffer:(AudioBufferList *)buffer length:(UInt32 *)ioFrames {
-    
-    if ( _index == _blocks.count || !_blocks.count ) {
-        *ioFrames = 0;
-        return;
-    }
-    
-    if ( !_converter ) {
-        if ( !AECheckOSStatus(AudioConverterNew(&_originalFormat, &_clientFormat, &_converter), "AudioConverterNew") ) {
-            *ioFrames = 0;
-            return;
-        }
-    }
-    
+- (OSStatus)readIntoBuffer:(AudioBufferList *)buffer length:(UInt32 *)ioFrames {
     AEAudioBufferListSetLengthWithFormat(buffer, _clientFormat, *ioFrames);
-    OSStatus result = AudioConverterFillComplexBuffer(_converter, AEAudioPasteboardReaderInputProc, (__bridge void *)self,
-                                                      ioFrames, buffer, NULL);
-    if ( result != kFinishedStatus && !AECheckOSStatus(result, "AudioConverterFillComplexBuffer") ) {
-        *ioFrames = 0;
-    }
+    return ExtAudioFileRead(self.extAudioFile, ioFrames, buffer);
 }
 
 - (void)reset {
-    if ( _converter ) {
-        AudioConverterReset(_converter);
+    if ( self.extAudioFile ) {
+        ExtAudioFileDispose(self.extAudioFile);
+        AudioFileClose(self.audioFile);
     }
     
-    _index = 0;
-    _offset = 0;
-    
-    // Get pasteboard item
-    const wave_header_t *header;
-    const wave_chunk_t *dataChunk;
-    self.blocks = [AEAudioPasteboard getPasteboardBlocksWithHeader:&header dataChunk:&dataChunk];
-    if ( !self.blocks ) {
+    self.data = [AEAudioPasteboard dataForAudioOnPasteboard];
+    if ( !self.data ) {
         return;
     }
     
-    _offset = (char*)dataChunk + sizeof(wave_chunk_t) - (char*)self.blocks.firstObject.bytes;
-    
-    _originalFormat =
-        [AEAudioPasteboard pasteboardAudioDescriptionWithChannels:CFSwapInt16LittleToHost(header->fmt_chunk.NumChannels)
-                                                       sampleRate:CFSwapInt32LittleToHost(header->fmt_chunk.SampleRate)];
-}
-
-static OSStatus AEAudioPasteboardReaderInputProc(AudioConverterRef inAudioConverter,
-                                                 UInt32 * ioNumberDataPackets,
-                                                 AudioBufferList * ioData,
-                                                 AudioStreamPacketDescription ** outDataPacketDescription,
-                                                 void * inUserData) {
-    
-    AEAudioPasteboardReader * THIS = (__bridge AEAudioPasteboardReader *)inUserData;
-    
-    if ( THIS->_index == THIS->_blocks.count ) {
-        return kFinishedStatus;
+    self.extAudioFile = [AEAudioPasteboard extAudioFileForData:self.data forWriting:NO audioFile:&_audioFile];
+    if ( !self.extAudioFile ) {
+        return;
     }
     
-    NSData * block = THIS->_blocks[THIS->_index];
-    size_t remainingBytes = block.length - THIS->_offset;
-    size_t bufferBytes = MIN(*ioNumberDataPackets * THIS->_originalFormat.mBytesPerFrame, remainingBytes);
+    AECheckOSStatus(ExtAudioFileSetProperty(self.extAudioFile, kExtAudioFileProperty_ClientDataFormat,  sizeof(_clientFormat), &_clientFormat),
+                    "ExtAudioFileSetProperty(kExtAudioFileProperty_ClientDataFormat)");
     
-    *ioNumberDataPackets = (UInt32)bufferBytes / THIS->_originalFormat.mBytesPerFrame;
-    
-    ioData->mBuffers[0].mData = (void *)block.bytes + THIS->_offset;
-    ioData->mBuffers[0].mDataByteSize = (UInt32)bufferBytes;
-    
-    if ( bufferBytes == remainingBytes ) {
-        THIS->_offset = 0;
-        THIS->_index++;
-    } else {
-        THIS->_offset += bufferBytes;
-    }
-    
-    return noErr;
+    UInt32 size = sizeof(_originalFormat);
+    AECheckOSStatus(ExtAudioFileGetProperty(self.extAudioFile, kExtAudioFileProperty_FileDataFormat,  &size, &_originalFormat),
+                    "ExtAudioFileGetProperty(kExtAudioFileProperty_FileDataFormat)");
 }
 
 @end
