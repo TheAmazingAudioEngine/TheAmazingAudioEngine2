@@ -57,7 +57,7 @@ typedef void (^AEManagedValueReleaseNotificationBlock)(void);
  *  audio thread if using this class to manage an Objective-C object, and only interact with such objects
  *  via C functions they provide, not via Objective-C methods.
  */
-@interface AEManagedValue : NSObject
+@interface AEManagedValue<ObjectType> : NSObject
 
 /*!
  * Update multiple AEManagedValue instances atomically
@@ -111,7 +111,7 @@ void AEManagedValueCommitPendingUpdates(void);
  * @property objectValue The object value
  * @property completionBlock Block to perform once the old value is to be released
  */
-- (void)setObjectValue:(id _Nullable )objectValue withCompletionBlock:(void(^_Nullable)(id _Nullable oldValue))completionBlock;
+- (void)setObjectValue:(ObjectType _Nullable )objectValue withCompletionBlock:(void(^_Nullable)(ObjectType _Nullable oldValue))completionBlock;
 
 /*!
  * Set pointer value with a completion block
@@ -125,7 +125,7 @@ void AEManagedValueCommitPendingUpdates(void);
  * An object. You can set this property from the main thread. Note that you can use this property, 
  * or pointerValue, but not both.
  */
-@property (nonatomic, strong) id _Nullable objectValue;
+@property (nonatomic, strong) ObjectType _Nullable objectValue;
 
 /*!
  * A pointer to an allocated memory buffer. Old values will be automatically freed when the value 
