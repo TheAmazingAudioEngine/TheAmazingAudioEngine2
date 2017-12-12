@@ -72,6 +72,10 @@ extern pthread_t AEManagedValueRealtimeThreadIdentifier;
 @dynamic latencyCompensation;
 #endif
 
++ (NSSet<NSString *> *)keyPathsForValuesAffectingRunning {
+    return [NSSet setWithObject:@"ioUnit.running"];
+}
+
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
     if ( !(self = [super init]) ) return nil;
     
