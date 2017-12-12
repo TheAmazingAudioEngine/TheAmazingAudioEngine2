@@ -58,62 +58,63 @@ typedef struct {
     });
 }
 
-+ (NSDictionary *)infoForAudioPasteboardItem {
-    NSData * data = [self dataForAudioOnPasteboard];
-    if ( !data ) {
-        return nil;
-    }
-    
-    AudioFileID audioFile;
-    ExtAudioFileRef extAudioFile = [self extAudioFileForData:data forWriting:NO audioFile:&audioFile];
-    if ( !extAudioFile ) {
-        return nil;
-    }
-    
-    AudioStreamBasicDescription audioDescription;
-    UInt32 size = sizeof(audioDescription);
-    ExtAudioFileGetProperty(extAudioFile, kExtAudioFileProperty_FileDataFormat, &size, &audioDescription);
-    
-    SInt64 length;
-    size = sizeof(length);
-    ExtAudioFileGetProperty(extAudioFile, kExtAudioFileProperty_FileLengthFrames, &size, &length);
-    
-    ExtAudioFileDispose(extAudioFile);
-    AudioFileClose(audioFile);
-    
-    return @{
-        AEAudioPasteboardInfoNumberOfChannelsKey: @(audioDescription.mChannelsPerFrame),
-        AEAudioPasteboardInfoLengthInFramesKey: @(length),
-        AEAudioPasteboardInfoDurationInSecondsKey: @(length / audioDescription.mSampleRate),
-        AEAudioPasteboardInfoSampleRateKey: @(audioDescription.mSampleRate),
-        AEAudioPasteboardInfoSizeInBytesKey: @(data.length)
-    };
++ (void)loadInfoForAudioPasteboardItemWithCompletionBlock:(void (^)(NSDictionary *))block {
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
+        NSData * data = [self dataForAudioOnPasteboard];
+        if ( !data ) {
+            dispatch_async(dispatch_get_main_queue(), ^{ block(nil); });
+            return;
+        }
+        
+        AudioFileID audioFile;
+        ExtAudioFileRef extAudioFile = [self extAudioFileForData:data forWriting:NO audioFile:&audioFile];
+        if ( !extAudioFile ) {
+            dispatch_async(dispatch_get_main_queue(), ^{ block(nil); });
+            return;
+        }
+        
+        AudioStreamBasicDescription audioDescription;
+        UInt32 size = sizeof(audioDescription);
+        ExtAudioFileGetProperty(extAudioFile, kExtAudioFileProperty_FileDataFormat, &size, &audioDescription);
+        
+        SInt64 length;
+        size = sizeof(length);
+        ExtAudioFileGetProperty(extAudioFile, kExtAudioFileProperty_FileLengthFrames, &size, &length);
+        
+        ExtAudioFileDispose(extAudioFile);
+        AudioFileClose(audioFile);
+        
+        dispatch_async(dispatch_get_main_queue(), ^{ block(@{
+            AEAudioPasteboardInfoNumberOfChannelsKey: @(audioDescription.mChannelsPerFrame),
+            AEAudioPasteboardInfoLengthInFramesKey: @(length),
+            AEAudioPasteboardInfoDurationInSecondsKey: @(length / audioDescription.mSampleRate),
+            AEAudioPasteboardInfoSampleRateKey: @(audioDescription.mSampleRate),
+            AEAudioPasteboardInfoSizeInBytesKey: @(data.length)
+        }); });
+    });
 }
 
 + (void)pasteToFileAtPath:(NSString *)path fileType:(AEAudioFileType)fileType sampleRate:(double)sampleRate
              channelCount:(int)channelCount completionBlock:(void (^)(NSError * errorOrNil))completionBlock {
     
-    // Get reader
-    AEAudioPasteboardReader * reader = [AEAudioPasteboardReader readerForAudioPasteboardItem];
-    if ( !reader ) {
-        completionBlock([NSError errorWithDomain:AEAudioPasteboardErrorDomain code:AEAudioPasteboardErrorCodeNoItem
-                                        userInfo:nil]);
-        return;
-    }
-    
-    if ( !sampleRate ) {
-        sampleRate = reader.originalFormat.mSampleRate;
-    }
-    if ( !channelCount ) {
-        channelCount = reader.originalFormat.mChannelsPerFrame;
-    }
-    
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
+        
+        // Get reader
+        AEAudioPasteboardReader * reader = [AEAudioPasteboardReader readerForAudioPasteboardItem];
+        if ( !reader ) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                completionBlock([NSError errorWithDomain:AEAudioPasteboardErrorDomain code:AEAudioPasteboardErrorCodeNoItem
+                                                userInfo:nil]);
+            });
+            return;
+        }
         
         // Create audio file and configure for format
         NSError * error = nil;
         ExtAudioFileRef audioFile =
-            AEExtAudioFileCreate([NSURL fileURLWithPath:path], fileType, sampleRate, channelCount, &error);
+            AEExtAudioFileCreate([NSURL fileURLWithPath:path], fileType,
+                                 sampleRate ? sampleRate : reader.originalFormat.mSampleRate,
+                                 channelCount ? channelCount : reader.originalFormat.mChannelsPerFrame, &error);
         if ( !audioFile ) {
             dispatch_async(dispatch_get_main_queue(), ^{ completionBlock(error); });
             return;

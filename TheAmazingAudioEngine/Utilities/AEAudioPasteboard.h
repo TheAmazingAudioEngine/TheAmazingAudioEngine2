@@ -49,9 +49,10 @@ typedef void (^AEAudioPasteboardGeneratorBlock)(AudioBufferList * buffer, UInt32
 /*!
  * Get info about the current pasteboard item
  *
- *  Returns a dictionary of items (keyed by the AEAudioPasteboardInfo keys), or nil if there's no audio on the pasteboard
+ *  Provides, via the completion block, a dictionary of items (keyed by the AEAudioPasteboardInfo
+ *  keys), or nil if there's no audio on the pasteboard
  */
-+ (NSDictionary *)infoForAudioPasteboardItem;
++ (void)loadInfoForAudioPasteboardItemWithCompletionBlock:(void(^)(NSDictionary * info))block;
 
 /*!
  * Paste the pasteboard contents to a file
