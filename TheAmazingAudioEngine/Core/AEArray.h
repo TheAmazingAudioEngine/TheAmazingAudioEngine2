@@ -96,9 +96,9 @@ typedef void * _Nullable (^AEArrayIndexedCustomMappingBlock)(ObjectType _Nonnull
  *  and need to perform extra cleanup tasks beyond simply freeing the returned pointer.
  *
  * @param item The original object
- * @param bytes The bytes originally returned from the custom mapping block
+ * @param ptr Pointer originally returned from the custom mapping block
  */
-typedef void (^AEArrayReleaseBlock)(ObjectType _Nonnull item, void * _Nonnull bytes);
+typedef void (^AEArrayReleaseBlock)(ObjectType _Nonnull item, void * _Nonnull ptr);
 
 
 /*!
