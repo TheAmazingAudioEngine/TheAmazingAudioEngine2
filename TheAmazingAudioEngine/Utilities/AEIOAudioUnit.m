@@ -579,6 +579,15 @@ static void AEIOAudioUnitIAAConnectionChanged(void *inRefCon, AudioUnit inUnit, 
     AEIOAudioUnit * self = (__bridge AEIOAudioUnit *)inRefCon;
     dispatch_async(dispatch_get_main_queue(), ^{
         [self updateStreamFormat];
+        
+        UInt32 iaaConnected = NO;
+        UInt32 size = sizeof(iaaConnected);
+        if ( AECheckOSStatus(AudioUnitGetProperty(self.audioUnit, kAudioUnitProperty_IsInterAppConnected,
+                                                  kAudioUnitScope_Global, 0, &iaaConnected, &size),
+                             "AudioUnitGetProperty(kAudioUnitProperty_IsInterAppConnected)") && iaaConnected && !self.running ) {
+            // Start, if connected to IAA and not running
+            [self start:NULL];
+        }
     });
 }
 #endif
