@@ -313,16 +313,16 @@ typedef struct {
 static OSStatus AEAudioPasteboardRead(void * inClientData, SInt64 inPosition, UInt32 requestCount, void * buffer, UInt32 * actualCount) {
     NSData * data = (__bridge NSData *)inClientData;
     *actualCount = MIN(requestCount, (UInt32)(data.length - inPosition));
-    [data getBytes:buffer range:NSMakeRange(inPosition, *actualCount)];
+    [data getBytes:buffer range:NSMakeRange((NSUInteger)inPosition, *actualCount)];
     return noErr;
 }
 
 static OSStatus AEAudioPasteboardWrite(void * inClientData, SInt64 inPosition, UInt32 requestCount, const void * buffer, UInt32 * actualCount) {
     NSMutableData * data = (__bridge NSMutableData *)inClientData;
     if ( data.length < inPosition+requestCount ) {
-        [data setLength:inPosition+requestCount];
+        [data setLength:(NSUInteger)inPosition+requestCount];
     }
-    [data replaceBytesInRange:NSMakeRange(inPosition, requestCount) withBytes:buffer length:requestCount];
+    [data replaceBytesInRange:NSMakeRange((NSUInteger)inPosition, requestCount) withBytes:buffer length:requestCount];
     *actualCount = requestCount;
     return noErr;
 }
@@ -334,7 +334,7 @@ static SInt64 AEAudioPasteboardGetSize(void * inClientData) {
 
 static OSStatus AEAudioPasteboardSetSize(void * inClientData, SInt64 inSize) {
     NSMutableData * data = (__bridge NSMutableData *)inClientData;
-    [data setLength:inSize];
+    [data setLength:(NSUInteger)inSize];
     return noErr;
 }
 
