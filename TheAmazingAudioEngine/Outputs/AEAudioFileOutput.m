@@ -38,6 +38,7 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
     self.numberOfChannels = channelCount;
     self.renderer = renderer;
     _timestamp.mFlags = kAudioTimeStampSampleTimeValid | kAudioTimeStampHostTimeValid;
+    _timestamp.mHostTime = AEAudioFileOutputInitialHostTicksValue;
     
     return self;
 }
