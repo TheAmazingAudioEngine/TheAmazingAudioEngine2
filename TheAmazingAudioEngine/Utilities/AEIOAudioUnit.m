@@ -353,11 +353,6 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     
     // If not setup yet, take the sample rate from the audio session
 #if TARGET_OS_IPHONE
-    NSError * error;
-    if ( ![[AVAudioSession sharedInstance] setActive:YES error:&error] ) {
-        NSLog(@"Couldn't activate audio session: %@", error);
-        return 0.0;
-    }
     return [[AVAudioSession sharedInstance] sampleRate];
 #else
     return [self streamFormatForDefaultDeviceScope:
@@ -388,12 +383,6 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     
     // If not setup, take the channel count from the session
 #if TARGET_OS_IPHONE
-    NSError * error;
-    if ( ![[AVAudioSession sharedInstance] setActive:YES error:&error] ) {
-        NSLog(@"Couldn't activate audio session: %@", error);
-        return 0;
-    }
-    
     return (int)[[AVAudioSession sharedInstance] outputNumberOfChannels];
 #else
     return [self streamFormatForDefaultDeviceScope:kAudioDevicePropertyScopeOutput].mChannelsPerFrame;
@@ -457,12 +446,6 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     
     // If not setup, take the channel count from the session
 #if TARGET_OS_IPHONE
-    NSError * error;
-    if ( ![[AVAudioSession sharedInstance] setActive:YES error:&error] ) {
-        NSLog(@"Couldn't activate audio session: %@", error);
-        return 0;
-    }
-    
     return (int)[[AVAudioSession sharedInstance] inputNumberOfChannels];
 #else
     return [self streamFormatForDefaultDeviceScope:kAudioDevicePropertyScopeInput].mChannelsPerFrame;
