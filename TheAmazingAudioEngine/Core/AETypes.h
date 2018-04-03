@@ -98,6 +98,11 @@ static inline int AEChannelSetGetNumberOfChannels(AEChannelSet set) {
 static inline BOOL AEChannelSetEqualToSet(AEChannelSet a, AEChannelSet b) {
     return a.firstChannel == b.firstChannel && a.lastChannel == b.lastChannel;
 }
+    
+@interface NSValue (AEChannelSet)
++ (NSValue *)valueWithChannelSet:(AEChannelSet)channelSet;
+- (AEChannelSet)channelSetValue;
+@end
 
 #ifdef __cplusplus
 }
