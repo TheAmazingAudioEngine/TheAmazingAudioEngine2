@@ -44,6 +44,7 @@ static const double kAVAudioSession0dBGain = 0.75;
 @interface AEIOAudioUnit ()
 @property (nonatomic, strong) AEManagedValue * renderBlockValue;
 @property (nonatomic, readwrite) double currentSampleRate;
+@property (nonatomic, readwrite) BOOL running;
 @property (nonatomic, readwrite) int numberOfOutputChannels;
 @property (nonatomic, readwrite) int numberOfInputChannels;
 @property (nonatomic) AudioTimeStamp inputTimestamp;
@@ -59,7 +60,7 @@ static const double kAVAudioSession0dBGain = 0.75;
 @end
 
 @implementation AEIOAudioUnit
-@dynamic running, renderBlock, IOBufferDuration;
+@dynamic renderBlock, IOBufferDuration;
 
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
@@ -80,19 +81,6 @@ static const double kAVAudioSession0dBGain = 0.75;
 
 - (void)dealloc {
     [self teardown];
-}
-
-- (BOOL)running {
-    if ( !_audioUnit ) return NO;
-    UInt32 unitRunning;
-    UInt32 size = sizeof(unitRunning);
-    if ( !AECheckOSStatus(AudioUnitGetProperty(_audioUnit, kAudioOutputUnitProperty_IsRunning, kAudioUnitScope_Global, 0,
-                                               &unitRunning, &size),
-                          "AudioUnitGetProperty(kAudioOutputUnitProperty_IsRunning)") ) {
-        return NO;
-    }
-    
-    return unitRunning;
 }
 
 - (BOOL)setup:(NSError * _Nullable __autoreleasing *)error {
@@ -281,11 +269,15 @@ static const double kAVAudioSession0dBGain = 0.75;
         return NO;
     }
     
+    self.running = YES;
+    
     return YES;
 }
 
 - (void)stop {
     NSAssert(_audioUnit, @"You must call setup: on this instance before starting or stopping it");
+    
+    self.running = NO;
     
     // Stop unit
     [self willChangeValueForKey:@"running"];
