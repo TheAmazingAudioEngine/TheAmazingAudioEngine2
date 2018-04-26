@@ -36,6 +36,8 @@
 
 NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUnitDidUpdateStreamFormatNotification";
 NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNotification";
+NSString * const AEIOAudioUnitSessionInterruptionBeganNotification = @"AEIOAudioUnitSessionInterruptionBeganNotification";
+NSString * const AEIOAudioUnitSessionInterruptionEndedNotification = @"AEIOAudioUnitSessionInterruptionEndedNotification";
 
 static const double kAVAudioSession0dBGain = 0.75;
 
@@ -193,6 +195,7 @@ static const double kAVAudioSession0dBGain = 0.75;
             if ( wasRunning ) {
                 [weakSelf stop];
             }
+            [[NSNotificationCenter defaultCenter] postNotificationName:AEIOAudioUnitSessionInterruptionBeganNotification object:weakSelf];
         } else {
             NSUInteger optionFlags =
                 [notification.userInfo[AVAudioSessionInterruptionOptionKey] unsignedIntegerValue];
@@ -200,6 +203,7 @@ static const double kAVAudioSession0dBGain = 0.75;
                 if ( wasRunning ) {
                     [weakSelf start:NULL];
                 }
+                [[NSNotificationCenter defaultCenter] postNotificationName:AEIOAudioUnitSessionInterruptionEndedNotification object:weakSelf];
             }
         }
     }];

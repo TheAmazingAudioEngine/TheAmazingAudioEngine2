@@ -63,6 +63,22 @@ extern NSString * const _Nonnull AEIOAudioUnitDidSetupNotification;
  *  stopping the unit and starting it again.
  */
 extern NSString * const _Nonnull AEIOAudioUnitDidUpdateStreamFormatNotification;
+    
+/*!
+ * Audio session interruption notification began
+ *
+ *  This is broadcast after the AEIOAudioUnit has stopped, and stopped the audio session,
+ *  in response to a session interruption.
+ */
+extern NSString * const _Nonnull AEIOAudioUnitSessionInterruptionBeganNotification;
+    
+/*!
+ * Audio session interruption notification ended
+ *
+ *  This is broadcast once the AEIOAudioUnit has started the audio session and began
+ *  rendering again, in response to a session interruption end.
+ */
+extern NSString * const _Nonnull AEIOAudioUnitSessionInterruptionEndedNotification;
 
 /*!
  * Audio unit interface
