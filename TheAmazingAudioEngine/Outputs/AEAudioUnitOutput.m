@@ -76,6 +76,14 @@ extern pthread_t AEManagedValueRealtimeThreadIdentifier;
     return [NSSet setWithObject:@"ioUnit.running"];
 }
 
++ (NSSet<NSString *> *)keyPathsForValuesAffectingCurrentSampleRate {
+    return [NSSet setWithObject:@"ioUnit.currentSampleRate"];
+}
+
++ (NSSet<NSString *> *)keyPathsForValuesAffectingNumberOfOutputChannels {
+    return [NSSet setWithObject:@"ioUnit.numberOfOutputChannels"];
+}
+
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
     if ( !(self = [super init]) ) return nil;
     
