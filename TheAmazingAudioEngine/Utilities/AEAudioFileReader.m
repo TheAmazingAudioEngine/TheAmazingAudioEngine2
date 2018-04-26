@@ -256,17 +256,17 @@ static const UInt32 kMaxAudioFileReadSize = 16384;
     // Call completion blocks
     if ( !_cancelled ) {
         dispatch_async(dispatch_get_main_queue(), ^{
-            if ( _cancelled ) {
-                if ( _loadBlock ) {
+            if ( self.cancelled ) {
+                if ( self.loadBlock ) {
                     AEAudioBufferListFree(bufferList);
                 }
                 return;
             }
             
-            if ( _loadBlock ) {
-                _loadBlock(bufferList, readFrames, NULL);
+            if ( self.loadBlock ) {
+                self.loadBlock(bufferList, readFrames, NULL);
             } else {
-                _readCompletionBlock(NULL);
+                self.readCompletionBlock(NULL);
             }
         });
     }
@@ -274,10 +274,10 @@ static const UInt32 kMaxAudioFileReadSize = 16384;
 
 - (void)reportError:(NSError *)error {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if ( _loadBlock ) {
-            _loadBlock(NULL, 0, error);
+        if ( self.loadBlock ) {
+            self.loadBlock(NULL, 0, error);
         } else {
-            _readCompletionBlock(error);
+            self.readCompletionBlock(error);
         }
     });
 }

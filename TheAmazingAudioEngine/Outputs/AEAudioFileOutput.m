@@ -75,18 +75,18 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
             AEAudioBufferListSetLength(abl, frames);
             
             // Run renderer
-            AERendererRun(_renderer, abl, frames, &_timestamp);
+            AERendererRun(self.renderer, abl, frames, &self->_timestamp);
             
             // Write to file
-            status = ExtAudioFileWrite(_audioFile, frames, abl);
+            status = ExtAudioFileWrite(self.audioFile, frames, abl);
             if ( !AECheckOSStatus(status, "ExtAudioFileWrite") ) {
                 break;
             }
             
             remainingFrames -= frames;
-            _timestamp.mSampleTime += frames;
-            _timestamp.mHostTime += AEHostTicksFromSeconds((double)frames / self.sampleRate);
-            _numberOfFramesRecorded += frames;
+            self->_timestamp.mSampleTime += frames;
+            self->_timestamp.mHostTime += AEHostTicksFromSeconds((double)frames / self.sampleRate);
+            self->_numberOfFramesRecorded += frames;
         }
         
         AEAudioBufferListFree(abl);
@@ -120,17 +120,17 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
             UInt32 frames = AEBufferStackMaxFramesPerSlice;
             
             // Run renderer
-            AERendererRun(_renderer, abl, AEBufferStackMaxFramesPerSlice, &_timestamp);
+            AERendererRun(self.renderer, abl, AEBufferStackMaxFramesPerSlice, &self->_timestamp);
             
             // Write to file
-            status = ExtAudioFileWrite(_audioFile, AEBufferStackMaxFramesPerSlice, abl);
+            status = ExtAudioFileWrite(self.audioFile, AEBufferStackMaxFramesPerSlice, abl);
             if ( !AECheckOSStatus(status, "ExtAudioFileWrite") ) {
                 break;
             }
             
-            _timestamp.mSampleTime += frames;
-            _timestamp.mHostTime += AEHostTicksFromSeconds((double)frames / self.sampleRate);
-            _numberOfFramesRecorded += frames;
+            self->_timestamp.mSampleTime += frames;
+            self->_timestamp.mHostTime += AEHostTicksFromSeconds((double)frames / self.sampleRate);
+            self->_numberOfFramesRecorded += frames;
         }
         
         AEAudioBufferListFree(abl);
