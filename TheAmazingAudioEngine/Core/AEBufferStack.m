@@ -30,6 +30,7 @@
 #import "AEUtilities.h"
 
 const UInt32 AEBufferStackMaxFramesPerSlice = 4096;
+static const int kMaxChannelsPerBuffer = 32;
 static const int kDefaultPoolSize = 16;
 
 typedef struct _AEBufferStackBufferLinkedList {
@@ -51,7 +52,6 @@ typedef struct {
 
 struct AEBufferStack {
     int                poolSize;
-    int                maxChannelsPerBuffer;
     UInt32             frameCount;
     AudioTimeStamp     timeStamp;
     int                stackCount;
@@ -68,22 +68,21 @@ static void * AEBufferStackPoolGetUsedBufferAtIndex(const AEBufferStackPool * po
 static void AEBufferStackSwapTopTwoUsedBuffers(AEBufferStackPool * pool);
 
 AEBufferStack * AEBufferStackNew(int poolSize) {
-    return AEBufferStackNewWithOptions(poolSize, 2, 0);
+    return AEBufferStackNewWithOptions(poolSize, 0);
 }
 
-AEBufferStack * AEBufferStackNewWithOptions(int poolSize, int maxChannelsPerBuffer, int numberOfSingleChannelBuffers) {
+AEBufferStack * AEBufferStackNewWithOptions(int poolSize, int numberOfSingleChannelBuffers) {
     if ( !poolSize ) poolSize = kDefaultPoolSize;
-    if ( !numberOfSingleChannelBuffers ) numberOfSingleChannelBuffers = poolSize * maxChannelsPerBuffer;
+    if ( !numberOfSingleChannelBuffers ) numberOfSingleChannelBuffers = poolSize * 2;
     
     AEBufferStack * stack = (AEBufferStack*)calloc(1, sizeof(AEBufferStack));
     stack->poolSize = poolSize;
-    stack->maxChannelsPerBuffer = maxChannelsPerBuffer;
     stack->frameCount = AEBufferStackMaxFramesPerSlice;
     
     size_t bytesPerBufferChannel = AEBufferStackMaxFramesPerSlice * AEAudioDescription.mBytesPerFrame;
     AEBufferStackPoolInit(&stack->audioPool, numberOfSingleChannelBuffers, bytesPerBufferChannel);
     
-    size_t bytesPerBufferListEntry = sizeof(AEBufferStackBuffer) + ((maxChannelsPerBuffer-1) * sizeof(AudioBuffer));
+    size_t bytesPerBufferListEntry = sizeof(AEBufferStackBuffer) + ((kMaxChannelsPerBuffer-1) * sizeof(AudioBuffer));
     AEBufferStackPoolInit(&stack->bufferListPool, poolSize, bytesPerBufferListEntry);
     
     return stack;
@@ -116,10 +115,6 @@ int AEBufferStackGetPoolSize(const AEBufferStack * stack) {
     return stack->poolSize;
 }
 
-int AEBufferStackGetMaximumChannelsPerBuffer(const AEBufferStack * stack) {
-    return stack->maxChannelsPerBuffer;
-}
-
 int AEBufferStackCount(const AEBufferStack * stack) {
     return stack->stackCount;
 }
@@ -148,7 +143,7 @@ const AudioBufferList * AEBufferStackPushWithChannels(AEBufferStack * stack, int
         return NULL;
     }
     
-    if ( channelCount > stack->maxChannelsPerBuffer ) {
+    if ( channelCount > kMaxChannelsPerBuffer ) {
 #ifdef DEBUG
         if ( AERateLimit() )
             printf("Tried to push a buffer with too many channels. Add a breakpoint on AEBufferStackPushFailed to debug.\n");
@@ -191,7 +186,7 @@ const AudioBufferList * AEBufferStackPushExternal(AEBufferStack * stack, const A
         return NULL;
     }
     
-    if ( buffer->mNumberBuffers > stack->maxChannelsPerBuffer ) {
+    if ( buffer->mNumberBuffers > kMaxChannelsPerBuffer ) {
 #ifdef DEBUG
         if ( AERateLimit() )
             printf("Tried to push a buffer with too many channels. Add a breakpoint on AEBufferStackPushFailed to debug.\n");

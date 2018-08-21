@@ -48,11 +48,10 @@ AEBufferStack * AEBufferStackNew(int poolSize);
  * Initialize a new buffer stack, supplying additional options
  *
  * @param poolSize The number of audio buffer lists to make room for in the buffer pool, or 0 for default value
- * @param maxChannelsPerBuffer The maximum number of audio channels for each buffer (default 2)
- * @param numberOfSingleChannelBuffers Number of mono float buffers to allocate (or 0 for default: poolSize*maxChannelsPerBuffer)
+ * @param numberOfSingleChannelBuffers Number of mono float buffers to allocate (or 0 for default: poolSize*2)
  * @return The new buffer stack
  */
-AEBufferStack * AEBufferStackNewWithOptions(int poolSize, int maxChannelsPerBuffer, int numberOfSingleChannelBuffers);
+AEBufferStack * AEBufferStackNewWithOptions(int poolSize, int numberOfSingleChannelBuffers);
 
 /*!
  * Clean up a buffer stack
@@ -100,14 +99,6 @@ const AudioTimeStamp * AEBufferStackGetTimeStamp(const AEBufferStack * stack);
  * @return The current pool size
  */
 int AEBufferStackGetPoolSize(const AEBufferStack * stack);
-
-/*!
- * Get the maximum number of channels per buffer
- *
- * @param stack The stack
- * @return The maximum number of channels per buffer
- */
-int AEBufferStackGetMaximumChannelsPerBuffer(const AEBufferStack * stack);
 
 /*!
  * Get the current stack count

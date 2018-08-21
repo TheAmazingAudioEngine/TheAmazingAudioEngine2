@@ -61,9 +61,7 @@
         self.ioUnit.sampleRate = self.renderer.sampleRate;
         self.ownsIOUnit = YES;
     }
-    
-    self.ioUnit.maximumInputChannels = AEBufferStackGetMaximumChannelsPerBuffer(self.renderer.stack);
-    
+        
     __weak typeof(self) weakSelf = self;
     self.ioUnitStreamChangeObserverToken =
     [[NSNotificationCenter defaultCenter] addObserverForName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self.ioUnit

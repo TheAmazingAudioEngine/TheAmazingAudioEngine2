@@ -41,7 +41,6 @@ static const UInt32 kNoValue = -1;
     AudioFileID _audioFile;
     double      _fileSampleRate;
     int         _channels;
-    int         _usableChannels;
     UInt32      _lengthInFrames;
     AESeconds   _regionDuration;
     AESeconds   _regionStartTime;
@@ -312,7 +311,6 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
     
     _fileSampleRate = fileDescription.mSampleRate;
     _channels = fileDescription.mChannelsPerFrame;
-    _usableChannels = MIN(_channels, AEBufferStackGetMaximumChannelsPerBuffer(self.renderer.stack));
     _lengthInFrames = (UInt32)fileLengthInFrames;
     _regionStartTime = 0;
     _regionDuration = (double)_lengthInFrames / _fileSampleRate;
@@ -423,7 +421,7 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
 static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayerModule * THIS,
                                            const AERenderContext * _Nonnull context) {
     
-    const AudioBufferList * abl = AEBufferStackPushWithChannels(context->stack, 1, THIS->_usableChannels);
+    const AudioBufferList * abl = AEBufferStackPushWithChannels(context->stack, 1, THIS->_channels);
     if ( !abl ) return;
     
     if ( !THIS->_playing ) {
