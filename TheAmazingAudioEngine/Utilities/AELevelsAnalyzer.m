@@ -33,7 +33,11 @@ void AELevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AELevelsAnalyzer * THIS,
     
     if ( numberFrames > 0 && buffer ) {
         for ( int i=0; i<buffer->mNumberBuffers; i++ ) {
-            vDSP_maxmgv((float*)buffer->mBuffers[i].mData, 1, &max, numberFrames);
+            float bufferMax = max;
+            vDSP_maxmgv((float*)buffer->mBuffers[i].mData, 1, &bufferMax, numberFrames);
+            if ( bufferMax > max ) {
+                max = bufferMax;
+            }
         }
     }
     
