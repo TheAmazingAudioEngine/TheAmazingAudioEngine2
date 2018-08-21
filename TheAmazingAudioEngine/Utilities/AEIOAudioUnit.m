@@ -656,7 +656,7 @@ static void AEIOAudioUnitIAAConnectionChanged(void *inRefCon, AudioUnit inUnit, 
             asbd.mChannelsPerFrame = 2;
         }
         
-        int channels = MIN(asbd.mChannelsPerFrame, self.maximumInputChannels);
+        int channels = self.maximumInputChannels ? MIN(asbd.mChannelsPerFrame, self.maximumInputChannels) : asbd.mChannelsPerFrame;
         if ( _numberOfInputChannels != (int)channels ) {
             hasChanges = YES;
             self.numberOfInputChannels = channels;
