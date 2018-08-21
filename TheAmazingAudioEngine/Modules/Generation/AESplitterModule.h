@@ -56,12 +56,6 @@ extern "C" {
 //! You should not change this value while the module is in use.
 @property (nonatomic) int numberOfChannels;
 
-//! Average level
-@property (nonatomic) double average;
-
-//! Peak level
-@property (nonatomic) double peak;
-
 @end
 
 #ifdef __cplusplus
