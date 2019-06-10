@@ -181,10 +181,21 @@ static const double kAVAudioSession0dBGain = 0.75;
         NSInteger type = [notification.userInfo[AVAudioSessionInterruptionTypeKey] integerValue];
         if ( type == AVAudioSessionInterruptionTypeBegan ) {
             wasRunning = weakSelf.running;
-            if ( wasRunning ) {
-                [weakSelf stop];
+            
+            UInt32 interAppAudioConnected;
+            UInt32 size = sizeof(interAppAudioConnected);
+            AECheckOSStatus(AudioUnitGetProperty(weakSelf.audioUnit, kAudioUnitProperty_IsInterAppConnected, kAudioUnitScope_Global, 0, &interAppAudioConnected, &size), "AudioUnitGetProperty");
+            if ( interAppAudioConnected ) {
+                // Restart immediately, this is a spurious interruption
+                if ( !wasRunning ) {
+                    [weakSelf start:NULL];
+                }
+            } else {
+                if ( wasRunning ) {
+                    [weakSelf stop];
+                }
+                [[NSNotificationCenter defaultCenter] postNotificationName:AEIOAudioUnitSessionInterruptionBeganNotification object:weakSelf];
             }
-            [[NSNotificationCenter defaultCenter] postNotificationName:AEIOAudioUnitSessionInterruptionBeganNotification object:weakSelf];
         } else {
             NSUInteger optionFlags =
                 [notification.userInfo[AVAudioSessionInterruptionOptionKey] unsignedIntegerValue];
