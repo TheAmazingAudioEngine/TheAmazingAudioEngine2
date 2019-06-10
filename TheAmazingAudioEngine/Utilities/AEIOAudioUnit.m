@@ -209,9 +209,11 @@ static const double kAVAudioSession0dBGain = 0.75;
     [[NSNotificationCenter defaultCenter] addObserverForName:AVAudioSessionRouteChangeNotification object:nil
                                                        queue:nil usingBlock:^(NSNotification *notification)
     {
-        weakSelf.outputLatency = [AVAudioSession sharedInstance].outputLatency;
-        weakSelf.inputLatency = [AVAudioSession sharedInstance].inputLatency;
-        weakSelf.inputGain = weakSelf.inputGain;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            weakSelf.outputLatency = [AVAudioSession sharedInstance].outputLatency;
+            weakSelf.inputLatency = [AVAudioSession sharedInstance].inputLatency;
+            weakSelf.inputGain = weakSelf.inputGain;
+        });
     }];
     
     // Register callback to watch for Inter-App Audio connections
