@@ -63,6 +63,7 @@
 		4C7F3DD21FCFCDE300127BE6 /* AELevelsAnalyzer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7F3DCE1FCFCDE300127BE6 /* AELevelsAnalyzer.m */; };
 		4C7F3DD31FCFCDE300127BE6 /* AELevelsAnalyzer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7F3DCE1FCFCDE300127BE6 /* AELevelsAnalyzer.m */; };
 		4C7F3DD41FCFCDE300127BE6 /* AELevelsAnalyzer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7F3DCE1FCFCDE300127BE6 /* AELevelsAnalyzer.m */; };
+		4C943E231F2EE0A6000F1049 /* AEAudiobusInputModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C2BCEE11DACB33E00AD7A8D /* AEAudiobusInputModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C94E2861CAC9EAA006EB497 /* AEBufferStackTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C94E2851CAC9EAA006EB497 /* AEBufferStackTests.m */; };
 		4C94E2991CADFFB6006EB497 /* AEDSPUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C94E2971CADFFB6006EB497 /* AEDSPUtilities.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C94E29A1CADFFB6006EB497 /* AEDSPUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C94E2981CADFFB6006EB497 /* AEDSPUtilities.m */; };
@@ -177,6 +178,12 @@
 		4C9F0FB71CB269C30032903E /* AEVarispeedModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CDCAD761CA5484D008AAEF1 /* AEVarispeedModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C9F0FB81CB269C30032903E /* AELowShelfModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CDCAD6C1CA5484D008AAEF1 /* AELowShelfModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C9F0FBE1CB339180032903E /* AEManagedValueTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C9F0FBD1CB339180032903E /* AEManagedValueTests.m */; };
+		4CB2267622DC8C180064651A /* AEBlockModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CB2267422DC8C180064651A /* AEBlockModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4CB2267722DC8C180064651A /* AEBlockModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CB2267422DC8C180064651A /* AEBlockModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4CB2267822DC8C180064651A /* AEBlockModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CB2267422DC8C180064651A /* AEBlockModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4CB2267922DC8C180064651A /* AEBlockModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CB2267522DC8C180064651A /* AEBlockModule.m */; };
+		4CB2267A22DC8C180064651A /* AEBlockModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CB2267522DC8C180064651A /* AEBlockModule.m */; };
+		4CB2267B22DC8C180064651A /* AEBlockModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CB2267522DC8C180064651A /* AEBlockModule.m */; };
 		4CB2F2E11D49ABC6008F745F /* AEArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CB2F2D51D49ABC6008F745F /* AEArray.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4CB2F2E21D49ABC6008F745F /* AEArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CB2F2D51D49ABC6008F745F /* AEArray.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4CB2F2E31D49ABC6008F745F /* AEArray.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CB2F2D51D49ABC6008F745F /* AEArray.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -373,6 +380,8 @@
 		4C9F0F741CB265F90032903E /* libTheAmazingAudioEngine OS X.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTheAmazingAudioEngine OS X.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C9F0FBC1CB269C30032903E /* libTheAmazingAudioEngine tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTheAmazingAudioEngine tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C9F0FBD1CB339180032903E /* AEManagedValueTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEManagedValueTests.m; sourceTree = "<group>"; };
+		4CB2267422DC8C180064651A /* AEBlockModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AEBlockModule.h; sourceTree = "<group>"; };
+		4CB2267522DC8C180064651A /* AEBlockModule.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AEBlockModule.m; sourceTree = "<group>"; };
 		4CB2F2D51D49ABC6008F745F /* AEArray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEArray.h; sourceTree = "<group>"; };
 		4CB2F2D61D49ABC6008F745F /* AEArray.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEArray.m; sourceTree = "<group>"; };
 		4CB2F2D71D49ABC6008F745F /* AEBufferStack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEBufferStack.h; sourceTree = "<group>"; };
@@ -583,6 +592,8 @@
 				4C77566C1CCB42AA004415A2 /* AESubrendererModule.m */,
 				4CDCAD9A1CA90F98008AAEF1 /* AEAudioUnitModule.h */,
 				4CDCAD9B1CA90F98008AAEF1 /* AEAudioUnitModule.m */,
+				4CB2267422DC8C180064651A /* AEBlockModule.h */,
+				4CB2267522DC8C180064651A /* AEBlockModule.m */,
 				4CDCAD501CA3D215008AAEF1 /* Generation */,
 				4CDCAD551CA3E574008AAEF1 /* Processing */,
 				4C94E2A21CAE6AE0006EB497 /* Taps */,
@@ -711,6 +722,7 @@
 				4CB2F2FA1D49ABC6008F745F /* AETime.h in Headers */,
 				4CE10C311D07E510004AA02C /* AEWeakRetainingProxy.h in Headers */,
 				4C9F0F541CB265F90032903E /* AENewTimePitchModule.h in Headers */,
+				4CB2267722DC8C180064651A /* AEBlockModule.h in Headers */,
 				4C9F0F551CB265F90032903E /* AEAudioFilePlayerModule.h in Headers */,
 				4CB2F2EE1D49ABC6008F745F /* AEManagedValue.h in Headers */,
 				4CE5F4C51CD30A1900322F03 /* AEMainThreadEndpoint.h in Headers */,
@@ -762,6 +774,7 @@
 				4CB2F2FB1D49ABC6008F745F /* AETime.h in Headers */,
 				4CE10C301D07E510004AA02C /* AEWeakRetainingProxy.h in Headers */,
 				4C9F0F9D1CB269C30032903E /* AENewTimePitchModule.h in Headers */,
+				4CB2267822DC8C180064651A /* AEBlockModule.h in Headers */,
 				4C9F0F9E1CB269C30032903E /* AEAudioFilePlayerModule.h in Headers */,
 				4CB2F2EF1D49ABC6008F745F /* AEManagedValue.h in Headers */,
 				4CE5F4C61CD30A1900322F03 /* AEMainThreadEndpoint.h in Headers */,
@@ -834,6 +847,7 @@
 				4CB2F2ED1D49ABC6008F745F /* AEManagedValue.h in Headers */,
 				4CB2F2E11D49ABC6008F745F /* AEArray.h in Headers */,
 				4CDCAD801CA5484D008AAEF1 /* AEHighPassModule.h in Headers */,
+				4CB2267622DC8C180064651A /* AEBlockModule.h in Headers */,
 				4C77569B1CD2E5C6004415A2 /* TPCircularBuffer+AudioBufferList.h in Headers */,
 				4CDCACEB1CA25B6F008AAEF1 /* TheAmazingAudioEngine.h in Headers */,
 				4CE5F4CE1CD3169C00322F03 /* AEAudioThreadEndpoint.h in Headers */,
@@ -844,6 +858,7 @@
 				4CE5F4C41CD30A1900322F03 /* AEMainThreadEndpoint.h in Headers */,
 				4C43E5A91CF131290000DB62 /* AEAudioFileReader.h in Headers */,
 				4CDCAD3F1CA3C31C008AAEF1 /* AERenderer.h in Headers */,
+				4C943E231F2EE0A6000F1049 /* AEAudiobusInputModule.h in Headers */,
 				4CDCAD431CA3C31C008AAEF1 /* AEMessageQueue.h in Headers */,
 				4CDCAD411CA3C31C008AAEF1 /* AEAudioBufferListUtilities.h in Headers */,
 				4C77566D1CCB42AA004415A2 /* AESubrendererModule.h in Headers */,
@@ -1013,6 +1028,7 @@
 				4C9F0F3F1CB265F90032903E /* AEHighPassModule.m in Sources */,
 				4C9F0F401CB265F90032903E /* AEVarispeedModule.m in Sources */,
 				4C9F0F411CB265F90032903E /* AEBandpassModule.m in Sources */,
+				4CB2267A22DC8C180064651A /* AEBlockModule.m in Sources */,
 				4C9F0F421CB265F90032903E /* AEAudioFileRecorderModule.m in Sources */,
 				4C43E5AD1CF131290000DB62 /* AEAudioFileReader.m in Sources */,
 				4C31831C1CDEC6560085634F /* AEAudioFileOutput.m in Sources */,
@@ -1066,6 +1082,7 @@
 				4C9F0F891CB269C30032903E /* AEHighPassModule.m in Sources */,
 				4C9F0F8A1CB269C30032903E /* AEVarispeedModule.m in Sources */,
 				4C9F0F8B1CB269C30032903E /* AEBandpassModule.m in Sources */,
+				4CB2267B22DC8C180064651A /* AEBlockModule.m in Sources */,
 				4C9F0F8C1CB269C30032903E /* AEAudioFileRecorderModule.m in Sources */,
 				4C43E5AE1CF131290000DB62 /* AEAudioFileReader.m in Sources */,
 				4C31831D1CDEC6560085634F /* AEAudioFileOutput.m in Sources */,
@@ -1128,6 +1145,7 @@
 				4CE5F4D11CD3169C00322F03 /* AEAudioThreadEndpoint.m in Sources */,
 				4C9F0F231CB1E9FC0032903E /* AEIOAudioUnit.m in Sources */,
 				4C636E211D0D7BED005A380B /* AERealtimeWatchdog-simulator-x86_64.s in Sources */,
+				4CB2267922DC8C180064651A /* AEBlockModule.m in Sources */,
 				4CB2F2EA1D49ABC6008F745F /* AEBufferStack.m in Sources */,
 				4C31831B1CDEC6560085634F /* AEAudioFileOutput.m in Sources */,
 				4C7756981CD2E5C6004415A2 /* TPCircularBuffer+AudioBufferList.c in Sources */,

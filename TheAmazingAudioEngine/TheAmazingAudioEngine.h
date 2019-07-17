@@ -33,6 +33,7 @@ extern "C" {
 
 #import <TheAmazingAudioEngine/AEModule.h>
 #import <TheAmazingAudioEngine/AESubrendererModule.h>
+#import <TheAmazingAudioEngine/AEBlockModule.h>
 #import <TheAmazingAudioEngine/AEAudioUnitModule.h>
 #import <TheAmazingAudioEngine/AEAudioUnitInputModule.h>
 #import <TheAmazingAudioEngine/AEAudioFilePlayerModule.h>
