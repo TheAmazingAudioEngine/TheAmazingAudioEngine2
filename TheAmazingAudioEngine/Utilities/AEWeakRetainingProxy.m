@@ -27,7 +27,7 @@
 #import "AEWeakRetainingProxy.h"
 
 @interface AEWeakRetainingProxy ()
-@property (nonatomic, weak, readwrite) id target;
+@property (nonatomic, unsafe_unretained, readwrite) id target;
 @end
 
 @implementation AEWeakRetainingProxy

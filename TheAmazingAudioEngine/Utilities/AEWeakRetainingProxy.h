@@ -41,7 +41,7 @@ extern "C" {
 
 + (instancetype _Nonnull)proxyWithTarget:(id _Nonnull)target;
 
-@property (nonatomic, weak, readonly) id _Nullable target;
+@property (nonatomic, unsafe_unretained, readonly) id _Nullable target;
 
 @end
 
