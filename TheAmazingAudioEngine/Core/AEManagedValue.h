@@ -106,6 +106,15 @@ void * _Nullable AEManagedValueGetValue(__unsafe_unretained AEManagedValue * _No
 void AEManagedValueCommitPendingUpdates(void);
 
 /*!
+ * Service the release queue for this instance
+ *
+ *  Normally you do not need to call this function as it is done for you from AEManagedValueCommitPendingUpdates.
+ *  But if you use an instance of this class from any other thread than the audio thread (usedOnAudioThread = NO),
+ *  then you should call this function from the same thread that you use AEManagedValueGetValue.
+ */
+void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * _Nonnull managedValue);
+
+/*!
  * Set object value with a completion block
  *
  * @property objectValue The object value
@@ -144,6 +153,18 @@ void AEManagedValueCommitPendingUpdates(void);
  * Block for release notifications. Use this to be informed when an old value has been released.
  */
 @property (nonatomic, copy) AEManagedValueReleaseNotificationBlock _Nullable releaseNotificationBlock;
+
+/*!
+ * Whether this instance is to be used on the audio thread (default YES)
+ *
+ * If you use the AEManagedValueGetValue function of an instance on any other thread than the audio
+ * thread, you must set this property to NO, and ensure that you either call AEManagedValueGetValue regularly,
+ * or call AEManagedValueServiceReleaseQueue from the same thread to avoid delayed release of old values.
+ *
+ * This ensures that the default cleanup mechanism in AEManagedValueCommitPendingUpdates does not cause data
+ * to be released out of sync with the thread you use this instance with, causing crashes.
+ */
+@property (nonatomic) BOOL usedOnAudioThread;
 
 @end
 

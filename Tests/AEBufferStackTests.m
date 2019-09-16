@@ -163,7 +163,7 @@ static inline float valueForChannelOfBuffer(int channel, int buffer) {
 }
 
 - (void)testMix {
-    AEBufferStack * stack = AEBufferStackNewWithOptions(6, 4, 11);
+    AEBufferStack * stack = AEBufferStackNewWithOptions(6, 11);
     
     UInt32 frames = 128;
     AEBufferStackSetFrameCount(stack, frames);

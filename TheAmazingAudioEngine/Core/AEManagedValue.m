@@ -140,6 +140,7 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
 
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
+    _usedOnAudioThread = YES;
     return self;
 }
 
@@ -147,20 +148,22 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
     // Remove self from deferred sync list
     [__atomicUpdatedDeferredSyncValues removeObject:self];
     
-    // Remove self from instances awaiting service list
-    pthread_mutex_lock(&__pendingInstancesMutex);
-    for ( linkedlistitem_t * entry = __pendingInstances, * prior = NULL; entry; prior = entry, entry = entry->next ) {
-        if ( entry->data == (__bridge void*)self ) {
-            if ( prior ) {
-                prior->next = entry->next;
-            } else {
-                __pendingInstances = entry->next;
+    if ( self.usedOnAudioThread ) {
+        // Remove self from instances awaiting service list
+        pthread_mutex_lock(&__pendingInstancesMutex);
+        for ( linkedlistitem_t * entry = __pendingInstances, * prior = NULL; entry; prior = entry, entry = entry->next ) {
+            if ( entry->data == (__bridge void*)self ) {
+                if ( prior ) {
+                    prior->next = entry->next;
+                } else {
+                    __pendingInstances = entry->next;
+                }
+                free(entry);
+                break;
             }
-            free(entry);
-            break;
         }
+        pthread_mutex_unlock(&__pendingInstancesMutex);
     }
-    pthread_mutex_unlock(&__pendingInstancesMutex);
     
     // Perform any pending releases
     if ( _value ) {
@@ -241,21 +244,23 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
             }
         }
         
-        // Add self to the list of instances to service on the realtime thread within AEManagedValueCommitPendingUpdates
-        pthread_mutex_lock(&__pendingInstancesMutex);
-        BOOL alreadyPresent = NO;
-        for ( linkedlistitem_t * entry = __pendingInstances; entry; entry = entry->next ) {
-            if ( entry->data == (__bridge void*)self ) {
-                alreadyPresent = YES;
+        if ( self.usedOnAudioThread ) {
+            // Add self to the list of instances to service on the realtime thread within AEManagedValueCommitPendingUpdates
+            pthread_mutex_lock(&__pendingInstancesMutex);
+            BOOL alreadyPresent = NO;
+            for ( linkedlistitem_t * entry = __pendingInstances; entry; entry = entry->next ) {
+                if ( entry->data == (__bridge void*)self ) {
+                    alreadyPresent = YES;
+                }
             }
+            if ( !alreadyPresent ) {
+                linkedlistitem_t * entry = malloc(sizeof(linkedlistitem_t));
+                entry->next = __pendingInstances;
+                entry->data = (__bridge void*)self;
+                __pendingInstances = entry;
+            }
+            pthread_mutex_unlock(&__pendingInstancesMutex);
         }
-        if ( !alreadyPresent ) {
-            linkedlistitem_t * entry = malloc(sizeof(linkedlistitem_t));
-            entry->next = __pendingInstances;
-            entry->data = (__bridge void*)self;
-            __pendingInstances = entry;
-        }
-        pthread_mutex_unlock(&__pendingInstancesMutex);
     }
 }
 
@@ -296,6 +301,12 @@ void AEManagedValueCommitPendingUpdates() {
 
 void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     if ( !THIS ) return NULL;
+    
+    #ifdef DEBUG
+    if ( THIS->_usedOnAudioThread && AEManagedValueRealtimeThreadIdentifier && AEManagedValueRealtimeThreadIdentifier != pthread_self() && !pthread_main_np() ) {
+        if ( AERateLimit() ) printf("%s called from outside realtime thread\n", __FUNCTION__);
+    }
+    #endif
     
     if ( __atomicUpdateWaitingForCommit || pthread_rwlock_tryrdlock(&__atomicUpdateMutex) != 0 ) {
         // Atomic update in progress - return previous value
@@ -341,20 +352,22 @@ void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS
         self.pollTimer = nil;
     }
     
-    // Remove self from serviced instances list
-    pthread_mutex_lock(&__pendingInstancesMutex);
-    for ( linkedlistitem_t * entry = __servicedInstances, * prior = NULL; entry; prior = entry, entry = entry->next ) {
-        if ( entry->data == (__bridge void*)self ) {
-            if ( prior ) {
-                prior->next = entry->next;
-            } else {
-                __servicedInstances = entry->next;
+    if ( self.usedOnAudioThread ) {
+        // Remove self from serviced instances list
+        pthread_mutex_lock(&__pendingInstancesMutex);
+        for ( linkedlistitem_t * entry = __servicedInstances, * prior = NULL; entry; prior = entry, entry = entry->next ) {
+            if ( entry->data == (__bridge void*)self ) {
+                if ( prior ) {
+                    prior->next = entry->next;
+                } else {
+                    __servicedInstances = entry->next;
+                }
+                free(entry);
+                break;
             }
-            free(entry);
-            break;
         }
+        pthread_mutex_unlock(&__pendingInstancesMutex);
     }
-    pthread_mutex_unlock(&__pendingInstancesMutex);
 }
 
 - (void)releaseOldValue:(void *)value {
