@@ -16,24 +16,24 @@ class TriggerGestureRecognizer : UIGestureRecognizer {
     fileprivate var location: CGPoint = CGPoint.zero
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent) {
-        self.state = UIGestureRecognizerState.began
+        self.state = UIGestureRecognizer.State.began
         location = touches.first!.location(in: nil)
         pressure = Double(touches.first!.force / touches.first!.maximumPossibleForce)
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent) {
-        self.state = UIGestureRecognizerState.changed
+        self.state = UIGestureRecognizer.State.changed
         location = touches.first!.location(in: nil)
         pressure = Double(touches.first!.force / touches.first!.maximumPossibleForce)
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent) {
-        self.state = UIGestureRecognizerState.ended
+        self.state = UIGestureRecognizer.State.ended
         location = touches.first!.location(in: nil)
     }
     
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent) {
-        self.state = UIGestureRecognizerState.cancelled
+        self.state = UIGestureRecognizer.State.cancelled
     }
     
     override func location(in view: UIView?) -> CGPoint {

@@ -36,7 +36,7 @@ class PlayerButton: UIView {
                 animation.byValue = (newValue > 0 ? 1.0 : -1.0)*2.0*Double.pi
                 animation.duration = 60.0 / fabs(newValue);
                 animation.repeatCount = Float.infinity
-                animation.fillMode = kCAFillModeForwards
+                animation.fillMode = CAMediaTimingFillMode.forwards
                 imageLayer.add(animation, forKey: AnimationKey)
                 startTime = CACurrentMediaTime()
                 rotateAnimation = animation
@@ -54,15 +54,15 @@ class PlayerButton: UIView {
         
         layer.addSublayer(imageLayer)
         imageLayer.frame = layer.bounds
-        imageLayer.contentsGravity = kCAGravityCenter
+        imageLayer.contentsGravity = CALayerContentsGravity.center
         imageLayer.contentsScale = UIScreen.main.scale
         
         let highlight = UIImageView(image: UIImage(named: "Vinyl Highlight and Shadow"))
         self.addSubview(highlight)
-        self.addConstraint(NSLayoutConstraint(item: highlight, attribute: NSLayoutAttribute.centerX,
-            relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.centerX, multiplier: 1, constant: 0))
-        self.addConstraint(NSLayoutConstraint(item: highlight, attribute: NSLayoutAttribute.centerY,
-            relatedBy: NSLayoutRelation.equal, toItem: self, attribute: NSLayoutAttribute.centerY, multiplier: 1, constant: 0))
+        self.addConstraint(NSLayoutConstraint(item: highlight, attribute: NSLayoutConstraint.Attribute.centerX,
+                                              relatedBy: NSLayoutConstraint.Relation.equal, toItem: self, attribute: NSLayoutConstraint.Attribute.centerX, multiplier: 1, constant: 0))
+        self.addConstraint(NSLayoutConstraint(item: highlight, attribute: NSLayoutConstraint.Attribute.centerY,
+                                              relatedBy: NSLayoutConstraint.Relation.equal, toItem: self, attribute: NSLayoutConstraint.Attribute.centerY, multiplier: 1, constant: 0))
     }
     
     override var intrinsicContentSize : CGSize {

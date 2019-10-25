@@ -60,9 +60,9 @@ class ViewController: UIViewController {
         
         let speedTrackImage = UIImage(named: "Speed Track")?
             .resizableImage(withCapInsets: UIEdgeInsets(top: 0.0, left: 2.0, bottom: 0.0, right: 2.0))
-        speedSlider.setMaximumTrackImage(speedTrackImage, for: UIControlState())
-        speedSlider.setMinimumTrackImage(speedTrackImage, for: UIControlState())
-        speedSlider.setThumbImage(UIImage(named: "Speed Handle"), for: UIControlState())
+        speedSlider.setMaximumTrackImage(speedTrackImage, for: UIControl.State())
+        speedSlider.setMinimumTrackImage(speedTrackImage, for: UIControl.State())
+        speedSlider.setThumbImage(UIImage(named: "Speed Handle"), for: UIControl.State())
         speedSlider.maximumValue = 2.0
         speedSlider.minimumValue = 0.0
         speedSlider.value = 1.0
@@ -71,10 +71,10 @@ class ViewController: UIViewController {
             speedSlider.transform = CGAffineTransform(rotationAngle: CGFloat(-Double.pi/2))
         }
         
-        let playTrackImage = UIImage(named: "Play Slider Track")?.resizableImage(withCapInsets: UIEdgeInsetsMake(0, 1, 0, 1))
-        playSlider.setMaximumTrackImage(playTrackImage, for: UIControlState())
-        playSlider.setMinimumTrackImage(playTrackImage, for: UIControlState())
-        playSlider.setThumbImage(UIImage(named: "Play Slider Thumb"), for: UIControlState())
+        let playTrackImage = UIImage(named: "Play Slider Track")?.resizableImage(withCapInsets: UIEdgeInsets(top: 0, left: 1, bottom: 0, right: 1))
+        playSlider.setMaximumTrackImage(playTrackImage, for: UIControl.State())
+        playSlider.setMinimumTrackImage(playTrackImage, for: UIControl.State())
+        playSlider.setThumbImage(UIImage(named: "Play Slider Thumb"), for: UIControl.State())
         
         pad.image = UIImage(named: "Effect Bar")?
             .resizableImage(withCapInsets: UIEdgeInsets(top: 0, left: 63.0, bottom: 0, right: 62.0))
@@ -175,7 +175,7 @@ class ViewController: UIViewController {
                         animation.byValue = -8.0
                         animation.duration = audio.drums.duration / 32.0
                         animation.autoreverses = true
-                        animation.timingFunction = CAMediaTimingFunction(name: kCAMediaTimingFunctionEaseOut)
+                        animation.timingFunction = CAMediaTimingFunction(name: CAMediaTimingFunctionName.easeOut)
                         animation.repeatCount = Float.infinity
                         sender.imageView!.layer.add(animation, forKey: nil)
                     } else {
@@ -304,7 +304,7 @@ class ViewController: UIViewController {
     }
     
     @objc fileprivate func hitTouch(_ sender: TriggerGestureRecognizer) {
-        if sender.state == UIGestureRecognizerState.began {
+        if sender.state == UIGestureRecognizer.State.began {
             if let audio = audio {
                 // Begin playing the hit sample
                 audio.hit.regionDuration = audio.drums.regionDuration / 32
@@ -321,12 +321,12 @@ class ViewController: UIViewController {
                 }
                 beatButton.rotateSpeed = -60.0 / audio.hit.regionDuration
             }
-        } else if ( sender.state == UIGestureRecognizerState.changed ) {
+        } else if ( sender.state == UIGestureRecognizer.State.changed ) {
             if let audio = audio {
                 // Adjust the hit cycle length, based on 3D Touch pressure, for a beat repeat-like feature
                 audio.hit.regionDuration = audio.drums.regionDuration / (sender.pressure >= 1.0 ? 64 : 32)
             }
-        } else if sender.state == UIGestureRecognizerState.ended || sender.state == UIGestureRecognizerState.cancelled {
+        } else if sender.state == UIGestureRecognizer.State.ended || sender.state == UIGestureRecognizer.State.cancelled {
             if let audio = audio {
                 // Start the drums playing again
                 if !audio.drums.playing {
@@ -346,7 +346,7 @@ class ViewController: UIViewController {
     }
     
     @objc fileprivate func effectPadPan(_ sender: TriggerGestureRecognizer) {
-        if sender.state == UIGestureRecognizerState.began {
+        if sender.state == UIGestureRecognizer.State.began {
             // Start transitioning to 100% wet
             padWetDryTarget = 1.0
             if padWetDryTimer == nil {
@@ -355,7 +355,7 @@ class ViewController: UIViewController {
                                                                        userInfo: nil, repeats: true)
             }
         }
-        if sender.state == UIGestureRecognizerState.began || sender.state == UIGestureRecognizerState.changed {
+        if sender.state == UIGestureRecognizer.State.began || sender.state == UIGestureRecognizer.State.changed {
             // Update effect
             let location = sender.location(in: sender.view!)
             let bounds = sender.view!.bounds
@@ -374,7 +374,7 @@ class ViewController: UIViewController {
     
     @objc fileprivate func stereoSweepTouch(_ sender: TriggerGestureRecognizer) {
         if let audio = audio {
-            if sender.state == UIGestureRecognizerState.began || sender.state == UIGestureRecognizerState.changed {
+            if sender.state == UIGestureRecognizer.State.began || sender.state == UIGestureRecognizer.State.changed {
                 audio.balanceSweepRate = (sender.pressure >= 1.0 ? 0.5 : 2.0)
             } else {
                 audio.balanceSweepRate = 0.0
@@ -392,11 +392,11 @@ private extension ViewController {
     
     @objc func inputPermissionsError() {
         let displayName = Bundle.main.infoDictionary!["CFBundleDisplayName"]!
-        let alert = UIAlertController(title: "Microphone permissions required", message: "In order to record, you need to enable microphone permissions for \(displayName). To fix this, open the Settings app, then under Privacy and Microphone, turn on the switch beside \(displayName)", preferredStyle: UIAlertControllerStyle.actionSheet)
-        alert.addAction(UIAlertAction.init(title: "Open Settings", style: UIAlertActionStyle.default, handler: { action in
-            UIApplication.shared.openURL(URL(string: UIApplicationOpenSettingsURLString)!)
+        let alert = UIAlertController(title: "Microphone permissions required", message: "In order to record, you need to enable microphone permissions for \(displayName). To fix this, open the Settings app, then under Privacy and Microphone, turn on the switch beside \(displayName)", preferredStyle: UIAlertController.Style.actionSheet)
+        alert.addAction(UIAlertAction.init(title: "Open Settings", style: UIAlertAction.Style.default, handler: { action in
+            UIApplication.shared.openURL(URL(string: UIApplication.openSettingsURLString)!)
         }));
-        alert.addAction(UIAlertAction.init(title: "OK", style: UIAlertActionStyle.default, handler: nil))
+        alert.addAction(UIAlertAction.init(title: "OK", style: UIAlertAction.Style.default, handler: nil))
         alert.popoverPresentationController?.sourceView = micButton
         alert.popoverPresentationController?.sourceRect = micButton.bounds
         alert.modalPresentationStyle = UIModalPresentationStyle.popover
