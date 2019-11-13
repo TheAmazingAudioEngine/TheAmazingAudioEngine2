@@ -58,7 +58,7 @@
 		4C7756A41CD2E5E3004415A2 /* AECircularBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C77569F1CD2E5E3004415A2 /* AECircularBuffer.m */; };
 		4C7756A51CD2E5E3004415A2 /* AECircularBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C77569F1CD2E5E3004415A2 /* AECircularBuffer.m */; };
 		4C7F3DCF1FCFCDE300127BE6 /* AELevelsAnalyzer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7F3DCD1FCFCDE300127BE6 /* AELevelsAnalyzer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		4C7F3DD01FCFCDE300127BE6 /* AELevelsAnalyzer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7F3DCD1FCFCDE300127BE6 /* AELevelsAnalyzer.h */; };
+		4C7F3DD01FCFCDE300127BE6 /* AELevelsAnalyzer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7F3DCD1FCFCDE300127BE6 /* AELevelsAnalyzer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C7F3DD11FCFCDE300127BE6 /* AELevelsAnalyzer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7F3DCD1FCFCDE300127BE6 /* AELevelsAnalyzer.h */; };
 		4C7F3DD21FCFCDE300127BE6 /* AELevelsAnalyzer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7F3DCE1FCFCDE300127BE6 /* AELevelsAnalyzer.m */; };
 		4C7F3DD31FCFCDE300127BE6 /* AELevelsAnalyzer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7F3DCE1FCFCDE300127BE6 /* AELevelsAnalyzer.m */; };
@@ -735,7 +735,6 @@
 				4C9F0F5A1CB265F90032903E /* AEHighShelfModule.h in Headers */,
 				4C9F0F5B1CB265F90032903E /* AEDistortionModule.h in Headers */,
 				4C9F0F5C1CB265F90032903E /* AEAudioUnitInputModule.h in Headers */,
-				4C7F3DD01FCFCDE300127BE6 /* AELevelsAnalyzer.h in Headers */,
 				4C9F0F5D1CB265F90032903E /* AEAudioUnitModule.h in Headers */,
 				4C3183111CDDEFDE0085634F /* AEMixerModule.h in Headers */,
 				4C9F0F5E1CB265F90032903E /* AELowPassModule.h in Headers */,
@@ -758,6 +757,7 @@
 				4C9F0F6D1CB265F90032903E /* AEAudioUnitOutput.h in Headers */,
 				4C9F0F6E1CB265F90032903E /* AEAudioFileRecorderModule.h in Headers */,
 				4C9F0F6F1CB265F90032903E /* AEVarispeedModule.h in Headers */,
+				4C7F3DD01FCFCDE300127BE6 /* AELevelsAnalyzer.h in Headers */,
 				4C9F0F701CB265F90032903E /* AELowShelfModule.h in Headers */,
 				4CE5F4CF1CD3169C00322F03 /* AEAudioThreadEndpoint.h in Headers */,
 			);
