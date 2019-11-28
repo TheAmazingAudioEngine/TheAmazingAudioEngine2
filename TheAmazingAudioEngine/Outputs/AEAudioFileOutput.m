@@ -18,8 +18,9 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
 @interface AEAudioFileOutput ()
 @property (nonatomic, readwrite) double sampleRate;
 @property (nonatomic, readwrite) int numberOfChannels;
+@property (nonatomic, readwrite) BOOL multiTrackOutput;
 @property (nonatomic, strong, readwrite) NSString * path;
-@property (nonatomic) ExtAudioFileRef audioFile;
+@property (nonatomic) ExtAudioFileRef * audioFiles;
 @property (nonatomic, readwrite) UInt64 numberOfFramesRecorded;
 @property (nonatomic) AudioTimeStamp timestamp;
 @end
@@ -30,9 +31,26 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
                       sampleRate:(double)sampleRate channelCount:(int)channelCount
                            error:(NSError *__autoreleasing  _Nullable *)error {
     if ( !(self = [super init]) ) return nil;
-
-    if ( !(_audioFile = AEExtAudioFileCreate([NSURL fileURLWithPath:path], type, sampleRate, channelCount, error)) ) return nil;
-
+ 
+    NSFileManager * fm = [NSFileManager defaultManager];
+    if ( channelCount > 2 && ![fm fileExistsAtPath:path] ) {
+        if ( ![fm createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:error] ) {
+            return nil;
+        }
+    }
+    
+    int audioFileCount = ceil(channelCount/2.0);
+    self.audioFiles = malloc(sizeof(ExtAudioFileRef) * audioFileCount);
+    if ( audioFileCount == 1 ) {
+        if ( !(_audioFiles[0] = AEExtAudioFileCreate([NSURL fileURLWithPath:path], type, sampleRate, channelCount, error)) ) return nil;
+    } else {
+        NSString * pathExtension = type == AEAudioFileTypeM4A ? @"m4a" : type == AEAudioFileTypeWAVInt16 ? @"wav" : @"aiff";
+        for ( int i=0; i<audioFileCount; i++ ) {
+            NSString * filename = [[NSString stringWithFormat:@"Track %02d", i+1] stringByAppendingPathExtension:pathExtension];
+            if ( !(_audioFiles[i] = AEExtAudioFileCreate([NSURL fileURLWithPath:[path stringByAppendingPathComponent:filename]], type, sampleRate, 2, error)) ) return nil;
+        }
+    }
+    
     self.path = path;
     self.sampleRate = sampleRate;
     self.numberOfChannels = channelCount;
@@ -44,7 +62,7 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
 }
 
 - (void)dealloc {
-    if ( _audioFile ) {
+    if ( _audioFiles ) {
         [self finishWriting];
     }
 }
@@ -57,7 +75,7 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
 }
 
 - (void)runForDuration:(AESeconds)duration completionBlock:(AEAudioFileOutputCompletionBlock)completionBlock {
-    assert(_audioFile);
+    assert(_audioFiles);
     
     // Perform render in background thread
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
@@ -78,8 +96,7 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
             AERendererRun(self.renderer, abl, frames, &self->_timestamp);
             
             // Write to file
-            status = ExtAudioFileWrite(self.audioFile, frames, abl);
-            if ( !AECheckOSStatus(status, "ExtAudioFileWrite") ) {
+            if ( ![self writeFrames:frames fromBuffer:abl] ) {
                 break;
             }
             
@@ -104,7 +121,7 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
 
 - (void)runUntilCondition:(AEAudioFileOutputConditionBlock)conditionBlock
           completionBlock:(AEAudioFileOutputCompletionBlock)completionBlock {
-    assert(_audioFile);
+    assert(_audioFiles);
     
     // Perform render in background thread
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
@@ -123,8 +140,7 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
             AERendererRun(self.renderer, abl, AEBufferStackMaxFramesPerSlice, &self->_timestamp);
             
             // Write to file
-            status = ExtAudioFileWrite(self.audioFile, AEBufferStackMaxFramesPerSlice, abl);
-            if ( !AECheckOSStatus(status, "ExtAudioFileWrite") ) {
+            if ( ![self writeFrames:AEBufferStackMaxFramesPerSlice fromBuffer:abl] ) {
                 break;
             }
             
@@ -146,9 +162,31 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
     });
 }
 
+- (BOOL)writeFrames:(UInt32)frames fromBuffer:(AudioBufferList *)abl {
+    if ( self.numberOfChannels <= 2 ) {
+        OSStatus status = ExtAudioFileWrite(_audioFiles[0], frames, abl);
+        return AECheckOSStatus(status, "ExtAudioFileWrite");
+    } else {
+        int audioFileCount = ceil(self.numberOfChannels/2.0);
+        for ( int i=0; i<audioFileCount; i++ ) {
+            AEChannelSet channels = AEChannelSetMake(i*2, (i*2)+1);
+            AEAudioBufferListCopyOnStackWithChannelSubset(subbuffer, abl, channels);
+            OSStatus status = ExtAudioFileWrite(_audioFiles[i], frames, subbuffer);
+            if ( !AECheckOSStatus(status, "ExtAudioFileWrite") ) {
+                return NO;
+            }
+        }
+        return YES;
+    }
+}
+
 - (void)finishWriting {
-    AECheckOSStatus(ExtAudioFileDispose(_audioFile), "AudioFileClose");
-    _audioFile = NULL;
+    int audioFileCount = ceil(self.numberOfChannels/2.0);
+    for ( int i=0; i<audioFileCount; i++ ) {
+        AECheckOSStatus(ExtAudioFileDispose(_audioFiles[i]), "AudioFileClose");
+    }
+    free(_audioFiles);
+    self.audioFiles = NULL;
 }
 
 @end

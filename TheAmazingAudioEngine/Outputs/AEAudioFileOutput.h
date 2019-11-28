@@ -60,6 +60,9 @@ typedef BOOL (^AEAudioFileOutputConditionBlock)(void);
  *  It can be used in place of AEAudioUnitOutput, for instance, and will write
  *  to disk rather than sending audio to the device output.
  *
+ *  It can also be used in multi-track mode, outputting each stereo channel pair
+ *  to a different audio file.
+ *
  *  Note that because this class runs the render loop as fast as it can write
  *  to disk, it isn't suitable for render loops that receive live audio.
  */
@@ -69,10 +72,10 @@ typedef BOOL (^AEAudioFileOutputConditionBlock)(void);
  * Initializer
  *
  * @param renderer Renderer to use to drive processing
- * @param path Path to the file to write to
+ * @param path Path to the file (or folder, if channelCount > 2) to write to
  * @param type The type of the file to write
  * @param sampleRate Sample rate to use
- * @param channelCount Number of channels
+ * @param channelCount Number of channels. If more than two, each stereo pair is output to a different file
  * @param error If not NULL, the error on output
  */
 - (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer
