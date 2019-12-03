@@ -302,12 +302,6 @@ void AEManagedValueCommitPendingUpdates() {
 void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     if ( !THIS ) return NULL;
     
-    #ifdef DEBUG
-    if ( THIS->_usedOnAudioThread && AEManagedValueRealtimeThreadIdentifier && AEManagedValueRealtimeThreadIdentifier != pthread_self() && !pthread_main_np() ) {
-        if ( AERateLimit() ) printf("%s called from outside realtime thread\n", __FUNCTION__);
-    }
-    #endif
-    
     if ( __atomicUpdateWaitingForCommit || pthread_rwlock_tryrdlock(&__atomicUpdateMutex) != 0 ) {
         // Atomic update in progress - return previous value
         return THIS->_atomicBatchUpdateLastValue;
