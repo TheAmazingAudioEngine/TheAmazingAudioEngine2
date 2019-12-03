@@ -7,7 +7,7 @@
 //
 
 #import "AEAudiobusInputModule.h"
-#import "Audiobus.h"
+#import <Audiobus/Audiobus.h>
 
 @interface AEAudiobusInputModule ()
 @property (nonatomic, strong, readwrite) ABAudioReceiverPort * audioReceiverPort;
