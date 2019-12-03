@@ -84,6 +84,11 @@ typedef struct {
         ExtAudioFileDispose(extAudioFile);
         AudioFileClose(audioFile);
         
+        if ( length == 0 ) {
+            dispatch_async(dispatch_get_main_queue(), ^{ block(nil); });
+            return;
+        }
+        
         dispatch_async(dispatch_get_main_queue(), ^{ block(@{
             AEAudioPasteboardInfoNumberOfChannelsKey: @(audioDescription.mChannelsPerFrame),
             AEAudioPasteboardInfoLengthInFramesKey: @(length),
@@ -245,9 +250,18 @@ typedef struct {
     }
     
     for ( NSString * type in supportedTypes ) {
-        NSData * data = [pasteboard dataForPasteboardType:type];
-        if ( data ) {
-            return data;
+        NSIndexSet * itemSet = [pasteboard itemSetWithPasteboardTypes:@[type]];
+        if ( itemSet.count > 0 ) {
+            NSArray <NSData *> * dataArray = [pasteboard dataForPasteboardType:type inItemSet:itemSet];
+            if ( dataArray.count == 1 ) {
+                return dataArray.firstObject;
+            } else if ( dataArray.count > 1 ) {
+                NSMutableData * data = [NSMutableData data];
+                for ( NSData * block in dataArray ) {
+                    [data appendData:block];
+                }
+                return data;
+            }
         }
     }
     
