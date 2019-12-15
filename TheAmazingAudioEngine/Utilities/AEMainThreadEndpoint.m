@@ -49,7 +49,7 @@ static AEMainThreadEndpointThread * __sharedThread = nil;
 
 @interface AEMainThreadEndpointThread : NSThread
 - (void)addEndpoint:(AEMainThreadEndpoint *)endpoint;
-- (void)removeEndpoint:(AEMainThreadEndpoint *)endpoint;
+- (void)handleReleasedEndpoint;
 @property (nonatomic) semaphore_t semaphore;
 @end
 
@@ -85,7 +85,7 @@ static AEMainThreadEndpointThread * __sharedThread = nil;
 }
 
 - (void)dealloc {
-    [self.thread removeEndpoint:self];
+    [self.thread handleReleasedEndpoint];
     TPCircularBufferCleanup(&_buffer);
 }
 
@@ -186,9 +186,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
     semaphore_create(mach_task_self(), &_semaphore, SYNC_POLICY_FIFO, 0);
-    self.endpoints =
-        [[NSHashTable alloc] initWithOptions:NSPointerFunctionsOpaqueMemory|NSPointerFunctionsObjectPointerPersonality
-                                    capacity:8];
+    self.endpoints = [NSHashTable weakObjectsHashTable];
     
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
@@ -226,13 +224,11 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
     }
 }
 
-- (void)removeEndpoint:(AEMainThreadEndpoint *)endpoint {
-    // Endpoints are removed when they are deallocated (as we store weak references)
-    // Because we keep a strong reference during servicing in main, they will never happen during servicing,
-    // so we should never actually get lock contention.
+- (void)handleReleasedEndpoint {
+    // Endpoints are removed when they are deallocated (as we store weak references). Note that NSHashTable count doesn't
+    // work properly with weak references, so we use allObjects.count, which does.
     pthread_mutex_lock(&_mutex);
-    [self.endpoints removeObject:endpoint];
-    if ( self.endpoints.count == 0 ) {
+    if ( self.endpoints.allObjects.count == 0 ) {
         __sharedThread = nil;
         [self cancel];
     }
