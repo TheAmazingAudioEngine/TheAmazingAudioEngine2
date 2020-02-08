@@ -29,6 +29,7 @@
 #import "AEBufferStack.h"
 #import "AEUtilities.h"
 #import "AEDSPUtilities.h"
+#import "AEManagedValue.h"
 #import <Accelerate/Accelerate.h>
 
 @interface AESplitterModule () {
@@ -37,19 +38,29 @@
     UInt64 _bufferedTime;
     UInt32 _bufferedFrames;
 }
-@property (nonatomic, strong, readwrite) AEModule * module;
+@property (nonatomic, strong, readwrite) AEManagedValue * moduleValue;
 @end
 
 @implementation AESplitterModule
+@dynamic module;
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer module:(AEModule *)module {
     if ( !(self = [super initWithRenderer:renderer]) ) return nil;
     _numberOfChannels = 2;
     _buffer = AEAudioBufferListCreate(AEBufferStackMaxFramesPerSlice);
     _bufferedTime = UINT32_MAX;
+    self.moduleValue = [AEManagedValue new];
     self.module = module;
     self.processFunction = AESplitterModuleProcess;
     return self;
+}
+
+- (void)setModule:(AEModule *)module {
+    self.moduleValue.objectValue = module;
+}
+
+- (AEModule *)module {
+    return self.moduleValue.objectValue;
 }
 
 - (void)setNumberOfChannels:(int)numberOfChannels {
@@ -68,7 +79,13 @@ static void AESplitterModuleProcess(__unsafe_unretained AESplitterModule * THIS,
         int priorStackDepth = AEBufferStackCount(context->stack);
         #endif
         
-        AEModuleProcess(THIS->_module, context);
+        __unsafe_unretained AEModule * module = (__bridge AEModule *)AEManagedValueGetValue(THIS->_moduleValue);
+        if ( module ) {
+            AEModuleProcess(module, context);
+        } else {
+            AEBufferStackPush(context->stack, 1);
+            AEBufferStackSilence(context->stack);
+        }
         
         #ifdef DEBUG
         if ( AEBufferStackCount(context->stack) != priorStackDepth+1 ) {

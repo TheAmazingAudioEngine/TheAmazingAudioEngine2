@@ -50,7 +50,7 @@ extern "C" {
 - (instancetype)initWithRenderer:(AERenderer *)renderer module:(AEModule *)module;
 
 //! The module
-@property (nonatomic, strong, readonly) AEModule * module;
+@property (nonatomic, strong) AEModule * module;
 
 //! The number of channels that will be generated (default 2).
 //! You should not change this value while the module is in use.
