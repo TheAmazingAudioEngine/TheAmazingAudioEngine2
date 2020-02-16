@@ -216,6 +216,19 @@ typedef void (^AEArrayReleaseBlock)(ObjectType _Nonnull item, void * _Nonnull pt
 - (void * _Nullable)pointerValueForObject:(ObjectType _Nonnull)object;
 
 /*!
+ * Get the object associated with the given poiner value, if any
+ *
+ *  This method allows you to lookup the original object, using the same values as the
+ *  audio thread; if you are using a mapping block to create structures that correspond
+ *  to objects in the original array, for instance, then you may perform a reverse lookup
+ *  from the created structures to the objects on the main thread using this method.
+ *
+ * @param pointer The pointer
+ * @return The associated object, if any
+ */
+- (ObjectType _Nullable)objectForPointerValue:(void * _Nullable)pointer;
+
+/*!
  * Update the pointer value associated with the given object
  *
  *  If you are using a mapping block to create structures that correspond to objects in the
@@ -256,8 +269,6 @@ typedef void (^AEArrayReleaseBlock)(ObjectType _Nonnull item, void * _Nonnull pt
  *  after which the array values may differ. Consequently, it is advised that AEArrayGetToken
  *  is called only once per render loop.
  *
- *  Note: Do not use this function on the main thread
- *
  * @param array The array
  * @return The token, for use with other accessors
  */
@@ -295,8 +306,6 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
  *  Note: This macro calls AEArrayGetToken to access the array. Consequently, it is not
  *  recommended for use when you need to access the array in addition to this enumeration.
  *
- *  Note: Do not use this macro on the main thread
- *
  * @param array The array
  * @param type The object type
  * @param varname Name of object variable for inner loop
@@ -325,8 +334,6 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
  *
  *  Note: This macro calls AEArrayGetToken to access the array. Consequently, it is not
  *  recommended for use when you need to access the array in addition to this enumeration.
- *
- *  Note: Do not use this macro on the main thread
  *
  * @param array The array
  * @param type The pointer type (e.g. struct myStruct *)
