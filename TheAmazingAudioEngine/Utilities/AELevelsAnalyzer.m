@@ -11,39 +11,79 @@
 #import "AEDSPUtilities.h"
 #import <Accelerate/Accelerate.h>
 
-static const float kAvgFalloffPerAnalysis = 0.1;
-static const float kPeakFalloffPerAnalysis = 0.01;
+static const int kRMSWindowFrameCount = 4096;
+static const int kRMSBufferBlockCountMax = kRMSWindowFrameCount / 64;
+static const AESeconds kPeakHoldInterval = 0.5;
+static const float kPeakFalloffPerSecond = 3.0;
 static const AESeconds kAnalysisTimeout = 0.05;
 static const AESeconds kTimeoutAnalysisFalloffInterval = 1.0;
 
 @interface AELevelsAnalyzer () {
     AEHostTicks _lastAnalysis;
-    float _average;
+    AEHostTicks _lastPeak;
     float _peak;
+    struct { float sumSquare; int n; } _sumSquareBuffer[kRMSBufferBlockCountMax];
+    int _sumSquareBufferHead;
+    float _sumSquareAccumulator;
+    int _sumSquareN;
+    float _meanSumSquare;
 }
 @end
 
 @implementation AELevelsAnalyzer
 @dynamic peak, average;
 
-void AELevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AELevelsAnalyzer * THIS,
-                                   const AudioBufferList * buffer,
-                                   UInt32 numberFrames) {
+void AELevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AELevelsAnalyzer * THIS, const AudioBufferList * buffer, UInt32 numberFrames) {
+    AELevelsAnalyzerAnalyzeBufferChannel(THIS, buffer, -1, numberFrames);
+}
+
+void AELevelsAnalyzerAnalyzeBufferChannel(__unsafe_unretained AELevelsAnalyzer * THIS, const AudioBufferList * buffer, int channel, UInt32 numberFrames) {
     float max = 0;
-    
+    float sumOfSquares = 0;
+    int n = numberFrames;
+
     if ( numberFrames > 0 && buffer ) {
-        for ( int i=0; i<buffer->mNumberBuffers; i++ ) {
+        n = numberFrames * (channel == -1 ? buffer->mNumberBuffers : 1);
+        for ( int i=(channel == -1 ? 0 : channel); i<buffer->mNumberBuffers && (channel == -1 || i<channel+1); i++ ) {
+            // Calculate max sample
             float bufferMax = max;
             vDSP_maxmgv((float*)buffer->mBuffers[i].mData, 1, &bufferMax, numberFrames);
             if ( bufferMax > max ) {
                 max = bufferMax;
             }
+            
+            // Calculate sum of squares
+            float channelSumSquare = 0;
+            vDSP_svesq((float*)buffer->mBuffers[i].mData, 1, &channelSumSquare, numberFrames);
+            sumOfSquares += channelSumSquare;
         }
     }
     
-    THIS->_lastAnalysis = AECurrentTimeInHostTicks();
-    THIS->_average = (kAvgFalloffPerAnalysis * max) + ((1.0-kAvgFalloffPerAnalysis) * THIS->_average);
-    THIS->_peak = MAX(max, ((1.0-kPeakFalloffPerAnalysis) * THIS->_peak));
+    AEHostTicks now = AECurrentTimeInHostTicks();
+    AESeconds sinceLastAnalysis = AESecondsFromHostTicks(now-THIS->_lastAnalysis);
+    THIS->_lastAnalysis = now;
+
+    // Calculate peak, with dropoff
+    if ( max >= THIS->_peak ) {
+        THIS->_lastPeak = now;
+        THIS->_peak = max;
+    } else if ( AESecondsFromHostTicks(now-THIS->_lastPeak) > kPeakHoldInterval ) {
+        THIS->_peak = (1.0-(sinceLastAnalysis*kPeakFalloffPerSecond)) * THIS->_peak;
+    }
+    
+    // Calculate running RMS
+    if ( sinceLastAnalysis > kTimeoutAnalysisFalloffInterval ) {
+        memset(&THIS->_sumSquareBuffer, 0, sizeof(THIS->_sumSquareBuffer));
+        THIS->_sumSquareAccumulator = 0;
+        THIS->_sumSquareN = 0;
+    }
+    int rmsBufferBlockCount = MIN(kRMSBufferBlockCountMax, (kRMSWindowFrameCount / numberFrames));
+    THIS->_sumSquareBufferHead = (THIS->_sumSquareBufferHead + 1) % rmsBufferBlockCount;
+    THIS->_sumSquareAccumulator += sumOfSquares - THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].sumSquare;
+    THIS->_sumSquareN += n - THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].n;
+    THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].sumSquare = sumOfSquares;
+    THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].n = n;
+    THIS->_meanSumSquare = THIS->_sumSquareAccumulator / THIS->_sumSquareN;
 }
 
 - (double)peak {
@@ -60,11 +100,11 @@ void AELevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AELevelsAnalyzer * THIS,
 - (double)average {
     AESeconds sinceLast = AECurrentTimeInSeconds()-AESecondsFromHostTicks(_lastAnalysis);
     if ( sinceLast < kAnalysisTimeout ) {
-        return AEDSPRatioToDecibels(_average);
+        return AEDSPRatioToDecibels(sqrt(_meanSumSquare));
     } else if ( sinceLast > kAnalysisTimeout+kTimeoutAnalysisFalloffInterval ) {
         return -INFINITY;
     } else {
-        return AEDSPRatioToDecibels(_average * (1.0 - (sinceLast / kTimeoutAnalysisFalloffInterval)));
+        return AEDSPRatioToDecibels(sqrt(_meanSumSquare) * (1.0 - (sinceLast / kTimeoutAnalysisFalloffInterval)));
     }
 }
 
