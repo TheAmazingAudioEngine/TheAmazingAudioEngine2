@@ -147,12 +147,14 @@ AudioBufferList *AEAudioBufferListCreateWithContentsOfFile(NSString * filePath, 
  * @param offsetBytes Number of bytes to offset mData/mDataByteSize members
  */
 #define AEAudioBufferListCopyOnStackWithByteOffset(name, sourceBufferList, offsetBytes) \
-    char name ## _bytes[sizeof(AudioBufferList)+(sizeof(AudioBuffer)*(sourceBufferList->mNumberBuffers-1))]; \
-    memcpy(name ## _bytes, sourceBufferList, sizeof(name ## _bytes)); \
+    const AudioBufferList * name ## _sourceBuffer = (sourceBufferList); \
+    const UInt32 name ## _offsetBytes = (UInt32)(offsetBytes); \
+    char name ## _bytes[sizeof(AudioBufferList)+(sizeof(AudioBuffer)*(name ## _sourceBuffer->mNumberBuffers-1))]; \
+    memcpy(name ## _bytes, name ## _sourceBuffer, sizeof(name ## _bytes)); \
     AudioBufferList * name = (AudioBufferList*)name ## _bytes; \
     for ( int i=0; i<name->mNumberBuffers; i++ ) { \
-        name->mBuffers[i].mData = (char*)name->mBuffers[i].mData + offsetBytes; \
-        name->mBuffers[i].mDataByteSize -= offsetBytes; \
+        name->mBuffers[i].mData = (char*)name->mBuffers[i].mData + name ## _offsetBytes; \
+        name->mBuffers[i].mDataByteSize -= name ## _offsetBytes; \
     }
 
 /*!
