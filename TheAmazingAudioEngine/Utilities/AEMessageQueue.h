@@ -33,12 +33,12 @@ extern "C" {
 
 //! Argument to method call, for use with AEMessageQueuePerformSelectorOnMainThread
 typedef struct {
+    size_t length;
     BOOL isValue;
     const void * _Nullable data;
-    size_t length;
 } AEArgument;
 
-//! Empty argument, to terminate list of arguments in AEMessageQueuePerformSelectorOnMainThread
+//! Empty argument
 extern AEArgument AEArgumentNone;
 
 /*!
@@ -60,7 +60,7 @@ extern AEArgument AEArgumentNone;
  * @return The initialized argument
  */
 #define AEArgumentScalar(argument) \
-    (AEArgument){ YES, &(typeof(argument)){argument}, sizeof(argument) }
+    (AEArgument){ sizeof(argument), YES, &(typeof(argument)){argument} }
 
 /*!
  * Create a structure argument for use with AEMessageQueuePerformSelectorOnMainThread
@@ -78,7 +78,7 @@ extern AEArgument AEArgumentNone;
  * @return The initialized argument
  */
 #define AEArgumentStruct(argument) \
-    (AEArgument){ YES, &(argument), sizeof(argument) }
+    (AEArgument){ sizeof(argument), YES, &(argument) }
 
 /*!
  * Create a data argument for use with AEMessageQueuePerformSelectorOnMainThread
@@ -94,7 +94,7 @@ extern AEArgument AEArgumentNone;
  * @return The initialized argument
  */
 #define AEArgumentData(buffer, size) \
-    (AEArgument) { NO, buffer, size }
+    (AEArgument) { size, NO, buffer }
 
 //! Block
 typedef void (^AEMessageQueueBlock)(void);
@@ -165,13 +165,13 @@ typedef void (^AEMessageQueueBlock)(void);
  * @param messageQueue The message queue instance
  * @param target The target object
  * @param selector The selector
- * @param arguments List of arguments, terminated by AEArgumentNone
+ * @param arguments List of arguments, terminated by NULL (for no arguments, use `AEArgumentNone, NULL`)
  * @return YES on success, or NO if out of buffer space or not polling
  */
 BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueue * _Nonnull messageQueue,
                                                __unsafe_unretained id _Nonnull target,
                                                SEL _Nonnull selector,
-                                               AEArgument arguments, ...);
+                                               AEArgument arguments, ...) __attribute__((sentinel));
 
 /*!
  * Begins a group of messages to be performed consecutively.

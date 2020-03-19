@@ -75,6 +75,8 @@ typedef struct {
         if ( *type == AEMessageQueueMainThreadMessage ) {
             const main_thread_message_t * message = (const main_thread_message_t *)data;
             id target = message->target;
+            if ( !target ) return;
+            
             const char * selectorString = ((char *)data) + sizeof(main_thread_message_t);
             const char * arguments = ((char *)data) + sizeof(main_thread_message_t) + message->selectorLength;
             const char * argumentEnd = ((char *)data) + length;
@@ -165,7 +167,7 @@ BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueu
         va_list args;
         va_start(args, arguments);
         AEArgument argument;
-        while ( 1 ) {
+        while ( va_arg(args, void*) != NULL ) {
             argument = va_arg(args, AEArgument);
             if ( argument.length == 0 ) break;
             messageSize += sizeof(main_thread_message_arg_t) + argument.length;
@@ -200,7 +202,7 @@ BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueu
         va_list args;
         va_start(args, arguments);
         AEArgument argument;
-        while ( 1 ) {
+        while ( va_arg(args, void*) != NULL ) {
             argument = va_arg(args, AEArgument);
             if ( argument.length == 0 ) break;
             
