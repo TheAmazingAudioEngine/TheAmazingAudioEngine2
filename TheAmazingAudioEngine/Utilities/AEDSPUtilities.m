@@ -276,3 +276,10 @@ void AEDSPMixMono(const float * buffer1, const float * buffer2, float gain1, flo
         vDSP_vadd(buffer1, 1, buffer2, 1, output, 1, frames);
     }
 }
+
+void AEDSPCrossfade(const AudioBufferList * a, const AudioBufferList * b, const AudioBufferList * target, UInt32 frames) {
+    assert(a->mNumberBuffers == b->mNumberBuffers && b->mNumberBuffers == target->mNumberBuffers);
+    for ( int i=0; i<a->mNumberBuffers; i++ ) {
+        vDSP_vtmerg(a->mBuffers[i].mData, 1, b->mBuffers[i].mData, 1, target->mBuffers[i].mData, 1, frames);
+    }
+}

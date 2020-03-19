@@ -154,6 +154,16 @@ void AEDSPMix(const AudioBufferList * bufferList1, const AudioBufferList * buffe
 void AEDSPMixMono(const float * buffer1, const float * buffer2, float gain1, float gain2, UInt32 frames, float * output);
 
 /*!
+ * Crossfade from one buffer to another
+ *
+ * @param a First buffer list
+ * @param b Second buffer list
+ * @param target Target buffer list
+ * @param frames Number of frames to crossfade over
+ */
+void AEDSPCrossfade(const AudioBufferList * a, const AudioBufferList * b, const AudioBufferList * target, UInt32 frames);
+
+/*!
  * Silence an audio buffer list (zero out frames)
  *
  * @param bufferList Pointer to an AudioBufferList containing audio
