@@ -72,10 +72,14 @@ void AELevelsAnalyzerAnalyzeBufferChannel(__unsafe_unretained AELevelsAnalyzer *
     }
     
     // Calculate running RMS
-    if ( sinceLastAnalysis > kTimeoutAnalysisFalloffInterval ) {
+    if ( numberFrames == 0 || sinceLastAnalysis > kTimeoutAnalysisFalloffInterval ) {
         memset(&THIS->_sumSquareBuffer, 0, sizeof(THIS->_sumSquareBuffer));
         THIS->_sumSquareAccumulator = 0;
         THIS->_sumSquareN = 0;
+    }
+    if ( numberFrames == 0 ) {
+        THIS->_meanSumSquare = 0;
+        return;
     }
     int rmsBufferBlockCount = MIN(kRMSBufferBlockCountMax, (kRMSWindowFrameCount / numberFrames));
     THIS->_sumSquareBufferHead = (THIS->_sumSquareBufferHead + 1) % rmsBufferBlockCount;
