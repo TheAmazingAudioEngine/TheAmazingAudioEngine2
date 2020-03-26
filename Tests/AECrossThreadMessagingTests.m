@@ -175,7 +175,7 @@ typedef struct {
     int data[2] = {1, 2};
     XCTAssertEqualObjects(self.mainThreadMessageValue4, [NSData dataWithBytes:data length:sizeof(data)]);
     
-    AEMessageQueuePerformSelectorOnMainThread(queue, self, @selector(mainThreadMessageTestWithNoArguments), NULL);
+    AEMessageQueuePerformSelectorOnMainThread(queue, self, @selector(mainThreadMessageTestWithNoArguments), AEArgumentNone, NULL);
     
     [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
     
