@@ -283,3 +283,199 @@ void AEDSPCrossfade(const AudioBufferList * a, const AudioBufferList * b, const 
         vDSP_vtmerg(a->mBuffers[i].mData, 1, b->mBuffers[i].mData, 1, target->mBuffers[i].mData, 1, frames);
     }
 }
+
+#pragma mark - FFT Convolution
+
+typedef struct AEDSPFFTConvolution_t {
+    int length;
+    vDSP_DFT_Setup forward;
+    vDSP_DFT_Setup inverse;
+    float * inputR;
+    float * inputI;
+    float * filterR;
+    float * filterI;
+    int filterLength;
+    float * overflow;
+    int overflowLength;
+    float * temp;
+    AEDSPFFTConvolutionOperation operation;
+} AEDSPFFTConvolution;
+
+static int AEDSPFFTConvolutionCalculateFFTLength(int length) {
+    // Select FFT length. Length must be power of 2, or f * 2^n, where f is 3, 5, or 15 and n is at least 4.
+    int fftLength = pow(2, ceil(log2(length)));
+    if ( fftLength != length ) {
+        // See if there's an f * 2^n form that's less than the next highest power of two
+        const int fs[] = {3, 5, 15};
+        for ( int i=0; i<sizeof(fs)/sizeof(fs[0]); i++ ) {
+            int N = (int)ceilf(log2f(length/(float)fs[i]));
+            if ( N < 4 ) continue;
+            int l = fs[i] * pow(2,N);
+            if ( l > fftLength ) {
+                break;
+            }
+            if ( l >= length ) {
+                fftLength = l;
+                break;
+            }
+        }
+    }
+    return fftLength;
+}
+
+AEDSPFFTConvolution * AEDSPFFTConvolutionInit(int length) {
+    int fftLength = AEDSPFFTConvolutionCalculateFFTLength(length);
+    
+    AEDSPFFTConvolution * setup = malloc(sizeof(AEDSPFFTConvolution));
+    setup->length = fftLength;
+    setup->inputR = malloc(sizeof(float) * fftLength/2);
+    setup->inputI = malloc(sizeof(float) * fftLength/2);
+    setup->filterR = malloc(sizeof(float) * fftLength/2);
+    setup->filterI = malloc(sizeof(float) * fftLength/2);
+    setup->overflow = malloc(sizeof(float) * fftLength);
+    setup->temp = malloc(sizeof(float) * fftLength);
+    setup->forward = vDSP_DFT_zrop_CreateSetup(0, fftLength, vDSP_DFT_FORWARD);
+    setup->inverse = vDSP_DFT_zrop_CreateSetup(setup->forward, fftLength, vDSP_DFT_INVERSE);
+    return setup;
+}
+
+void AEDSPFFTConvolutionDealloc(AEDSPFFTConvolution * setup) {
+    free(setup->inputR);
+    free(setup->inputI);
+    free(setup->filterR);
+    free(setup->filterI);
+    free(setup->overflow);
+    free(setup->temp);
+    vDSP_DFT_DestroySetup(setup->forward);
+    vDSP_DFT_DestroySetup(setup->inverse);
+    free(setup);
+}
+
+inline static void AEDSPFFTConvolutionInterleaveAndPad(float * buffer, float * real, float * imag, int length, int fftLength, BOOL reverse) {
+    
+    if ( reverse ) {
+        DSPSplitComplex split = { .realp = imag, .imagp = real };
+        vDSP_ctoz((DSPComplex *)(buffer + length - 2), -2, &split, 1, length/2);
+    } else {
+        DSPSplitComplex split = { .realp = real, .imagp = imag };
+        vDSP_ctoz((DSPComplex *)buffer, 2, &split, 1, length/2);
+    }
+    
+    if ( length < fftLength ) {
+        int padding = (fftLength/2)-(length/2);
+        vDSP_vclr(real+(length/2), 1, padding);
+        vDSP_vclr(imag+(length/2), 1, padding);
+        if ( length%2 ) {
+            if ( reverse ) {
+                real[(length/2)] = buffer[0];
+            } else {
+                real[(length/2)] = buffer[length-1];
+            }
+        }
+    }
+}
+
+void AEDSPFFTConvolutionPrepareContinuous(AEDSPFFTConvolution * setup, float * filter, int filterLength, AEDSPFFTConvolutionOperation operation) {
+    setup->operation = operation;
+    setup->filterLength = filterLength;
+    
+    // Perform forward FFT of filter signal
+    AEDSPFFTConvolutionInterleaveAndPad(filter, setup->filterR, setup->filterI, filterLength, setup->length, operation == AEDSPFFTConvolutionOperation_Correlation || operation == AEDSPFFTConvolutionOperation_CorrelationFull);
+    vDSP_DFT_Execute(setup->forward, setup->filterR, setup->filterI, setup->filterR, setup->filterI);
+}
+
+void AEDSPFFTConvolutionReset(AEDSPFFTConvolution * setup) {
+    setup->overflowLength = 0;
+}
+    
+static void _AEDSPFFTConvolutionExecute(AEDSPFFTConvolution * setup, float * input, int inputLength, float * output, int outputLength, AEDSPFFTConvolutionOperation operation, BOOL continuous) {
+    int filterLength = setup->filterLength;
+    assert(filterLength < setup->length);
+    
+    BOOL overlapAdd = continuous || inputLength > setup->length - filterLength + 1;
+    
+    int outputElementsToSkip = 0;
+    if ( operation == AEDSPFFTConvolutionOperation_Convolution || operation == AEDSPFFTConvolutionOperation_Correlation ) {
+        // Skip filterLength-1 frames from start
+        outputElementsToSkip = filterLength - 1;
+    }
+    
+    while ( inputLength > 0 ) {
+        int blockLength = overlapAdd ? MIN(setup->length - filterLength + 1, inputLength) : inputLength;
+        
+        // Perform forward FFT of input signal
+        AEDSPFFTConvolutionInterleaveAndPad(input, setup->inputR, setup->inputI, blockLength, setup->length, NO);
+        vDSP_DFT_Execute(setup->forward, setup->inputR, setup->inputI, setup->inputR, setup->inputI);
+        
+        // Multiply signals. The Nyquist value is stored in imag[0], so treat that differently
+        DSPSplitComplex inputSplit = { .realp = setup->inputR, .imagp = setup->inputI };
+        DSPSplitComplex filterSplit = { .realp = setup->filterR, .imagp = setup->filterI };
+        float multipliedNyquist = setup->inputI[0] * setup->filterI[0];
+        float priorFilterNyquist = setup->filterI[0];
+        setup->inputI[0] = setup->filterI[0] = 0;
+        vDSP_zvmul(&inputSplit, 1, &filterSplit, 1, &inputSplit, 1, (setup->length/2), 1);
+        setup->inputI[0] = multipliedNyquist;
+        setup->filterI[0] = priorFilterNyquist;
+        
+        // Perform inverse FFT
+        vDSP_DFT_Execute(setup->inverse, setup->inputR, setup->inputI, setup->inputR, setup->inputI);
+
+        // De-interleave to output
+        vDSP_ztoc(&inputSplit, 1, (DSPComplex *)setup->temp, 2, setup->length/2);
+        
+        // Scale according to API convention (undo x2 scale for each forward transform, and xN scale for inverse)
+        float scale = 1.0 / (2*2*setup->length);
+        vDSP_vsmul(setup->temp, 1, &scale, setup->temp, 1, setup->length);
+        
+        if ( setup->overflowLength > 0 ) {
+            // Add overflow from last block
+            vDSP_vadd(setup->temp, 1, setup->overflow, 1, setup->temp, 1, setup->overflowLength);
+        }
+        
+        // Save overflow
+        if ( overlapAdd ) {
+            setup->overflowLength = filterLength - 1;
+            memcpy(setup->overflow, setup->temp + blockLength, sizeof(float) * setup->overflowLength);
+        }
+        
+        // Save output
+        int blockOutputLength = overlapAdd ? blockLength : blockLength + filterLength - 1;
+        int skippedElements = MIN(outputElementsToSkip, blockOutputLength);
+        blockOutputLength = MIN(outputLength, blockOutputLength - skippedElements);
+        memcpy(output, setup->temp + skippedElements, sizeof(float) * blockOutputLength);
+        
+        // Advance
+        inputLength -= blockLength;
+        input += blockLength;
+        outputLength -= blockOutputLength;
+        output += blockOutputLength;
+        outputElementsToSkip -= skippedElements;
+    }
+    
+    if ( outputLength > 0 && setup->overflowLength > 0 ) {
+        int length = MIN(outputLength, setup->overflowLength);
+        int skippedElements = MIN(outputElementsToSkip, length);
+        length -= skippedElements;
+        memcpy(output, setup->overflow + skippedElements, length * sizeof(float));
+        output += length;
+        outputLength -= length;
+        setup->overflowLength -= length+skippedElements;
+    }
+    
+    if ( outputLength > 0 ) {
+        memset(output, 0, outputLength * sizeof(float));
+    }
+}
+
+void AEDSPFFTConvolutionExecuteContinuous(AEDSPFFTConvolution * setup, float * input, int inputLength, float * output, int outputLength) {
+    _AEDSPFFTConvolutionExecute(setup, input, inputLength, output, outputLength, setup->operation, YES);
+}
+
+void AEDSPFFTConvolutionExecute(AEDSPFFTConvolution * setup, float * input, int inputLength, float * filter, int filterLength, float * output, int outputLength, AEDSPFFTConvolutionOperation operation) {
+    if ( filter ) {
+        AEDSPFFTConvolutionPrepareContinuous(setup, filter, filterLength, operation);
+    }
+    setup->overflowLength = 0;
+    _AEDSPFFTConvolutionExecute(setup, input, inputLength, output, outputLength, operation, NO);
+    setup->overflowLength = 0;
+}
