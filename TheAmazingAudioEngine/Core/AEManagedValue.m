@@ -219,7 +219,9 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
         _atomicBatchUpdateLastValue = _value;
     } else {
         // Defer value sync
-        [__atomicUpdatedDeferredSyncValues addObject:self];
+        @synchronized ( __atomicUpdatedDeferredSyncValues ) {
+            [__atomicUpdatedDeferredSyncValues addObject:self];
+        }
     }
     
     if ( oldValue || completionBlock ) {
