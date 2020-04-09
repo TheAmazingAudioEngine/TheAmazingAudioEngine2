@@ -75,8 +75,6 @@ typedef struct {
         if ( *type == AEMessageQueueMainThreadMessage ) {
             const main_thread_message_t * message = (const main_thread_message_t *)data;
             id target = message->target;
-            if ( !target ) return;
-            
             const char * selectorString = ((char *)data) + sizeof(main_thread_message_t);
             const char * arguments = ((char *)data) + sizeof(main_thread_message_t) + message->selectorLength;
             const char * argumentEnd = ((char *)data) + length;
@@ -164,17 +162,15 @@ BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueu
     size_t messageSize = sizeof(main_thread_message_t) + selectorLength;
     if ( arguments.length > 0 ) {
         messageSize += sizeof(main_thread_message_arg_t) + arguments.length;
-        va_list args, args2;
+        va_list args;
         va_start(args, arguments);
-        va_copy(args2, args);
         AEArgument argument;
-        while ( va_arg(args2, void*) != NULL ) {
+        while ( 1 ) {
             argument = va_arg(args, AEArgument);
             if ( argument.length == 0 ) break;
             messageSize += sizeof(main_thread_message_arg_t) + argument.length;
         }
         va_end(args);
-        va_end(args2);
     }
     
     // Create message
@@ -201,11 +197,10 @@ BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueu
         argumentPtr += sizeof(main_thread_message_arg_t) + arguments.length;
         
         // Copy remaining arguments
-        va_list args, args2;
+        va_list args;
         va_start(args, arguments);
-        va_copy(args2, args);
         AEArgument argument;
-        while ( va_arg(args2, void*) != NULL ) {
+        while ( 1 ) {
             argument = va_arg(args, AEArgument);
             if ( argument.length == 0 ) break;
             
@@ -216,7 +211,6 @@ BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueu
             argumentPtr += sizeof(main_thread_message_arg_t) + argument.length;
         }
         va_end(args);
-        va_end(args2);
     }
     
     // Dispatch
