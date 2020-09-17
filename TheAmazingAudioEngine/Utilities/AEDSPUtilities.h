@@ -247,6 +247,14 @@ typedef enum {
 AEDSPFFTConvolution * AEDSPFFTConvolutionInit(int length);
 
 /*!
+ * Return appropriate FFT size greater than or equal to the given length
+ *
+ *  This is used automatically by AEDSPFFTConvolutionInit, but can be used in advance to make
+ *  other determinations in advance.
+ */
+int AEDSPFFTConvolutionCalculateFFTLength(int length);
+
+/*!
  * Deallocate FFT convolution resources
  *
  * @param setup Setup structure

@@ -301,7 +301,7 @@ typedef struct AEDSPFFTConvolution_t {
     AEDSPFFTConvolutionOperation operation;
 } AEDSPFFTConvolution;
 
-static int AEDSPFFTConvolutionCalculateFFTLength(int length) {
+int AEDSPFFTConvolutionCalculateFFTLength(int length) {
     // Select FFT length. Length must be power of 2, or f * 2^n, where f is 3, 5, or 15 and n is at least 4.
     int fftLength = pow(2, ceil(log2(length)));
     if ( fftLength != length ) {
@@ -376,6 +376,7 @@ inline static void AEDSPFFTConvolutionInterleaveAndPad(float * buffer, float * r
 }
 
 void AEDSPFFTConvolutionPrepareContinuous(AEDSPFFTConvolution * setup, float * filter, int filterLength, AEDSPFFTConvolutionOperation operation) {
+    assert(filterLength < setup->length);
     setup->operation = operation;
     setup->filterLength = filterLength;
     
@@ -390,8 +391,6 @@ void AEDSPFFTConvolutionReset(AEDSPFFTConvolution * setup) {
     
 static void _AEDSPFFTConvolutionExecute(AEDSPFFTConvolution * setup, float * input, int inputLength, float * output, int outputLength, AEDSPFFTConvolutionOperation operation, BOOL continuous) {
     int filterLength = setup->filterLength;
-    assert(filterLength < setup->length);
-    
     BOOL overlapAdd = continuous || inputLength > setup->length - filterLength + 1;
     
     int outputElementsToSkip = 0;
