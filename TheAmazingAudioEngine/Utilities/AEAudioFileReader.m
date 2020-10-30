@@ -166,7 +166,7 @@ static const UInt32 kMaxAudioFileReadSize = 16384;
         [self reportError:[NSError errorWithDomain:NSOSStatusErrorDomain code:status
                             userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:
                               NSLocalizedString(@"Couldn't convert the audio file (error %d/%4.4s)", @""),
-                                status, (char*)&fourCC]}]];
+                                (int)status, (char*)&fourCC]}]];
         return;
     }
     
@@ -229,7 +229,7 @@ static const UInt32 kMaxAudioFileReadSize = 16384;
             [self reportError:[NSError errorWithDomain:NSOSStatusErrorDomain code:status
                                userInfo:@{NSLocalizedDescriptionKey: [NSString stringWithFormat:
                                 NSLocalizedString(@"Couldn't read the audio file (error %d/%4.4s)", @""),
-                                  status, (char*)&fourCC]}]];
+                                  (int)status, (char*)&fourCC]}]];
             return;
         }
         

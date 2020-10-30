@@ -84,7 +84,7 @@ ExtAudioFileRef AEExtAudioFileCreate(NSURL * url, AEAudioFileType fileType, doub
             if ( error ) *error = [NSError errorWithDomain:NSOSStatusErrorDomain
                                                       code:status
                                                   userInfo:@{ NSLocalizedDescriptionKey:
-                                                                  [NSString stringWithFormat:NSLocalizedString(@"Couldn't prepare the output format (error %d/%4.4s)", @""), status, (char*)&fourCC]}];
+                                                                  [NSString stringWithFormat:NSLocalizedString(@"Couldn't prepare the output format (error %d/%4.4s)", @""), (int)status, (char*)&fourCC]}];
             return NULL;
         }
         fileTypeID = kAudioFileM4AType;
