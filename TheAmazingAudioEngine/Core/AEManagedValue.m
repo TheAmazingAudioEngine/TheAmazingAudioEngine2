@@ -212,9 +212,8 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
     // Assign new value
     void * oldValue = _value;
     _value = value;
-    _valueSet = YES;
     
-    if ( __atomicUpdateCounter == 0 && !__atomicUpdateWaitingForCommit ) {
+    if ( !_valueSet || (__atomicUpdateCounter == 0 && !__atomicUpdateWaitingForCommit) ) {
         // Sync value for recall on realtime thread during atomic batch update
         _atomicBatchUpdateLastValue = _value;
     } else {
@@ -223,6 +222,8 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
             [__atomicUpdatedDeferredSyncValues addObject:self];
         }
     }
+    
+    _valueSet = YES;
     
     if ( oldValue || completionBlock ) {
         // Mark old value as pending release - it'll be transferred to the release queue by
