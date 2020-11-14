@@ -40,6 +40,8 @@ static int __atomicUpdateCounter = 0;
 static pthread_rwlock_t __atomicUpdateMutex = PTHREAD_RWLOCK_INITIALIZER;
 static NSHashTable * __atomicUpdatedDeferredSyncValues = nil;
 static BOOL __atomicUpdateWaitingForCommit = NO;
+static NSMutableArray * __atomicUpdateCompletionBlocks = nil;
+static NSTimer * __atomicUpdateCompletionTimer = nil;
 
 static linkedlistitem_t * __pendingInstances = NULL;
 static linkedlistitem_t * __servicedInstances = NULL;
@@ -67,6 +69,11 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
 
 + (void)initialize {
     __atomicUpdatedDeferredSyncValues = [[NSHashTable alloc] initWithOptions:NSPointerFunctionsWeakMemory capacity:0];
+    __atomicUpdateCompletionBlocks = [NSMutableArray array];
+}
+
++ (void)performAtomicBatchUpdate:(AEManagedValueUpdateBlock)block {
+    [self performAtomicBatchUpdate:block withCompletionBlock:nil];
 }
 
 /*!
@@ -107,7 +114,7 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
  *    thread, and (2) that we then need a mechanism to release items in the list, which we can't
  *    do on the realtime thread.
  */
-+ (void)performAtomicBatchUpdate:(AEManagedValueUpdateBlock)block {
++ (void)performAtomicBatchUpdate:(AEManagedValueUpdateBlock)block withCompletionBlock:(void (^)(void))completionBlock {
     
     if ( !__atomicUpdateWaitingForCommit ) {
         // Perform deferred sync to _atomicBatchUpdateLastValue for previously-batch-updated values
@@ -125,6 +132,12 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
         __atomicUpdateWaitingForCommit = YES;
     }
     
+    if ( completionBlock ) {
+        @synchronized ( __atomicUpdateCompletionBlocks ) {
+            [__atomicUpdateCompletionBlocks addObject:completionBlock];
+        }
+    }
+    
     __atomicUpdateCounter++;
     
     // Perform the updates
@@ -135,6 +148,21 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
     if ( __atomicUpdateCounter == 0 ) {
         // Unlock, allowing GetValue to access _value again
         pthread_rwlock_unlock(&__atomicUpdateMutex);
+    }
+    
+    if ( completionBlock && !__atomicUpdateCompletionTimer ) {
+        __atomicUpdateCompletionTimer = [NSTimer scheduledTimerWithTimeInterval:0.01 repeats:YES block:^(NSTimer * _Nonnull timer) {
+            if ( !__atomicUpdateWaitingForCommit ) {
+                @synchronized ( __atomicUpdateCompletionBlocks ) {
+                    [__atomicUpdateCompletionTimer invalidate];
+                    __atomicUpdateCompletionTimer = nil;
+                    for ( void (^block)(void) in __atomicUpdateCompletionBlocks ) {
+                        block();
+                    }
+                    [__atomicUpdateCompletionBlocks removeAllObjects];
+                }
+            }
+        }];
     }
 }
 

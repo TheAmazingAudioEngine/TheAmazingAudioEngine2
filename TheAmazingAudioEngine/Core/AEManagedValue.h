@@ -78,6 +78,16 @@ typedef void (^AEManagedValueReleaseNotificationBlock)(void);
 + (void)performAtomicBatchUpdate:(AEManagedValueUpdateBlock _Nonnull)block;
 
 /*!
+ * Atomic batch update variant with completion block
+ *
+ *  See performAtomicBatchUpdate: for discussion.
+ *
+ * @param block Atomic update block
+ * @param completionBlock Block to be called on main thread after commit
+ */
++ (void)performAtomicBatchUpdate:(AEManagedValueUpdateBlock _Nonnull)block withCompletionBlock:(void(^_Nullable)(void))completionBlock;
+
+/*!
  * Get access to the value on the realtime audio thread
  *
  *  The object or buffer returned is guaranteed to remain valid until the next call to this function.
