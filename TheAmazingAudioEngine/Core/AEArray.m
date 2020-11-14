@@ -212,14 +212,17 @@ typedef struct {
 #pragma mark - Realtime thread accessors
 
 AEArrayToken AEArrayGetToken(__unsafe_unretained AEArray * THIS) {
+    if ( !THIS ) return NULL;
     return AEManagedValueGetValue(THIS->_value);
 }
 
 int AEArrayGetCount(AEArrayToken token) {
+    if ( !token ) return 0;
     return ((array_t*)token)->count;
 }
 
 void * AEArrayGetItem(AEArrayToken token, int index) {
+    if ( !token ) return NULL;
     return ((array_t*)token)->entries[index]->pointer;
 }
 

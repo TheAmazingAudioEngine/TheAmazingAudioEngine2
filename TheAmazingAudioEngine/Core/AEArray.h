@@ -272,7 +272,7 @@ typedef void (^AEArrayReleaseBlock)(ObjectType _Nonnull item, void * _Nonnull pt
  * @param array The array
  * @return The token, for use with other accessors
  */
-AEArrayToken _Nonnull AEArrayGetToken(__unsafe_unretained AEArray * _Nonnull array);
+AEArrayToken _Nullable AEArrayGetToken(__unsafe_unretained AEArray * _Nullable array);
 
 /*!
  * Get the number of items in the array
@@ -280,7 +280,7 @@ AEArrayToken _Nonnull AEArrayGetToken(__unsafe_unretained AEArray * _Nonnull arr
  * @param token The array token, as returned from AEArrayGetToken
  * @return Item count
  */
-int AEArrayGetCount(AEArrayToken _Nonnull token);
+int AEArrayGetCount(AEArrayToken _Nullable token);
 
 /*!
  * Get the item at a given index
@@ -289,7 +289,7 @@ int AEArrayGetCount(AEArrayToken _Nonnull token);
  * @param index The item index
  * @return Item at the given index
  */
-void * _Nullable AEArrayGetItem(AEArrayToken _Nonnull token, int index);
+void * _Nullable AEArrayGetItem(AEArrayToken _Nullable token, int index);
 
 /*!
  * Enumerate object types in the array, for use on audio thread
