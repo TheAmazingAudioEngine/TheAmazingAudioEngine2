@@ -43,6 +43,14 @@ extern "C" {
 AudioComponentDescription AEAudioComponentDescriptionMake(OSType manufacturer, OSType type, OSType subtype);
 
 /*!
+ * Compare two AudioComponentDescriptions
+ *
+ * @param a First AudioComponentDescription
+ * @param b Second AudioComponentDescription
+ */
+BOOL AEAudioComponentDescriptionsEqual(AudioComponentDescription a, AudioComponentDescription b);
+
+/*!
  * Rate limit an operation
  *
  *  This can be used to prevent spamming error messages to the console

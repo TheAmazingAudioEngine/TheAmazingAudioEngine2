@@ -36,6 +36,10 @@ AudioComponentDescription AEAudioComponentDescriptionMake(OSType manufacturer, O
     return description;
 }
 
+BOOL AEAudioComponentDescriptionsEqual(AudioComponentDescription a, AudioComponentDescription b) {
+    return a.componentManufacturer == b.componentManufacturer && a.componentType == b.componentType && a.componentSubType == b.componentSubType;
+}
+
 BOOL AERateLimit(void) {
     static double lastMessage = 0;
     static int messageCount=0;
