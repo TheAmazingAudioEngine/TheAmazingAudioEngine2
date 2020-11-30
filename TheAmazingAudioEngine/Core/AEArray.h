@@ -304,7 +304,8 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nullable token, int index);
  *      }
  *
  *  Note: This macro calls AEArrayGetToken to access the array. Consequently, it is not
- *  recommended for use when you need to access the array in addition to this enumeration.
+ *  recommended for use when you need to access the array in addition to this enumeration;
+ *  use AEArrayEnumerateObjectsToken instead.
  *
  * @param array The array
  * @param type The object type
@@ -312,12 +313,33 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nullable token, int index);
  */
 #define AEArrayEnumerateObjects(array, type, varname) \
     AEArrayToken __AEArrayVar(token, __LINE__) = AEArrayGetToken(array); \
-    int __AEArrayVar(count, __LINE__) = AEArrayGetCount(__AEArrayVar(token, __LINE__)); \
+    AEArrayEnumerateObjectsToken(__AEArrayVar(token, __LINE__), type, varname)
+
+/*!
+ * Enumerate object types in the array, using array token, for use on audio thread
+ *
+ *  This convenience macro provides the ability to enumerate the objects
+ *  in the array, in a realtime-thread safe fashion. Use it instead of AEArrayEnumerateObjects
+ *  when you need to access the array in addition to the enumeration.
+ *
+ *  Use it like:
+ *
+ *      AEArrayToken token = AEArrayGetToken(array);
+ *      AEArrayEnumerateObjectsToken(token, MyObjectType *, myVar) {
+ *          // Do stuff with myVar, which is a MyObjectType *
+ *      }
+ *
+ * @param token The token, as obtained by AEArrayGetToken
+ * @param type The object type
+ * @param varname Name of object variable for inner loop
+ */
+#define AEArrayEnumerateObjectsToken(token, type, varname) \
+    int __AEArrayVar(count, __LINE__) = AEArrayGetCount(token); \
     int __AEArrayVar(i, __LINE__) = 0; \
-    for ( __unsafe_unretained type varname = __AEArrayVar(count, __LINE__) > 0 ? (__bridge type)AEArrayGetItem(__AEArrayVar(token, __LINE__), 0) : NULL; \
+    for ( __unsafe_unretained type varname = __AEArrayVar(count, __LINE__) > 0 ? (__bridge type)AEArrayGetItem(token, 0) : NULL; \
           __AEArrayVar(i, __LINE__) < __AEArrayVar(count, __LINE__); \
           __AEArrayVar(i, __LINE__)++, varname = __AEArrayVar(i, __LINE__) < __AEArrayVar(count, __LINE__) ? \
-            (__bridge type)AEArrayGetItem(__AEArrayVar(token, __LINE__), __AEArrayVar(i, __LINE__)) : NULL )
+            (__bridge type)AEArrayGetItem(token, __AEArrayVar(i, __LINE__)) : NULL )
 
 /*!
  * Enumerate pointer types in the array, for use on audio thread
@@ -333,7 +355,8 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nullable token, int index);
  *      }
  *
  *  Note: This macro calls AEArrayGetToken to access the array. Consequently, it is not
- *  recommended for use when you need to access the array in addition to this enumeration.
+ *  recommended for use when you need to access the array in addition to this enumeration;
+ *  use AEArrayEnumeratePointersToken instead.
  *
  * @param array The array
  * @param type The pointer type (e.g. struct myStruct *)
@@ -341,12 +364,34 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nullable token, int index);
  */
 #define AEArrayEnumeratePointers(array, type, varname) \
     AEArrayToken __AEArrayVar(token, __LINE__) = AEArrayGetToken(array); \
-    int __AEArrayVar(count, __LINE__) = AEArrayGetCount(__AEArrayVar(token, __LINE__)); \
+    AEArrayEnumeratePointersToken(__AEArrayVar(token, __LINE__), type, varname)
+
+/*!
+ * Enumerate pointer types in the array, using array token, for use on audio thread
+ *
+ *  This convenience macro provides the ability to enumerate the pointers
+ *  in the array, in a realtime-thread safe fashion. It differs from AEArrayEnumerateObjectsToken
+ *  in that it is designed for use with pointer types, rather than objects. Use this instead of
+ *  AEArrayEnumeratePointers when you need to access the array in addition to the enumeration.
+ *
+ *  Use it like:
+ *
+ *      AEArrayToken token = AEArrayGetToken(array);
+ *      AEArrayEnumeratePointers(token, MyCType *, myVar) {
+ *          // Do stuff with myVar, which is a MyCType *
+ *      }
+ *
+ * @param array The array
+ * @param type The pointer type (e.g. struct myStruct *)
+ * @param varname Name of pointer variable for inner loop
+ */
+#define AEArrayEnumeratePointersToken(token, type, varname) \
+    int __AEArrayVar(count, __LINE__) = AEArrayGetCount(token); \
     int __AEArrayVar(i, __LINE__) = 0; \
-    for ( type varname = __AEArrayVar(count, __LINE__) > 0 ? (type)AEArrayGetItem(__AEArrayVar(token, __LINE__), 0) : NULL; \
+    for ( type varname = __AEArrayVar(count, __LINE__) > 0 ? (type)AEArrayGetItem(token, 0) : NULL; \
           __AEArrayVar(i, __LINE__) < __AEArrayVar(count, __LINE__); \
           __AEArrayVar(i, __LINE__)++, varname = __AEArrayVar(i, __LINE__) < __AEArrayVar(count, __LINE__) ? \
-            (type)AEArrayGetItem(__AEArrayVar(token, __LINE__), __AEArrayVar(i, __LINE__)) : NULL )
+            (type)AEArrayGetItem(token, __AEArrayVar(i, __LINE__)) : NULL )
 
 
 //! Number of values in array
