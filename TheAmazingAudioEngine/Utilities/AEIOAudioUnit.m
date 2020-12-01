@@ -221,8 +221,8 @@ static const double kAVAudioSession0dBGain = 0.75;
                                                        queue:nil usingBlock:^(NSNotification *notification)
     {
         dispatch_async(dispatch_get_main_queue(), ^{
-            weakSelf.outputLatency = [AVAudioSession sharedInstance].outputLatency;
-            weakSelf.inputLatency = [AVAudioSession sharedInstance].inputLatency;
+            weakSelf.outputLatency = AVAudioSession.sharedInstance.outputLatency;
+            weakSelf.inputLatency = AVAudioSession.sharedInstance.inputLatency;
             weakSelf.inputGain = weakSelf.inputGain;
         });
     }];
@@ -259,14 +259,14 @@ static const double kAVAudioSession0dBGain = 0.75;
 #if TARGET_OS_IPHONE
     // Activate audio session
     NSError * e;
-    if ( ![[AVAudioSession sharedInstance] setActive:YES error:&e] ) {
+    if ( ![AVAudioSession.sharedInstance setActive:YES error:&e] ) {
         NSLog(@"Couldn't activate audio session: %@", e);
         if ( error ) *error = e;
         return NO;
     }
     
-    self.outputLatency = [AVAudioSession sharedInstance].outputLatency;
-    self.inputLatency = [AVAudioSession sharedInstance].inputLatency;
+    self.outputLatency = AVAudioSession.sharedInstance.outputLatency;
+    self.inputLatency = AVAudioSession.sharedInstance.inputLatency;
     self.inputGain = self.inputGain;
 #endif
     
@@ -359,7 +359,7 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     
     // If not setup yet, take the sample rate from the audio session
 #if TARGET_OS_IPHONE
-    return [[AVAudioSession sharedInstance] sampleRate];
+    return [AVAudioSession.sharedInstance sampleRate];
 #else
     return [self streamFormatForDefaultDeviceScope:
             self.outputEnabled ? kAudioDevicePropertyScopeOutput : kAudioDevicePropertyScopeInput].mSampleRate;
@@ -389,7 +389,7 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     
     // If not setup, take the channel count from the session
 #if TARGET_OS_IPHONE
-    return (int)[[AVAudioSession sharedInstance] outputNumberOfChannels];
+    return (int)[AVAudioSession.sharedInstance outputNumberOfChannels];
 #else
     return [self streamFormatForDefaultDeviceScope:kAudioDevicePropertyScopeOutput].mChannelsPerFrame;
 #endif
@@ -425,7 +425,7 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     _inputGain = inputGain;
     
 #if TARGET_OS_IPHONE
-    AVAudioSession * audioSession = [AVAudioSession sharedInstance];
+    AVAudioSession * audioSession = AVAudioSession.sharedInstance;
     
     // Try to set the hardware gain; zero seems to still be audible, though, so we'll bypass for that
     if ( audioSession.inputGainSettable && inputGain > 0 ) {
@@ -452,7 +452,7 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
     
     // If not setup, take the channel count from the session
 #if TARGET_OS_IPHONE
-    return (int)[[AVAudioSession sharedInstance] inputNumberOfChannels];
+    return (int)[AVAudioSession.sharedInstance inputNumberOfChannels];
 #else
     return [self streamFormatForDefaultDeviceScope:kAudioDevicePropertyScopeInput].mChannelsPerFrame;
 #endif
@@ -468,7 +468,7 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 
 - (AESeconds)IOBufferDuration {
 #if TARGET_OS_IPHONE
-    return [[AVAudioSession sharedInstance] IOBufferDuration];
+    return [AVAudioSession.sharedInstance IOBufferDuration];
 #else
     // Get the default device
     AudioDeviceID deviceId =
@@ -491,7 +491,7 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 - (void)setIOBufferDuration:(AESeconds)IOBufferDuration {
 #if TARGET_OS_IPHONE
     NSError * error = nil;
-    if ( ![[AVAudioSession sharedInstance] setPreferredIOBufferDuration:IOBufferDuration error:&error] ) {
+    if ( ![AVAudioSession.sharedInstance setPreferredIOBufferDuration:IOBufferDuration error:&error] ) {
         NSLog(@"Unable to set IO Buffer duration: %@", error.localizedDescription);
     }
 #else
