@@ -50,12 +50,12 @@ AudioStreamBasicDescription AEAudioDescriptionWithChannelsAndRate(int channels, 
 /*!
  * File types
  */
-typedef NS_ENUM(NSInteger, AEAudioFileType) {
+typedef enum {
     AEAudioFileTypeAIFFFloat32, //!< 32-bit floating point AIFF (AIFC)
     AEAudioFileTypeAIFFInt16,   //!< 16-bit signed little-endian integer AIFF
     AEAudioFileTypeWAVInt16,    //!< 16-bit signed little-endian integer WAV
     AEAudioFileTypeM4A,         //!< AAC in an M4A container
-};
+} AEAudioFileType;
 
 /*!
  * Channel set
