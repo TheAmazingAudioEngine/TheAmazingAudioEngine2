@@ -163,6 +163,7 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
                 }
             }
         }];
+        __atomicUpdateCompletionTimer.tolerance = 0.01;
     }
 }
 
@@ -270,9 +271,7 @@ pthread_t AEManagedValueRealtimeThreadIdentifier = NULL;
             double interval = completionBlock ? 0.01 : 0.1;
             self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:interval target:[AEWeakRetainingProxy proxyWithTarget:self]
                                                             selector:@selector(pollReleaseList) userInfo:nil repeats:YES];
-            if ( !completionBlock ) {
-                self.pollTimer.tolerance = 0.5;
-            }
+            self.pollTimer.tolerance = completionBlock ? 0.01 : 0.5;
         }
         
         if ( self.usedOnAudioThread ) {
