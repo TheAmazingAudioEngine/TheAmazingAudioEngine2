@@ -51,6 +51,7 @@ AEChannelSet AEChannelSetDefault = {0, 1};
     return [NSValue valueWithBytes:&channelSet objCType:@encode(AEChannelSet)];
 }
 - (AEChannelSet)channelSetValue {
+    NSAssert(!strcmp(self.objCType, @encode(AEChannelSet)), @"Wrong type");
     AEChannelSet set;
     [self getValue:&set];
     return set;
