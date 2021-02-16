@@ -478,3 +478,82 @@ void AEDSPFFTConvolutionExecute(AEDSPFFTConvolution * setup, float * input, int 
     _AEDSPFFTConvolutionExecute(setup, input, inputLength, output, outputLength, operation, NO);
     setup->overflowLength = 0;
 }
+
+
+int AEDSPFindPeaksInDistribution(float * distribution, int start, int end, float leadingDelta, float trailingDelta, int minimumSeparation, BOOL sort, int * peaks, int maxPeaks) {
+    int bufferSize = 128;
+    struct { int index; float score; } * results = sort ? malloc(sizeof(*results) * bufferSize) : NULL;
+    int peakCount = 0;
+    
+    BOOL seekMax = YES;
+    int step = end > start ? 1 : -1;
+    float max = -INFINITY, min = INFINITY;
+    float lastValley = -INFINITY;
+    int lastPeak = -1;
+    int maxI = 0, minI = 0;
+    for ( int i=start; step > 0 ? i<end : i >= end; i += step ) {
+        float sample = distribution[i];
+        
+        if ( sample > max ) {
+            max = sample;
+            maxI = i;
+        }
+        if ( sample < min ) {
+            min = sample;
+            minI = i;
+        }
+        
+        if ( seekMax ) {
+            if ( sample < max-trailingDelta && lastValley < max-leadingDelta ) {
+                if ( !minimumSeparation || lastPeak == -1 || i-lastPeak >= minimumSeparation ) {
+                    if ( sort && peakCount >= bufferSize ) {
+                        bufferSize += 128;
+                        results = realloc(results, sizeof(*results)*bufferSize);
+                    }
+                    
+                    if ( sort ) {
+                        results[peakCount].index = maxI;
+                        results[peakCount].score = max;
+                    } else {
+                        peaks[peakCount] = maxI;
+                    }
+                    
+                    peakCount++;
+                    
+                    if ( peakCount == maxPeaks && !sort ) {
+                        break;
+                    }
+                }
+                
+                min = sample;
+                minI = i;
+                seekMax = NO;
+                lastPeak = i;
+            }
+        } else {
+            if ( sample > min+leadingDelta ) {
+                max = sample;
+                maxI = i;
+                lastValley = min;
+                seekMax = YES;
+            }
+        }
+    }
+    
+    if ( sort ) {
+        qsort_b(results, peakCount, sizeof(*results), ^(const void * elem1, const void * elem2) {
+            const typeof(*results) * e1 = elem1;
+            const typeof(*results) * e2 = elem2;
+            float diff = e1->score - e2->score;
+            return diff < 0 ? 1 : diff > 0 ? -1 : 0;
+        });
+        
+        for ( int i=0; i<maxPeaks && i<peakCount; i++ ) {
+            peaks[i] = results[i].index;
+        }
+        
+        free(results);
+    }
+    
+    return MIN(maxPeaks, peakCount);
+}
