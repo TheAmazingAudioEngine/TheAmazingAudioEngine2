@@ -337,7 +337,7 @@ void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
         return THIS->_atomicBatchUpdateLastValue;
     }
     
-    if ( !pthread_main_np() ) {
+    if ( !THIS->_usedOnAudioThread && !pthread_main_np() ) {
         AEManagedValueServiceReleaseQueue(THIS);
     }
     
