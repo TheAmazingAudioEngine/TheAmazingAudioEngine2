@@ -46,6 +46,8 @@ AudioStreamBasicDescription AEAudioDescriptionWithChannelsAndRate(int channels, 
 
 AEChannelSet AEChannelSetDefault = {0, 1};
 
+pthread_t AERealtimeThreadIdentifier = NULL;
+
 @implementation NSValue (AEChannelSet)
 + (NSValue *)valueWithChannelSet:(AEChannelSet)channelSet {
     return [NSValue valueWithBytes:&channelSet objCType:@encode(AEChannelSet)];

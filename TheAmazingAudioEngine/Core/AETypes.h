@@ -104,6 +104,9 @@ static inline BOOL AEChannelSetEqualToSet(AEChannelSet a, AEChannelSet b) {
 - (AEChannelSet)channelSetValue;
 @end
 
+//! The realtime thread; set this to pthread_self on the render thread (AEAudioUnitOutput does this automatically)
+extern pthread_t AERealtimeThreadIdentifier;
+
 #ifdef __cplusplus
 }
 #endif
