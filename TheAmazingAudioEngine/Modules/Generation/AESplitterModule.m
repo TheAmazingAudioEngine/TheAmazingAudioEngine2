@@ -96,7 +96,6 @@ static void AESplitterModuleProcess(__unsafe_unretained AESplitterModule * THIS,
         }
         #endif
         
-        // Perform analysis
         const AudioBufferList * buffer = AEBufferStackGet(context->stack, 0);
         if ( buffer ) {
             THIS->_timestamp = *AEBufferStackGetTimeStampForBuffer(context->stack, 0);
