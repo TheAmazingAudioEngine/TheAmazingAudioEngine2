@@ -158,7 +158,7 @@ AudioTimeStamp AEAudioUnitInputModuleGetInputTimestamp(__unsafe_unretained AEAud
 
 static void AEAudioUnitInputModuleProcess(__unsafe_unretained AEAudioUnitInputModule * self,
                                           const AERenderContext * _Nonnull context) {
-    if ( !self->_numberOfInputChannels ) {
+    if ( !self->_numberOfInputChannels || !AEIOAudioUnitGetInputEnabled(self->_ioUnit) ) {
         const AudioBufferList * abl = AEBufferStackPush(context->stack, 1);
         AEAudioBufferListSilence(abl, 0, context->frames);
         return;

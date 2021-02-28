@@ -141,6 +141,16 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull u
                                   const AudioBufferList * _Nonnull buffer, UInt32 frames);
 
 /*!
+ * Determine whether input is enabled
+ *
+ *  For use with input-enabled instances.
+ *
+ * @param unit The unit instance
+ * @return Whether audio input is enabled
+ */
+BOOL AEIOAudioUnitGetInputEnabled(__unsafe_unretained AEIOAudioUnit * _Nonnull unit);
+
+/*!
  * Get the last received input timestamp
  *
  *  For use with input-enabled instances, this gives access to the most recent AudioTimeStamp
