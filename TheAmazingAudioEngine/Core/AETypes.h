@@ -60,7 +60,7 @@ typedef enum {
 /*!
  * Channel set
  */
-typedef struct {
+typedef struct AEChannelSet {
     int firstChannel; //!< The index of the first channel of the set
     int lastChannel;  //!< The index of the last channel of the set
 } AEChannelSet;
