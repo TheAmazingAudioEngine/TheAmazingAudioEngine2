@@ -51,6 +51,26 @@ AudioComponentDescription AEAudioComponentDescriptionMake(OSType manufacturer, O
 BOOL AEAudioComponentDescriptionsEqual(AudioComponentDescription a, AudioComponentDescription b);
 
 /*!
+ * Convert a 14-character string to an AudioComponentDescription
+ */
+AudioComponentDescription AEStringToAudioComponentDescription(NSString * _Nonnull string);
+
+/*!
+ * Convert an AudioComponentDescription to a 14-character string
+ */
+NSString * _Nonnull AEAudioComponentDescriptionToString(AudioComponentDescription audioComponentDescription);
+
+/*!
+ * Convert a string to a four-CC type
+ */
+OSType AEStringToOSType(NSString * _Nonnull string);
+
+/*!
+ * Convert a four-CC type to a 4-character string
+ */
+NSString * _Nonnull AEOSTypeToString(OSType number);
+
+/*!
  * Rate limit an operation
  *
  *  This can be used to prevent spamming error messages to the console

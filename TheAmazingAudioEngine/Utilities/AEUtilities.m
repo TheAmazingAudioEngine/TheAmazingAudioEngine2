@@ -40,6 +40,44 @@ BOOL AEAudioComponentDescriptionsEqual(AudioComponentDescription a, AudioCompone
     return a.componentManufacturer == b.componentManufacturer && a.componentType == b.componentType && a.componentSubType == b.componentSubType;
 }
 
+NSString * AEOSTypeToString(OSType number) {
+    NSMutableString * result = [NSMutableString string];
+    int numberOfChars = 4;
+    for ( int i = 0; i < numberOfChars; i++ ) {
+        char chr = (number >> (8*(numberOfChars-1-i)));
+        if ( chr == 0 ) chr = ' ';
+        [result appendFormat:@"%c", chr];
+    }
+    return result;
+}
+
+OSType AEStringToOSType(NSString* string) {
+    OSType result = 0;
+    const char* cString = [string UTF8String];
+    for (NSUInteger i = 0; i < string.length; i++) {
+        OSType tmp = cString[string.length -1 - i];
+        tmp = tmp << i*8;
+        result |= tmp;
+    }
+    return result;
+}
+
+NSString * AEAudioComponentDescriptionToString(AudioComponentDescription audioComponentDescription) {
+    return [NSString stringWithFormat:@"%@:%@:%@",
+            AEOSTypeToString(audioComponentDescription.componentManufacturer),
+            AEOSTypeToString(audioComponentDescription.componentType),
+            AEOSTypeToString(audioComponentDescription.componentSubType)];
+}
+
+AudioComponentDescription AEStringToAudioComponentDescription(NSString * string) {
+    if ( string.length != 14 ) return (AudioComponentDescription){};
+    return (AudioComponentDescription){
+        .componentManufacturer = AEStringToOSType([string substringWithRange:NSMakeRange(0, 4)]),
+        .componentType = AEStringToOSType([string substringWithRange:NSMakeRange(5, 4)]),
+        .componentSubType = AEStringToOSType([string substringWithRange:NSMakeRange(10, 4)]),
+    };
+}
+
 BOOL AERateLimit(void) {
     static double lastMessage = 0;
     static int messageCount=0;
