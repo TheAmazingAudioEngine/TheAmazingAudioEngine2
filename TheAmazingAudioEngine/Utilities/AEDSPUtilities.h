@@ -213,6 +213,16 @@ static inline double AEDSPRatioToDecibels(double ratio) {
 }
 
 /*!
+ * Convert decibels to power ratio
+ *
+ * @param decibels Value in decibels
+ * @return Power ratio value
+ */
+static inline double AEDSPDecibelsToRatioClipped(double decibels, double minDb) {
+    return decibels <= minDb ? 0 : pow(10.0, decibels / 20.0);
+}
+
+/*!
  * Structure for FFT convolution
  */
 typedef struct AEDSPFFTConvolution_t AEDSPFFTConvolution;
