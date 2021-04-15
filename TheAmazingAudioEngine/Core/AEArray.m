@@ -49,7 +49,7 @@ typedef struct {
 @end
 
 @implementation AEArray
-@dynamic allValues, count;
+@dynamic allValues, count, usedOnAudioThread;
 
 - (instancetype)init {
     return [self initWithCustomMapping:nil];
@@ -71,6 +71,14 @@ typedef struct {
 - (void)setReleaseBlock:(AEArrayReleaseBlock)releaseBlock {
     _releaseBlock = releaseBlock;
     self.value.arrayReleaseBlock = releaseBlock;
+}
+
+- (void)setUsedOnAudioThread:(BOOL)usedOnAudioThread {
+    self.value.usedOnAudioThread = usedOnAudioThread;
+}
+
+- (BOOL)usedOnAudioThread {
+    return self.value.usedOnAudioThread;
 }
 
 - (NSArray *)allValues {

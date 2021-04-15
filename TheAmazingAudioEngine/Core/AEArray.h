@@ -404,6 +404,18 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nullable token, int index);
 //! free() to dispose bytes, if pointer differs from original Objective-C pointer.
 @property (nonatomic, copy) AEArrayReleaseBlock _Nullable releaseBlock;
 
+/*!
+ * Whether this instance is to be used on the audio thread (default YES)
+ *
+ * If you use any of the C accessor functions of an instance on any other thread than the audio
+ * thread, you must set this property to NO, and ensure that you either call the accessor functions regularly,
+ * or call AEManagedValueServiceReleaseQueue from the same thread to avoid delayed release of old values.
+ *
+ * This ensures that the default cleanup mechanism in AEManagedValueCommitPendingUpdates does not cause data
+ * to be released out of sync with the thread you use this instance with, causing crashes.
+ */
+@property (nonatomic) BOOL usedOnAudioThread;
+
 @end
 
 #ifdef __cplusplus
