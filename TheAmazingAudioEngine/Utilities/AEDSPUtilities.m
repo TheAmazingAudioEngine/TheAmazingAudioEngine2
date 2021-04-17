@@ -326,7 +326,7 @@ int AEDSPFFTConvolutionCalculateFFTLength(int length) {
 AEDSPFFTConvolution * AEDSPFFTConvolutionInit(int length) {
     int fftLength = AEDSPFFTConvolutionCalculateFFTLength(length);
     
-    AEDSPFFTConvolution * setup = malloc(sizeof(AEDSPFFTConvolution));
+    AEDSPFFTConvolution * setup = calloc(1, sizeof(AEDSPFFTConvolution));
     setup->length = fftLength;
     setup->inputR = malloc(sizeof(float) * fftLength/2);
     setup->inputI = malloc(sizeof(float) * fftLength/2);
