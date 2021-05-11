@@ -41,6 +41,7 @@ NSString * const AEAudioUnitOutputDidChangeSampleRateNotification = @"AEAudioUni
 NSString * const AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification = @"AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification";
 
 #ifdef DEBUG
+@import os.signpost;
 static const AESeconds kRenderTimeReportInterval = 0.0;   // Seconds between render time reports; 0 = no reporting
 static const double kRenderBudgetWarningThreshold = 0.75; // Ratio of total buffer duration to hit before budget overrun warnings
 static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wait before warning about budget overrun
@@ -58,6 +59,7 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     AESeconds _maximumRenderDuration;
     AESeconds _lastReportTime;
     AESeconds _firstReportTime;
+    os_log_t  _log;
 #endif
 }
 @property (nonatomic, strong) AEIOAudioUnit * ioUnit;
@@ -141,6 +143,12 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
 #endif
     
     self.renderer = renderer;
+    
+#ifdef DEBUG
+    if ( @available(iOS 12, *) ) {
+        _log = os_log_create("AEAudioUnitOutput", OS_LOG_CATEGORY_POINTS_OF_INTEREST);
+    }
+#endif
     
     return self;
 }
@@ -251,6 +259,9 @@ static void AEAudioUnitOutputReportRenderTime(__unsafe_unretained AEAudioUnitOut
     
     if ( now - self->_firstReportTime > kRenderBudgetWarningInitialDelay
             && renderTime > bufferDuration * kRenderBudgetWarningThreshold ) {
+        if ( @available(iOS 12, *) ) {
+            os_signpost_event_emit(self->_log, OS_SIGNPOST_ID_EXCLUSIVE, "Overrun");
+        }
         dispatch_async(dispatch_get_main_queue(), ^{
             NSLog(@"Warning: render took %lfs, %0.4lf%% of buffer duration.",
                   renderTime, (renderTime / bufferDuration) * 100.0);
