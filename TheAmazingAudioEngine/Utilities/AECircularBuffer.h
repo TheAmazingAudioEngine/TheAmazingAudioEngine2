@@ -192,6 +192,19 @@ void AECircularBufferDequeue(AECircularBuffer *buffer,
                              AudioTimeStamp *outTimestamp);
 
 /*!
+ * Copy a certain number of frames from the buffer; leave frames on buffer, without dequeuing
+ *
+ * @param buffer Circular buffer
+ * @param ioLengthInFrames On input, the number of frames to copy; on output, the number of frames provided
+ * @param outputBufferList The buffer list to copy audio to, or NULL to discard audio.
+ * @param outTimestamp On output, if not NULL, the timestamp corresponding to the first audio frame returned
+ */
+void AECircularBufferCopyOut(AECircularBuffer *buffer,
+                             UInt32 *ioLengthInFrames,
+                             const AudioBufferList *outputBufferList,
+                             AudioTimeStamp *outTimestamp);
+
+/*!
  * Access the next stored buffer list
  *
  * @param buffer Circular buffer

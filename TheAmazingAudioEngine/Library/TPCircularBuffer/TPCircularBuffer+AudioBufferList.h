@@ -90,7 +90,8 @@ void TPCircularBufferProduceAudioBufferList(TPCircularBuffer *buffer, const Audi
  * @param audioFormat       The AudioStreamBasicDescription describing the audio, or NULL if you specify kTPCircularBufferCopyAll to the `frames` argument
  * @return YES if buffer list was successfully copied; NO if there was insufficient space
  */
-bool TPCircularBufferCopyAudioBufferList(TPCircularBuffer *buffer, const AudioBufferList *bufferList, const AudioTimeStamp *timestamp, UInt32 frames, const AudioStreamBasicDescription *audioFormat);
+bool TPCircularBufferCopyInAudioBufferList(TPCircularBuffer *buffer, const AudioBufferList *bufferList, const AudioTimeStamp *timestamp, UInt32 frames, const AudioStreamBasicDescription *audioFormat);
+#define TPCircularBufferCopyAudioBufferList TPCircularBufferCopyInAudioBufferList // Legacy alias
 
 /*!
  * Get a pointer to the next stored buffer list
@@ -163,6 +164,20 @@ void TPCircularBufferConsumeNextBufferListPartial(TPCircularBuffer *buffer, int 
  * @param audioFormat       The format of the audio stored in the buffer
  */
 void TPCircularBufferDequeueBufferListFrames(TPCircularBuffer *buffer, UInt32 *ioLengthInFrames, const AudioBufferList *outputBufferList, AudioTimeStamp *outTimestamp, const AudioStreamBasicDescription *audioFormat);
+
+/*!
+ * Copy out a certain number of frames from the buffer, possibly from multiple queued buffer lists
+ *
+ *  Copies the given number of frames from the buffer into outputBufferList, of the
+ *  given audio description, without consuming the audio buffers.
+ *
+ * @param buffer            Circular buffer
+ * @param ioLengthInFrames  On input, the number of frames in the given audio format to copy; on output, the number of frames provided
+ * @param outputBufferList  The buffer list to copy audio to. The structure must be initialised properly, and the mData pointers must not be NULL.
+ * @param outTimestamp      On output, if not NULL, the timestamp corresponding to the first audio frame returned
+ * @param audioFormat       The format of the audio stored in the buffer
+ */
+void TPCircularBufferCopyOutBufferListFrames(TPCircularBuffer *buffer, UInt32 *ioLengthInFrames, const AudioBufferList *outputBufferList, AudioTimeStamp *outTimestamp, const AudioStreamBasicDescription *audioFormat);
 
 /*!
  * Determine how many frames of audio are buffered

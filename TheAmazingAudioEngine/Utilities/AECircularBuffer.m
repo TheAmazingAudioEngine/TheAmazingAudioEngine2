@@ -67,7 +67,7 @@ BOOL AECircularBufferEnqueue(AECircularBuffer *buffer,
                              const AudioBufferList *bufferList,
                              const AudioTimeStamp *timestamp,
                              UInt32 frames) {
-    return TPCircularBufferCopyAudioBufferList(&buffer->buffer, bufferList, timestamp, frames, &buffer->audioDescription);
+    return TPCircularBufferCopyInAudioBufferList(&buffer->buffer, bufferList, timestamp, frames, &buffer->audioDescription);
 }
 
 AudioBufferList * AECircularBufferPrepareEmptyAudioBufferList(AECircularBuffer *buffer,
@@ -82,6 +82,13 @@ void AECircularBufferProduceAudioBufferList(AECircularBuffer *buffer) {
 
 UInt32 AECircularBufferPeek(AECircularBuffer *buffer, AudioTimeStamp *outTimestamp) {
     return TPCircularBufferPeek(&buffer->buffer, outTimestamp, &buffer->audioDescription);
+}
+
+void AECircularBufferCopyOut(AECircularBuffer *buffer,
+                             UInt32 *ioLengthInFrames,
+                             const AudioBufferList *outputBufferList,
+                             AudioTimeStamp *outTimestamp) {
+    return TPCircularBufferCopyOutBufferListFrames(&buffer->buffer, ioLengthInFrames, outputBufferList, outTimestamp, &buffer->audioDescription);
 }
 
 void AECircularBufferDequeue(AECircularBuffer *buffer,
