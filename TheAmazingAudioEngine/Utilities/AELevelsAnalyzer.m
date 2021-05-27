@@ -40,10 +40,7 @@ void AELevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AELevelsAnalyzer * THIS, 
 void AELevelsAnalyzerAnalyzeBufferChannel(__unsafe_unretained AELevelsAnalyzer * THIS, const AudioBufferList * buffer, int channel, UInt32 numberFrames) {
     float max = 0;
     float sumOfSquares = 0;
-    int n = numberFrames;
-
     if ( numberFrames > 0 && buffer ) {
-        n = numberFrames * (channel == -1 ? buffer->mNumberBuffers : 1);
         for ( int i=(channel == -1 ? 0 : channel); i<buffer->mNumberBuffers && (channel == -1 || i<channel+1); i++ ) {
             // Calculate max sample
             float bufferMax = max;
@@ -52,10 +49,12 @@ void AELevelsAnalyzerAnalyzeBufferChannel(__unsafe_unretained AELevelsAnalyzer *
                 max = bufferMax;
             }
             
-            // Calculate sum of squares
-            float channelSumSquare = 0;
-            vDSP_svesq((float*)buffer->mBuffers[i].mData, 1, &channelSumSquare, numberFrames);
-            sumOfSquares += channelSumSquare;
+            if ( bufferMax > 0 ) {
+                // Calculate sum of squares (max over all channels)
+                float channelSumSquare = 0;
+                vDSP_svesq((float*)buffer->mBuffers[i].mData, 1, &channelSumSquare, numberFrames);
+                sumOfSquares = MAX(channelSumSquare, sumOfSquares);
+            }
         }
     }
     
@@ -84,9 +83,9 @@ void AELevelsAnalyzerAnalyzeBufferChannel(__unsafe_unretained AELevelsAnalyzer *
     int rmsBufferBlockCount = MIN(kRMSBufferBlockCountMax, (kRMSWindowFrameCount / numberFrames));
     THIS->_sumSquareBufferHead = (THIS->_sumSquareBufferHead + 1) % rmsBufferBlockCount;
     THIS->_sumSquareAccumulator += sumOfSquares - THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].sumSquare;
-    THIS->_sumSquareN += n - THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].n;
+    THIS->_sumSquareN += numberFrames - THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].n;
     THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].sumSquare = sumOfSquares;
-    THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].n = n;
+    THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].n = numberFrames;
     THIS->_meanSumSquare = THIS->_sumSquareAccumulator / THIS->_sumSquareN;
 }
 
