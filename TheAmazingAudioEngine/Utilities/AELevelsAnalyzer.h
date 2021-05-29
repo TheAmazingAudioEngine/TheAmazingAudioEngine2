@@ -32,6 +32,16 @@ extern "C" {
 void AELevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AELevelsAnalyzer * analyzer, const AudioBufferList * buffer, UInt32 numberFrames);
 
 /*!
+ * Analyze a buffer, mixing results rather than appending
+ *
+ * @param analyzer The analyzer instance
+ * @param buffer The audio buffer
+ * @param numberFrames The length of the audio buffer, in frames
+ * @param first Whether this is the first buffer; if NO, subsequent analyses will be mixed additively
+ */
+void AELevelsAnalyzerMixAndAnalyzeBuffer(__unsafe_unretained AELevelsAnalyzer * analyzer, const AudioBufferList * buffer, UInt32 numberFrames, BOOL first);
+
+/*!
  * Analyze a single buffer channel
  *
  * @param analyzer The analyzer instance

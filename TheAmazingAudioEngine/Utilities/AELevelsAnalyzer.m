@@ -17,10 +17,12 @@ static const AESeconds kPeakHoldInterval = 0.5;
 static const float kPeakFalloffPerSecond = 3.0;
 static const AESeconds kAnalysisTimeout = 0.05;
 static const AESeconds kTimeoutAnalysisFalloffInterval = 1.0;
+static const AESeconds kQueryTimeout = 0.5;
 
 @interface AELevelsAnalyzer () {
-    AEHostTicks _lastAnalysis;
-    AEHostTicks _lastPeak;
+    AESeconds _lastAnalysis;
+    AESeconds _lastPeak;
+    AESeconds _lastQuery;
     float _peak;
     struct { float sumSquare; int n; } _sumSquareBuffer[kRMSBufferBlockCountMax];
     int _sumSquareBufferHead;
@@ -34,10 +36,26 @@ static const AESeconds kTimeoutAnalysisFalloffInterval = 1.0;
 @dynamic peak, average;
 
 void AELevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AELevelsAnalyzer * THIS, const AudioBufferList * buffer, UInt32 numberFrames) {
-    AELevelsAnalyzerAnalyzeBufferChannel(THIS, buffer, -1, numberFrames);
+    AELevelsAnalyzerMixAndAnalyzeChannel(THIS, buffer, -1, numberFrames, YES);
+}
+
+void AELevelsAnalyzerMixAndAnalyzeBuffer(__unsafe_unretained AELevelsAnalyzer * THIS, const AudioBufferList * buffer, UInt32 numberFrames, BOOL first) {
+    AELevelsAnalyzerMixAndAnalyzeChannel(THIS, buffer, -1, numberFrames, first);
 }
 
 void AELevelsAnalyzerAnalyzeBufferChannel(__unsafe_unretained AELevelsAnalyzer * THIS, const AudioBufferList * buffer, int channel, UInt32 numberFrames) {
+    AELevelsAnalyzerMixAndAnalyzeChannel(THIS, buffer, channel, numberFrames, YES);
+}
+
+static void AELevelsAnalyzerMixAndAnalyzeChannel(__unsafe_unretained AELevelsAnalyzer * THIS, const AudioBufferList * buffer, int channel, UInt32 numberFrames, BOOL first) {
+    AESeconds now = AECurrentTimeInSeconds();
+    if ( now-THIS->_lastQuery > kQueryTimeout ) {
+        THIS->_sumSquareN = 0;
+        THIS->_sumSquareAccumulator = 0;
+        THIS->_peak = 0;
+        return;
+    }
+    
     float max = 0;
     float sumOfSquares = 0;
     if ( numberFrames > 0 && buffer ) {
@@ -58,15 +76,14 @@ void AELevelsAnalyzerAnalyzeBufferChannel(__unsafe_unretained AELevelsAnalyzer *
         }
     }
     
-    AEHostTicks now = AECurrentTimeInHostTicks();
-    AESeconds sinceLastAnalysis = AESecondsFromHostTicks(now-THIS->_lastAnalysis);
+    AESeconds sinceLastAnalysis = now-THIS->_lastAnalysis;
     THIS->_lastAnalysis = now;
 
     // Calculate peak, with dropoff
     if ( max >= THIS->_peak ) {
         THIS->_lastPeak = now;
         THIS->_peak = max;
-    } else if ( AESecondsFromHostTicks(now-THIS->_lastPeak) > kPeakHoldInterval ) {
+    } else if ( now-THIS->_lastPeak > kPeakHoldInterval ) {
         THIS->_peak = (1.0-(sinceLastAnalysis*kPeakFalloffPerSecond)) * THIS->_peak;
     }
     
@@ -80,17 +97,21 @@ void AELevelsAnalyzerAnalyzeBufferChannel(__unsafe_unretained AELevelsAnalyzer *
         THIS->_meanSumSquare = 0;
         return;
     }
-    int rmsBufferBlockCount = MIN(kRMSBufferBlockCountMax, (kRMSWindowFrameCount / numberFrames));
-    THIS->_sumSquareBufferHead = (THIS->_sumSquareBufferHead + 1) % rmsBufferBlockCount;
-    THIS->_sumSquareAccumulator += sumOfSquares - THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].sumSquare;
-    THIS->_sumSquareN += numberFrames - THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].n;
-    THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].sumSquare = sumOfSquares;
+    
+    if ( first ) {
+        int rmsBufferBlockCount = MIN(kRMSBufferBlockCountMax, (kRMSWindowFrameCount / numberFrames));
+        THIS->_sumSquareBufferHead = (THIS->_sumSquareBufferHead + 1) % rmsBufferBlockCount;
+        THIS->_sumSquareN += numberFrames - THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].n;
+    }
+    THIS->_sumSquareAccumulator += sumOfSquares - (first ? THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].sumSquare : 0);
+    THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].sumSquare = sumOfSquares + (first ? 0 : THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].sumSquare);
     THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].n = numberFrames;
     THIS->_meanSumSquare = THIS->_sumSquareAccumulator / THIS->_sumSquareN;
 }
 
 - (double)peak {
-    AESeconds sinceLast = AECurrentTimeInSeconds()-AESecondsFromHostTicks(_lastAnalysis);
+    _lastQuery = AECurrentTimeInSeconds();
+    AESeconds sinceLast = _lastQuery-_lastAnalysis;
     if ( sinceLast < kAnalysisTimeout ) {
         return AEDSPRatioToDecibels(_peak);
     } else if ( sinceLast > kAnalysisTimeout+kTimeoutAnalysisFalloffInterval ) {
@@ -101,7 +122,8 @@ void AELevelsAnalyzerAnalyzeBufferChannel(__unsafe_unretained AELevelsAnalyzer *
 }
 
 - (double)average {
-    AESeconds sinceLast = AECurrentTimeInSeconds()-AESecondsFromHostTicks(_lastAnalysis);
+    _lastQuery = AECurrentTimeInSeconds();
+    AESeconds sinceLast = _lastQuery-_lastAnalysis;
     if ( sinceLast < kAnalysisTimeout ) {
         return AEDSPRatioToDecibels(sqrt(_meanSumSquare));
     } else if ( sinceLast > kAnalysisTimeout+kTimeoutAnalysisFalloffInterval ) {
