@@ -94,4 +94,10 @@ BOOL AEModuleIsActive(__unsafe_unretained AEModule * _Nonnull module) {
     }
 }
 
+void AEModuleReset(__unsafe_unretained AEModule * _Nonnull module) {
+    if ( module->_resetFunction ) {
+        module->_resetFunction(module);
+    }
+}
+
 @end

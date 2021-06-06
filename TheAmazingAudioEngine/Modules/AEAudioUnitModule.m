@@ -71,6 +71,7 @@
     if ( ![self setup] ) return nil;
     [self initialize];
     self.processFunction = AEAudioUnitModuleProcess;
+    self.resetFunction = AEAudioUnitModuleReset;
     _wetDry = 1.0;
     _pushBuffer = self.audioUnitModuleShouldPushBufferOnProcess;
     _channelCount = [self numberOfChannels];
@@ -227,6 +228,10 @@ static OSStatus audioUnitRenderCallback(void                       *inRefCon,
     }
     
     return noErr;
+}
+
+static void AEAudioUnitModuleReset(__unsafe_unretained AEAudioUnitModule * self) {
+    if ( self->_audioUnit ) AudioUnitReset(self->_audioUnit, kAudioUnitScope_Global, 0);
 }
 
 - (BOOL)setup {

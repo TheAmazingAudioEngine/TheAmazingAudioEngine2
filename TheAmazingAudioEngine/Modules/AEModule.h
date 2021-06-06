@@ -52,6 +52,17 @@ void AEModuleProcess(__unsafe_unretained AEModule * _Nonnull module, const AERen
  * @returns Whether the module is active
  */
 BOOL AEModuleIsActive(__unsafe_unretained AEModule * _Nonnull module);
+
+/*!
+ * Reset module state
+ *
+ *  Resets the state of the instance, where supported, in a realtime-thread-safe fashion.
+ *  This can be used prior to rendering again after a time of inactivity;
+ *  to avoid delay lines producing stale audio, for instance.
+ *
+ * @param module The module subclass
+ */
+void AEModuleReset(__unsafe_unretained AEModule * _Nonnull module);
     
 /*!
  * Processing function
@@ -79,6 +90,19 @@ typedef void (*AEModuleProcessFunc)(__unsafe_unretained AEModule * _Nonnull self
  * @returns YES if the module is active, NO otherwise
  */
 typedef BOOL (*AEModuleIsActiveFunc)(__unsafe_unretained AEModule * _Nonnull self);
+
+/*!
+ * Reset function
+ *
+ *  Subclasses may set this property to the address of a function that
+ *  resets the state of the instance, in a realtime-thread-safe fashion.
+ *  This can be invoked by calling AEModuleReset() in order to reset the
+ *  state of a module prior to rendering again after a time of inactivity;
+ *  to avoid delay lines producing stale audio, for instance.
+ *
+ * @param self A pointer to the module
+ */
+typedef void (*AEModuleResetFunc)(__unsafe_unretained AEModule * _Nonnull self);
     
 /*!
  * Module base class
@@ -128,6 +152,17 @@ typedef BOOL (*AEModuleIsActiveFunc)(__unsafe_unretained AEModule * _Nonnull sel
  *  by client code.
  */
 @property (nonatomic) AEModuleIsActiveFunc _Nullable isActiveFunction;
+
+/*!
+ * Reset function
+ *
+ *  Subclasses may set this property to the address of a function that
+ *  resets the state of the instance, in a realtime-thread-safe fashion.
+ *  This can be invoked by calling AEModuleReset() in order to reset the
+ *  state of a module prior to rendering again after a time of inactivity;
+ *  to avoid delay lines producing stale audio, for instance.
+ */
+@property (nonatomic) AEModuleResetFunc _Nullable resetFunction;
 
 /*!
  * The renderer
