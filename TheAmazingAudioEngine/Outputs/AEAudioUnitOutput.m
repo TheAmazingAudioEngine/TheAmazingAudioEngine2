@@ -95,7 +95,7 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     self.ioUnit = [AEIOAudioUnit new];
     self.ioUnit.outputEnabled = YES;
     
-    __unsafe_unretained AEAudioUnitOutput * weakSelf = self;
+    __unsafe_unretained AEAudioUnitOutput * THIS = self;
     self.ioUnit.renderBlock = ^(AudioBufferList * _Nonnull ioData, UInt32 frames, const AudioTimeStamp * _Nonnull timestamp) {
         AERealtimeThreadIdentifier = pthread_self();
         AEManagedValueCommitPendingUpdates();
@@ -109,9 +109,9 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
             AERendererRun(renderer, ioData, frames, timestamp);
             
             #ifdef DEBUG
-                AEAudioUnitOutputReportRenderTime(weakSelf,
+                AEAudioUnitOutputReportRenderTime(THIS,
                     AESecondsFromHostTicks(AECurrentTimeInHostTicks() - start),
-                    (double)frames / AEIOAudioUnitGetSampleRate(weakSelf->_ioUnit));
+                    (double)frames / AEIOAudioUnitGetSampleRate(THIS->_ioUnit));
             #endif
         } else {
             AEAudioBufferListSilence(ioData, 0, frames);
@@ -121,20 +121,20 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     self.ioUnitStreamChangeObserverToken =
     [[NSNotificationCenter defaultCenter] addObserverForName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self.ioUnit
                                                        queue:NULL usingBlock:^(NSNotification * note) {
-        BOOL rateChanged = fabs(weakSelf.renderer.sampleRate - weakSelf.ioUnit.currentSampleRate) > DBL_EPSILON;
-        BOOL channelsChanged = weakSelf.renderer.numberOfOutputChannels != weakSelf.ioUnit.numberOfOutputChannels;
+        BOOL rateChanged = fabs(THIS.renderer.sampleRate - THIS.ioUnit.currentSampleRate) > DBL_EPSILON;
+        BOOL channelsChanged = THIS.renderer.numberOfOutputChannels != THIS.ioUnit.numberOfOutputChannels;
         
-        weakSelf.renderer.sampleRate = weakSelf.ioUnit.currentSampleRate;
-        weakSelf.renderer.numberOfOutputChannels = weakSelf.ioUnit.numberOfOutputChannels;
+        THIS.renderer.sampleRate = THIS.ioUnit.currentSampleRate;
+        THIS.renderer.numberOfOutputChannels = THIS.ioUnit.numberOfOutputChannels;
         
         if ( rateChanged ) {
            [[NSNotificationCenter defaultCenter]
-            postNotificationName:AEAudioUnitOutputDidChangeSampleRateNotification object:weakSelf];
+            postNotificationName:AEAudioUnitOutputDidChangeSampleRateNotification object:THIS];
         }
         
         if ( channelsChanged ) {
            [[NSNotificationCenter defaultCenter]
-            postNotificationName:AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification object:weakSelf];
+            postNotificationName:AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification object:THIS];
         }
     }];
     
@@ -241,26 +241,26 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     self.ioUnit.latencyCompensation = latencyCompensation;
 }
 
-AESeconds AEAudioUnitOutputGetOutputLatency(__unsafe_unretained AEAudioUnitOutput * self) {
-    return AEIOAudioUnitGetOutputLatency(self->_ioUnit);
+AESeconds AEAudioUnitOutputGetOutputLatency(__unsafe_unretained AEAudioUnitOutput * THIS) {
+    return AEIOAudioUnitGetOutputLatency(THIS->_ioUnit);
 }
 #endif
 
-AudioUnit _Nullable AEAudioUnitOutputGetAudioUnit(__unsafe_unretained AEAudioUnitOutput * self) {
-    return AEIOAudioUnitGetAudioUnit(self->_ioUnit);
+AudioUnit _Nullable AEAudioUnitOutputGetAudioUnit(__unsafe_unretained AEAudioUnitOutput * THIS) {
+    return AEIOAudioUnitGetAudioUnit(THIS->_ioUnit);
 }
 
 #ifdef DEBUG
-static void AEAudioUnitOutputReportRenderTime(__unsafe_unretained AEAudioUnitOutput * self,
+static void AEAudioUnitOutputReportRenderTime(__unsafe_unretained AEAudioUnitOutput * THIS,
                                               AESeconds renderTime,
                                               AESeconds bufferDuration) {
     AESeconds now = AECurrentTimeInSeconds();
-    if ( !self->_firstReportTime ) self->_firstReportTime = now;
+    if ( !THIS->_firstReportTime ) THIS->_firstReportTime = now;
     
-    if ( now - self->_firstReportTime > kRenderBudgetWarningInitialDelay
+    if ( now - THIS->_firstReportTime > kRenderBudgetWarningInitialDelay
             && renderTime > bufferDuration * kRenderBudgetWarningThreshold ) {
         if ( @available(iOS 12, *) ) {
-            os_signpost_event_emit(self->_log, OS_SIGNPOST_ID_EXCLUSIVE, "Overrun");
+            os_signpost_event_emit(THIS->_log, OS_SIGNPOST_ID_EXCLUSIVE, "Overrun");
         }
         dispatch_async(dispatch_get_main_queue(), ^{
             NSLog(@"Warning: render took %lfs, %0.4lf%% of buffer duration.",
@@ -269,25 +269,25 @@ static void AEAudioUnitOutputReportRenderTime(__unsafe_unretained AEAudioUnitOut
     }
     
     if ( kRenderTimeReportInterval > 0 ) {
-        self->_averageRenderDurationAccumulator += renderTime;
-        self->_averageRenderDurationSampleCount++;
+        THIS->_averageRenderDurationAccumulator += renderTime;
+        THIS->_averageRenderDurationSampleCount++;
         
-        self->_maximumRenderDuration = MAX(self->_maximumRenderDuration, renderTime);
+        THIS->_maximumRenderDuration = MAX(THIS->_maximumRenderDuration, renderTime);
         
-        if ( now - self->_lastReportTime > kRenderTimeReportInterval ) {
-            AESeconds average = self->_averageRenderDurationAccumulator / self->_averageRenderDurationSampleCount;
-            AESeconds maximum = self->_maximumRenderDuration;
+        if ( now - THIS->_lastReportTime > kRenderTimeReportInterval ) {
+            AESeconds average = THIS->_averageRenderDurationAccumulator / THIS->_averageRenderDurationSampleCount;
+            AESeconds maximum = THIS->_maximumRenderDuration;
             
             dispatch_async(dispatch_get_main_queue(), ^{
-                AESeconds bufferDuration = self.ioUnit.IOBufferDuration;
-                NSLog(@"Render time report: %lfs/%0.4lf%% average,\t%lfs/%0.4lf%% maximum",
+                AESeconds bufferDuration = THIS.ioUnit.IOBufferDuration;
+                NSLog(@"Render time report: %lfs/%0.4lf%% average, %lfs/%0.4lf%% maximum",
                       average, (average/bufferDuration)*100.0, maximum, (maximum/bufferDuration)*100.0);
             });
             
-            self->_lastReportTime = now;
-            self->_averageRenderDurationAccumulator = 0;
-            self->_averageRenderDurationSampleCount = 0;
-            self->_maximumRenderDuration = 0;
+            THIS->_lastReportTime = now;
+            THIS->_averageRenderDurationAccumulator = 0;
+            THIS->_averageRenderDurationSampleCount = 0;
+            THIS->_maximumRenderDuration = 0;
         }
     }
 }

@@ -119,42 +119,42 @@
     return AEAudioDescription.mChannelsPerFrame;
 }
 
-static void AEAudioUnitModuleProcess(__unsafe_unretained AEAudioUnitModule * self, const AERenderContext * _Nonnull context) {
+static void AEAudioUnitModuleProcess(__unsafe_unretained AEAudioUnitModule * THIS, const AERenderContext * _Nonnull context) {
     
     const AudioBufferList * abl = NULL;
     
-    if ( (self->_hasInput || !self->_pushBuffer)
-            && self->_componentDescription.componentType != kAudioUnitType_FormatConverter ) {
+    if ( (THIS->_hasInput || !THIS->_pushBuffer)
+            && THIS->_componentDescription.componentType != kAudioUnitType_FormatConverter ) {
         abl = AEBufferStackGet(context->stack, 0);
     } else {
         abl = AEBufferStackPush(context->stack, 1);
     }
     
-    if ( !abl || (self->_hasInput && self->_wetDry < DBL_EPSILON) ) {
-        if ( !self->_isClean ) {
-            AECheckOSStatus(AudioUnitReset(self->_audioUnit, kAudioUnitScope_Global, 0), "AudioUnitReset");
-            self->_isClean = YES;
+    if ( !abl || (THIS->_hasInput && THIS->_wetDry < DBL_EPSILON) ) {
+        if ( !THIS->_isClean ) {
+            AECheckOSStatus(AudioUnitReset(THIS->_audioUnit, kAudioUnitScope_Global, 0), "AudioUnitReset");
+            THIS->_isClean = YES;
         }
         return;
     }
     
-    self->_isClean = NO;
+    THIS->_isClean = NO;
     
-    if ( self->_hasInput && abl->mNumberBuffers != self->_channelCount && !AEBufferStackGetIsExternalBuffer(context->stack, 0) ) {
-        // Get a buffer with self->_channelCount channels
+    if ( THIS->_hasInput && abl->mNumberBuffers != THIS->_channelCount && !AEBufferStackGetIsExternalBuffer(context->stack, 0) ) {
+        // Get a buffer with THIS->_channelCount channels
         AEBufferStackPop(context->stack, 1);
-        abl = AEBufferStackPushWithChannels(context->stack, 1, self->_channelCount);
+        abl = AEBufferStackPushWithChannels(context->stack, 1, THIS->_channelCount);
         if ( !abl ) {
             // Restore prior buffer and bail
             AEBufferStackPushWithChannels(context->stack, 1, 1);
             return;
         }
-        for ( int i=1; i<self->_channelCount; i++ ) {
+        for ( int i=1; i<THIS->_channelCount; i++ ) {
             memcpy(abl->mBuffers[i].mData, abl->mBuffers[0].mData, context->frames * AEAudioDescription.mBytesPerFrame);
         }
     }
     
-    if ( self->_hasInput && self->_wetDry < 1.0-DBL_EPSILON ) {
+    if ( THIS->_hasInput && THIS->_wetDry < 1.0-DBL_EPSILON ) {
         // Not 100% wet - need to mix with a pristine buffer. We'll push one to write to, and mix it down after
         abl = AEBufferStackPush(context->stack, 1);
         if ( !abl ) {
@@ -163,18 +163,18 @@ static void AEAudioUnitModuleProcess(__unsafe_unretained AEAudioUnitModule * sel
     }
     
     AudioUnitRenderActionFlags flags = 0;
-    self->_currentContext = context;
+    THIS->_currentContext = context;
     
-    AEAudioBufferListCreateOnStackWithFormat(mutableAbl, AEAudioDescriptionWithChannelsAndRate(self->_channelCount, 0));
+    AEAudioBufferListCreateOnStackWithFormat(mutableAbl, AEAudioDescriptionWithChannelsAndRate(THIS->_channelCount, 0));
     memcpy(mutableAbl, abl, MIN(AEAudioBufferListGetStructSize(mutableAbl), AEAudioBufferListGetStructSize(abl)));
-    if ( mutableAbl->mNumberBuffers != self->_channelCount ) {
+    if ( mutableAbl->mNumberBuffers != THIS->_channelCount ) {
         // If channel count doesn't match, then pad it out (we'll discard the extra channels)
-        int extra = self->_channelCount - mutableAbl->mNumberBuffers;
+        int extra = THIS->_channelCount - mutableAbl->mNumberBuffers;
         const AudioBufferList * extraAbl = NULL;
         if ( extra > 0 ) {
             extraAbl = AEBufferStackPushWithChannels(context->stack, 1, extra);
         }
-        mutableAbl->mNumberBuffers = self->_channelCount;
+        mutableAbl->mNumberBuffers = THIS->_channelCount;
         for ( int i=0; i<extra; i++ ) {
             memcpy(&mutableAbl->mBuffers[abl->mNumberBuffers+i], &extraAbl->mBuffers[i], sizeof(AudioBuffer));
         }
@@ -183,19 +183,19 @@ static void AEAudioUnitModuleProcess(__unsafe_unretained AEAudioUnitModule * sel
         }
     }
     
-    if ( !AECheckOSStatus(AudioUnitRender(self->_audioUnit, &flags, context->timestamp, 0, context->frames, mutableAbl),
+    if ( !AECheckOSStatus(AudioUnitRender(THIS->_audioUnit, &flags, context->timestamp, 0, context->frames, mutableAbl),
                           "AudioUnitRender") ) {
-        if ( !self->_hasInput ) {
+        if ( !THIS->_hasInput ) {
             AEAudioBufferListSilence(abl, 0, context->frames);
-        } else if ( self->_wetDry >= 1.0-DBL_EPSILON ) {
+        } else if ( THIS->_wetDry >= 1.0-DBL_EPSILON ) {
             AEBufferStackPop(context->stack, 1);
         }
         return;
     }
     
-    if ( self->_hasInput && self->_wetDry < 1.0-DBL_EPSILON ) {
+    if ( THIS->_hasInput && THIS->_wetDry < 1.0-DBL_EPSILON ) {
         // Not 100% wet - mix down with ratio
-        AEBufferStackMixWithGain(context->stack, 2, (float[]){ self->_wetDry, 1.0-self->_wetDry });
+        AEBufferStackMixWithGain(context->stack, 2, (float[]){ THIS->_wetDry, 1.0-THIS->_wetDry });
     }
 }
 
@@ -206,19 +206,19 @@ static OSStatus audioUnitRenderCallback(void                       *inRefCon,
                                         UInt32                      inNumberFrames,
                                         AudioBufferList            *ioData) {
     
-    __unsafe_unretained AEAudioUnitModule * self = (__bridge AEAudioUnitModule*)inRefCon;
+    __unsafe_unretained AEAudioUnitModule * THIS = (__bridge AEAudioUnitModule*)inRefCon;
     
-    if ( self->_componentDescription.componentType == kAudioUnitType_FormatConverter ) {
-        __unsafe_unretained AERenderer * renderer = (__bridge AERenderer*)AEManagedValueGetValue(self->_subrendererValue);
+    if ( THIS->_componentDescription.componentType == kAudioUnitType_FormatConverter ) {
+        __unsafe_unretained AERenderer * renderer = (__bridge AERenderer*)AEManagedValueGetValue(THIS->_subrendererValue);
         if ( renderer ) {
             AERendererRun(renderer, ioData, inNumberFrames, inTimeStamp);
         } else {
             AEAudioBufferListSilence(ioData, 0, inNumberFrames);
         }
     } else {
-        const AERenderContext * context = self->_currentContext;
+        const AERenderContext * context = THIS->_currentContext;
         const AudioBufferList * abl =
-            AEBufferStackGet(context->stack, self->_hasInput && self->_wetDry < 1.0-DBL_EPSILON ? 1 : 0);
+            AEBufferStackGet(context->stack, THIS->_hasInput && THIS->_wetDry < 1.0-DBL_EPSILON ? 1 : 0);
         assert(abl->mBuffers[0].mDataByteSize >= inNumberFrames * AEAudioDescription.mBytesPerFrame);
         
         for ( int i=0; i<ioData->mNumberBuffers; i++ ) {
@@ -230,8 +230,8 @@ static OSStatus audioUnitRenderCallback(void                       *inRefCon,
     return noErr;
 }
 
-static void AEAudioUnitModuleReset(__unsafe_unretained AEAudioUnitModule * self) {
-    if ( self->_audioUnit ) AudioUnitReset(self->_audioUnit, kAudioUnitScope_Global, 0);
+static void AEAudioUnitModuleReset(__unsafe_unretained AEAudioUnitModule * THIS) {
+    if ( THIS->_audioUnit ) AudioUnitReset(THIS->_audioUnit, kAudioUnitScope_Global, 0);
 }
 
 - (BOOL)setup {
@@ -329,8 +329,8 @@ static void AEAudioUnitModuleReset(__unsafe_unretained AEAudioUnitModule * self)
     [self initialize];
 }
 
-AudioUnit AEAudioUnitModuleGetAudioUnit(__unsafe_unretained AEAudioUnitModule * self) {
-    return self->_audioUnit;
+AudioUnit AEAudioUnitModuleGetAudioUnit(__unsafe_unretained AEAudioUnitModule * THIS) {
+    return THIS->_audioUnit;
 }
 
 @end

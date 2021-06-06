@@ -54,16 +54,12 @@
     return self.subrendererValue.objectValue;
 }
 
-static void AESubrendererModuleProcess(__unsafe_unretained AESubrendererModule * self,
-                                       const AERenderContext * _Nonnull context) {
+static void AESubrendererModuleProcess(__unsafe_unretained AESubrendererModule * THIS, const AERenderContext * _Nonnull context) {
     
-    const AudioBufferList * abl =
-        AEBufferStackPushWithChannels(context->stack, 1,
-                                      self->_numberOfOutputChannels == 0 ? context->output->mNumberBuffers
-                                        : self->_numberOfOutputChannels);
+    const AudioBufferList * abl = AEBufferStackPushWithChannels(context->stack, 1, THIS->_numberOfOutputChannels == 0 ? context->output->mNumberBuffers : THIS->_numberOfOutputChannels);
     if ( !abl ) return;
     
-    __unsafe_unretained AERenderer * renderer = (__bridge AERenderer*)AEManagedValueGetValue(self->_subrendererValue);
+    __unsafe_unretained AERenderer * renderer = (__bridge AERenderer*)AEManagedValueGetValue(THIS->_subrendererValue);
     if ( renderer ) {
         AERendererRun(renderer, abl, context->frames, context->timestamp);
     } else {

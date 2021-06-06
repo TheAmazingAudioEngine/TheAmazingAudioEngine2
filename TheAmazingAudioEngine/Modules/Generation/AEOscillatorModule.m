@@ -41,13 +41,13 @@
     return self;
 }
 
-static void AEOscillatorModuleProcess(__unsafe_unretained AEOscillatorModule * self, const AERenderContext * _Nonnull context) {
+static void AEOscillatorModuleProcess(__unsafe_unretained AEOscillatorModule * THIS, const AERenderContext * _Nonnull context) {
     const AudioBufferList * abl = AEBufferStackPushWithChannels(context->stack, 1, 1);
     if ( !abl ) return;
     
-    float rate = self->_frequency / context->sampleRate;
+    float rate = THIS->_frequency / context->sampleRate;
     for ( int i=0; i<context->frames; i++ ) {
-        ((float*)abl->mBuffers[0].mData)[i] = AEDSPGenerateOscillator(rate, &self->_position) - 0.5;
+        ((float*)abl->mBuffers[0].mData)[i] = AEDSPGenerateOscillator(rate, &THIS->_position) - 0.5;
     }
 }
 

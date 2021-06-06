@@ -104,15 +104,15 @@ typedef struct {
     }
 }
 
-static void AEMixerModuleProcess(__unsafe_unretained AEMixerModule * self, const AERenderContext * _Nonnull context) {
-    const AudioBufferList * abl = AEBufferStackPushWithChannels(context->stack, 1, self->_numberOfChannels);
+static void AEMixerModuleProcess(__unsafe_unretained AEMixerModule * THIS, const AERenderContext * _Nonnull context) {
+    const AudioBufferList * abl = AEBufferStackPushWithChannels(context->stack, 1, THIS->_numberOfChannels);
     if ( !abl ) return;
     
     // Silence buffer first
     AEAudioBufferListSilence(abl, 0, context->frames);
     
     // Run each module, applying volume/balance then mixing into our output buffer
-    AEArrayEnumeratePointers(self->_array, AEMixerModuleSubModuleEntry *, entry) {
+    AEArrayEnumeratePointers(THIS->_array, AEMixerModuleSubModuleEntry *, entry) {
         
         if ( !AEModuleIsActive(entry->module) ) {
             // Module is idle; skip (and skip the volume/balance ramp, too)

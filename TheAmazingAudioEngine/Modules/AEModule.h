@@ -73,10 +73,10 @@ void AEModuleReset(__unsafe_unretained AEModule * _Nonnull module);
  *  Within a processing a function, a module may add, modify or remove
  *  buffers within the stack.
  *
- * @param self A pointer to the module
+ * @param THIS A pointer to the module
  * @param context The rendering context
  */
-typedef void (*AEModuleProcessFunc)(__unsafe_unretained AEModule * _Nonnull self, const AERenderContext * _Nonnull context);
+typedef void (*AEModuleProcessFunc)(__unsafe_unretained AEModule * _Nonnull THIS, const AERenderContext * _Nonnull context);
 
 /*!
  * Active test function
@@ -86,10 +86,10 @@ typedef void (*AEModuleProcessFunc)(__unsafe_unretained AEModule * _Nonnull self
  *  NO, the module is considered inactive and processing can be skipped
  *  by client code.
  *
- * @param self A pointer to the module
+ * @param THIS A pointer to the module
  * @returns YES if the module is active, NO otherwise
  */
-typedef BOOL (*AEModuleIsActiveFunc)(__unsafe_unretained AEModule * _Nonnull self);
+typedef BOOL (*AEModuleIsActiveFunc)(__unsafe_unretained AEModule * _Nonnull THIS);
 
 /*!
  * Reset function
@@ -100,9 +100,9 @@ typedef BOOL (*AEModuleIsActiveFunc)(__unsafe_unretained AEModule * _Nonnull sel
  *  state of a module prior to rendering again after a time of inactivity;
  *  to avoid delay lines producing stale audio, for instance.
  *
- * @param self A pointer to the module
+ * @param THIS A pointer to the module
  */
-typedef void (*AEModuleResetFunc)(__unsafe_unretained AEModule * _Nonnull self);
+typedef void (*AEModuleResetFunc)(__unsafe_unretained AEModule * _Nonnull THIS);
     
 /*!
  * Module base class
