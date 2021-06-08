@@ -50,6 +50,7 @@ void AELevelsAnalyzerAnalyzeBufferChannel(__unsafe_unretained AELevelsAnalyzer *
 static void AELevelsAnalyzerMixAndAnalyzeChannel(__unsafe_unretained AELevelsAnalyzer * THIS, const AudioBufferList * buffer, int channel, UInt32 numberFrames, BOOL first) {
     AESeconds now = AECurrentTimeInSeconds();
     if ( now-THIS->_lastQuery > kQueryTimeout ) {
+        memset(&THIS->_sumSquareBuffer, 0, sizeof(THIS->_sumSquareBuffer));
         THIS->_sumSquareN = 0;
         THIS->_sumSquareAccumulator = 0;
         THIS->_peak = 0;
