@@ -66,10 +66,19 @@
 }
 
 - (void)beginRecordingAtTime:(AEHostTicks)time {
+    assert(!_complete);
     self.recording = YES;
-    _complete = NO;
     _recordedFrames = 0;
     _startTime = time ? time : AECurrentTimeInHostTicks();
+    _stopTime = 0;
+}
+
+void AEAudioFileRecorderModuleBeginRecording(__unsafe_unretained AEAudioFileRecorderModule * THIS, AEHostTicks time) {
+    assert(!THIS->_complete);
+    THIS->_recording = YES;
+    THIS->_recordedFrames = 0;
+    THIS->_startTime = time ? time : AECurrentTimeInHostTicks();
+    THIS->_stopTime = 0;
 }
 
 - (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(AEAudioFileRecorderModuleCompletionBlock)block {
@@ -180,6 +189,7 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
 - (void)finishWriting {
     AECheckOSStatus(ExtAudioFileDispose(_audioFile), "AudioFileClose");
     _audioFile = NULL;
+    _complete = YES;
 }
 
 @end

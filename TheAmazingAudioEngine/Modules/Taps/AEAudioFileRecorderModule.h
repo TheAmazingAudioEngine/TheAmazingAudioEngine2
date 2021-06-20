@@ -81,6 +81,14 @@ typedef void (^AEAudioFileRecorderModuleCompletionBlock)(void);
 - (void)beginRecordingAtTime:(AEHostTicks)time;
 
 /*!
+ * Begin recording (realtime thread variant)
+ *
+ * @param module The module
+ * @param time Time to begin recording, or 0 for "now
+ */
+void AEAudioFileRecorderModuleBeginRecording(__unsafe_unretained AEAudioFileRecorderModule * _Nonnull module, AEHostTicks time);
+
+/*!
  * Stop recording
  *
  *  Will finish recording asynchronously at the given time, or if time is zero,
