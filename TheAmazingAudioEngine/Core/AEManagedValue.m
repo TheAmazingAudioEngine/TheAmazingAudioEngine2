@@ -238,7 +238,7 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
     void * oldValue = _value;
     _value = value;
     
-    if ( !_valueSet || (__atomicUpdateCounter == 0 && !__atomicUpdateWaitingForCommit) ) {
+    if ( __atomicUpdateCounter == 0 && !__atomicUpdateWaitingForCommit ) {
         // Sync value for recall on realtime thread during atomic batch update
         _atomicBatchUpdateLastValue = _value;
     } else {
