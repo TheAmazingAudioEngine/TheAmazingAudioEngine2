@@ -120,16 +120,16 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
     
     AEHostTicks startTime = THIS->_startTime;
     AEHostTicks stopTime = THIS->_stopTime;
+    AEHostTicks now = AEBufferStackGetTimeStampForBuffer(context->stack, 0)->mHostTime;
     
-    if ( stopTime && stopTime < context->timestamp->mHostTime ) {
+    if ( stopTime && stopTime < now ) {
         THIS->_complete = YES;
         AEMainThreadEndpointSend(THIS->_stopRecordingNotificationEndpoint, NULL, 0);
         pthread_mutex_unlock(&THIS->_audioFileMutex);
         return;
     }
     
-    AEHostTicks hostTimeAtBufferEnd
-        = context->timestamp->mHostTime + AEHostTicksFromSeconds((double)context->frames / context->sampleRate);
+    AEHostTicks hostTimeAtBufferEnd = now + AEHostTicksFromSeconds((double)context->frames / context->sampleRate);
     if ( startTime && startTime > hostTimeAtBufferEnd ) {
         pthread_mutex_unlock(&THIS->_audioFileMutex);
         return;
@@ -157,8 +157,8 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
     
     // Advance frames, if we have a start time mid-buffer
     UInt32 frames = context->frames;
-    if ( startTime && startTime > context->timestamp->mHostTime ) {
-        UInt32 advanceFrames = round(AESecondsFromHostTicks(startTime - context->timestamp->mHostTime) * context->sampleRate);
+    if ( startTime && startTime > now ) {
+        UInt32 advanceFrames = round(AESecondsFromHostTicks(startTime - now) * context->sampleRate);
         for ( int i=0; i<buffer->mNumberBuffers; i++ ) {
             buffer->mBuffers[i].mData += AEAudioDescription.mBytesPerFrame * advanceFrames;
             buffer->mBuffers[i].mDataByteSize -= AEAudioDescription.mBytesPerFrame * advanceFrames;
