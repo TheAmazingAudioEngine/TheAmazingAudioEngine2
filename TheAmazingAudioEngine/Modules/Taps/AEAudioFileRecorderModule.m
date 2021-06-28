@@ -25,6 +25,7 @@
     BOOL           _complete;
     UInt32         _recordedFrames;
 }
+@property (nonatomic) AEAudioFileType type;
 @property (nonatomic, readwrite) int numberOfChannels;
 @property (nonatomic, readwrite) BOOL recording;
 @property (nonatomic, strong, readwrite) NSString * path;
@@ -43,15 +44,15 @@
     
     if ( !(self = [super initWithRenderer:renderer]) ) return nil;
     
-    if ( !(_audioFile = AEExtAudioFileCreate([NSURL fileURLWithPath:path], type, self.renderer.sampleRate, numberOfChannels, error)) ) return nil;
-    
     self.path = path;
+    self.type = type;
+    self.numberOfChannels = numberOfChannels;
     
-    // Prime async recording
-    ExtAudioFileWriteAsync(_audioFile, 0, NULL);
+    if ( renderer ) {
+        if ( ![self openFileForRecordingError:error] ) return nil;
+    }
     
     self.processFunction = AEAudioFileRecorderModuleProcess;
-    self.numberOfChannels = numberOfChannels;
     
     pthread_mutex_init(&_audioFileMutex, NULL);
     
@@ -63,6 +64,19 @@
         [self finishWriting];
     }
     pthread_mutex_destroy(&_audioFileMutex);
+}
+
+- (void)setRenderer:(AERenderer *)renderer {
+    [super setRenderer:renderer];
+    if ( renderer && !_audioFile ) {
+        [self openFileForRecordingError:NULL];
+    }
+}
+
+- (BOOL)openFileForRecordingError:(NSError **)error {
+    if ( !(_audioFile = AEExtAudioFileCreate([NSURL fileURLWithPath:self.path], self.type, self.renderer.sampleRate, self.numberOfChannels, error)) ) return NO;
+    ExtAudioFileWriteAsync(_audioFile, 0, NULL); // Prime async recording
+    return YES;
 }
 
 - (void)beginRecordingAtTime:(AEHostTicks)time {
