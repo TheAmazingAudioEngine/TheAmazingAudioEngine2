@@ -187,7 +187,7 @@ static void AEAudioUnitModuleProcess(__unsafe_unretained AEAudioUnitModule * THI
                           "AudioUnitRender") ) {
         if ( !THIS->_hasInput ) {
             AEAudioBufferListSilence(abl, 0, context->frames);
-        } else if ( THIS->_wetDry >= 1.0-DBL_EPSILON ) {
+        } else if ( THIS->_wetDry < 1.0-DBL_EPSILON ) {
             AEBufferStackPop(context->stack, 1);
         }
         return;
