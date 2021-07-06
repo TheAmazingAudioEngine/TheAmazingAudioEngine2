@@ -105,6 +105,7 @@ static void AELevelsAnalyzerMixAndAnalyzeChannel(__unsafe_unretained AELevelsAna
         THIS->_sumSquareN += numberFrames - THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].n;
     }
     THIS->_sumSquareAccumulator += sumOfSquares - (first ? THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].sumSquare : 0);
+    if ( THIS->_sumSquareAccumulator < 0 ) THIS->_sumSquareAccumulator = 0; // Deal with floating-point errors causing negative value
     THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].sumSquare = sumOfSquares + (first ? 0 : THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].sumSquare);
     THIS->_sumSquareBuffer[THIS->_sumSquareBufferHead].n = numberFrames;
     THIS->_meanSumSquare = THIS->_sumSquareAccumulator / THIS->_sumSquareN;
