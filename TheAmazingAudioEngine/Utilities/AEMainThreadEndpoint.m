@@ -227,7 +227,12 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 - (void)handleReleasedEndpoint {
     // Endpoints are removed when they are deallocated (as we store weak references). Note that NSHashTable count doesn't
     // work properly with weak references, so we use allObjects.count, which does.
-    pthread_mutex_lock(&_mutex);
+    if ( pthread_mutex_trylock(&_mutex) != 0 ) {
+        // Contended lock - try again later to avoid a deadlock
+        [self performSelector:@selector(handleReleasedEndpoint) withObject:nil afterDelay:0];
+        return;
+    }
+    
     if ( self.endpoints.allObjects.count == 0 ) {
         __sharedThread = nil;
         [self cancel];
