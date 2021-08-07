@@ -118,6 +118,9 @@ typedef BOOL (^AEAudioFileOutputConditionBlock)(void);
 //! The renderer. You may change this between runs, but not during a run.
 @property (nonatomic, strong) AERenderer * _Nullable renderer;
 
+//! Whether to extend recording until silence reached, to capture effect tails (default NO)
+@property (nonatomic) BOOL extendRecordingUntilSilence;
+
 //! The sample rate
 @property (nonatomic, readonly) double sampleRate;
 

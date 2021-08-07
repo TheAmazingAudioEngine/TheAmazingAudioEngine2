@@ -12,6 +12,7 @@
 #import "AERenderer.h"
 #import "AEBufferStack.h"
 #import "AEAudioBufferListUtilities.h"
+#import <Accelerate/Accelerate.h>
 
 const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
 
@@ -87,20 +88,38 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
         
         // Run for frame count
         UInt32 remainingFrames = round(duration * self.sampleRate);
+        BOOL waitForSilence = self.extendRecordingUntilSilence;
+        UInt32 remainingDecayFrames = 10 * self.sampleRate;
         OSStatus status = noErr;
-        while ( remainingFrames > 0 ) {
-            UInt32 frames = MIN(remainingFrames, AEBufferStackMaxFramesPerSlice);
+        while ( 1 ) {
+            UInt32 frames = MIN(remainingFrames ? remainingFrames : waitForSilence ? MIN(512, remainingDecayFrames) : 0, AEBufferStackMaxFramesPerSlice);
+            if ( frames == 0 ) break;
+            
             AEAudioBufferListSetLength(abl, frames);
             
             // Run renderer
             AERendererRun(self.renderer, abl, frames, &self->_timestamp);
+            
+            if ( remainingFrames > 0 ) remainingFrames -= frames;
+            if ( remainingFrames == 0 && waitForSilence ) {
+                // Evaluate frames, waiting for silence
+                remainingDecayFrames -= frames;
+                float max = 0;
+                for ( int i=0;i<abl->mNumberBuffers && max == 0; i++ ) {
+                    float maxChannel = 0;
+                    vDSP_maxmgv(abl->mBuffers[0].mData, 1, &maxChannel, frames);
+                    max = MAX(max, maxChannel);
+                }
+                if ( max < 0.0001 ) {
+                    break;
+                }
+            }
             
             // Write to file
             if ( ![self writeFrames:frames fromBuffer:abl] ) {
                 break;
             }
             
-            remainingFrames -= frames;
             self->_timestamp.mSampleTime += frames;
             self->_timestamp.mHostTime += AEHostTicksFromSeconds((double)frames / self.sampleRate);
             self->_numberOfFramesRecorded += frames;
