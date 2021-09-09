@@ -68,7 +68,7 @@
 
 - (void)setRenderer:(AERenderer *)renderer {
     [super setRenderer:renderer];
-    if ( renderer && !_audioFile ) {
+    if ( renderer && _path && !_audioFile ) {
         [self openFileForRecordingError:NULL];
     }
 }
