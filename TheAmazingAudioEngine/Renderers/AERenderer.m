@@ -36,7 +36,7 @@ NSString * const AERendererDidChangeNumberOfOutputChannelsNotification = @"AERen
     UInt32 _sampleTime;
 }
 @property (nonatomic, strong) AEManagedValue * blockValue;
-@property (nonatomic, readwrite) AEBufferStack * stack;
+@property (nonatomic, readwrite) AEManagedValue * stackValue;
 @end
 
 @implementation AERenderer
@@ -47,21 +47,21 @@ NSString * const AERendererDidChangeNumberOfOutputChannelsNotification = @"AERen
     _numberOfOutputChannels = 2;
     _sampleRate = 44100.0;
     self.blockValue = [AEManagedValue new];
-    self.stack = AEBufferStackNew(0);
+    self.stackValue = [AEManagedValue new];
+    self.stackValue.pointerValue = AEBufferStackNewWithOptions(AEBufferStackDefaultPoolSize, (_numberOfOutputChannels * 4) + (AEBufferStackDefaultPoolSize * 2));
+    self.stackValue.releaseBlock = ^(void * value) { AEBufferStackFree(value); };
     return self;
-}
-
-- (void)dealloc {
-    AEBufferStackFree(self.stack);
 }
 
 void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList * bufferList, UInt32 frames,
                    const AudioTimeStamp * timestamp) {
     
+    AEBufferStack * stack = (AEBufferStack *)AEManagedValueGetValue(THIS->_stackValue);
+    
     // Reset the buffer stack, and set the frame count/timestamp
-    AEBufferStackReset(THIS->_stack);
-    AEBufferStackSetFrameCount(THIS->_stack, frames);
-    AEBufferStackSetTimeStamp(THIS->_stack, timestamp);
+    AEBufferStackReset(stack);
+    AEBufferStackSetFrameCount(stack, frames);
+    AEBufferStackSetTimeStamp(stack, timestamp);
     
     // Clear the output buffer
     AEAudioBufferListSilence(bufferList, 0, frames);
@@ -82,7 +82,7 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList 
             .sampleRate = THIS->_sampleRate,
             .timestamp = &time,
             .offlineRendering = THIS->_isOffline,
-            .stack = THIS->_stack
+            .stack = stack
         };
         
         block(&context);
@@ -107,7 +107,7 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList 
 - (void)setNumberOfOutputChannels:(int)numberOfOutputChannels {
     if ( _numberOfOutputChannels == numberOfOutputChannels ) return;
     _numberOfOutputChannels = numberOfOutputChannels;
-    
+    self.stackValue.pointerValue = AEBufferStackNewWithOptions(AEBufferStackDefaultPoolSize, (_numberOfOutputChannels * 4) + (AEBufferStackDefaultPoolSize * 2));
     [[NSNotificationCenter defaultCenter] postNotificationName:AERendererDidChangeNumberOfOutputChannelsNotification object:self];
 }
 
