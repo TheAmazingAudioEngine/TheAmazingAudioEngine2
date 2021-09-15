@@ -31,7 +31,7 @@
 
 const UInt32 AEBufferStackMaxFramesPerSlice = 4096;
 static const int kMaxChannelsPerBuffer = 32;
-static const int kDefaultPoolSize = 16;
+const int AEBufferStackDefaultPoolSize = 16;
 
 typedef struct _AEBufferStackBufferLinkedList {
     void * buffer;
@@ -72,7 +72,7 @@ AEBufferStack * AEBufferStackNew(int poolSize) {
 }
 
 AEBufferStack * AEBufferStackNewWithOptions(int poolSize, int numberOfSingleChannelBuffers) {
-    if ( !poolSize ) poolSize = kDefaultPoolSize;
+    if ( !poolSize ) poolSize = AEBufferStackDefaultPoolSize;
     if ( !numberOfSingleChannelBuffers ) numberOfSingleChannelBuffers = poolSize * 2;
     
     AEBufferStack * stack = (AEBufferStack*)calloc(1, sizeof(AEBufferStack));
