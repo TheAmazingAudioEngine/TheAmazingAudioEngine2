@@ -46,7 +46,7 @@
 
 #include <TargetConditionals.h>
 #include "AERealtimeWatchdog.h"
-#if __x86_64__ && TARGET_IPHONE_SIMULATOR && REALTIME_WATCHDOG_ENABLED
+#if __x86_64__ && TARGET_OS_SIMULATOR && REALTIME_WATCHDOG_ENABLED
 
 
 /********************************************************************

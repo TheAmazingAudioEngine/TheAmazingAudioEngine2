@@ -57,14 +57,23 @@ static void AERealtimeWatchdogUnsafeActivityWarning(const char * activity) {
 #endif
 }
 
-BOOL AERealtimeWatchdogIsOnRealtimeThread(void);
+
 BOOL AERealtimeWatchdogIsOnRealtimeThread(void) {
     pthread_t thread = pthread_self();
+
+#if 0 // Policy check seems to not work any more on iOS 14; disabled for now
     int policy;
     struct sched_param param;
     if ( pthread_getschedparam(thread, &policy, &param) == 0 && param.sched_priority >= sched_get_priority_max(policy) ) {
         return YES;
     }
+#else
+    char name[21];
+    if ( pthread_getname_np(thread, name, sizeof(name)) == 0 && !strcmp(name, "AURemoteIO::IOThread") ) {
+        return YES;
+    }
+#endif
+    
     return NO;
 }
 
@@ -113,6 +122,19 @@ typedef void (*dispatch_barrier_async_t)(dispatch_queue_t queue, dispatch_block_
 typedef void (*dispatch_barrier_async_f_t)(dispatch_queue_t queue, void *_Nullable context, dispatch_function_t work);
 typedef void (*dispatch_barrier_sync_t)(dispatch_queue_t queue, DISPATCH_NOESCAPE dispatch_block_t block);
 typedef void (*dispatch_barrier_sync_f_t)(dispatch_queue_t queue, void *_Nullable context, dispatch_function_t work);
+
+typedef dispatch_group_t (*dispatch_group_create_t)(void);
+typedef void (*dispatch_group_async_t)(dispatch_group_t group, dispatch_queue_t queue, dispatch_block_t block);
+typedef void (*dispatch_group_async_f_t)(dispatch_group_t group, dispatch_queue_t queue, void *_Nullable context, dispatch_function_t work);
+typedef long (*dispatch_group_wait_t)(dispatch_group_t group, dispatch_time_t timeout);
+typedef void (*dispatch_group_notify_t)(dispatch_group_t group, dispatch_queue_t queue, dispatch_block_t block);
+typedef void (*dispatch_group_notify_f_t)(dispatch_group_t group, dispatch_queue_t queue, void *_Nullable context, dispatch_function_t work);
+typedef void (*dispatch_group_enter_t)(dispatch_group_t group);
+typedef void (*dispatch_group_leave_t)(dispatch_group_t group);
+
+typedef dispatch_semaphore_t (*dispatch_semaphore_create_t)(long value);
+typedef long (*dispatch_semaphore_wait_t)(dispatch_semaphore_t dsema, dispatch_time_t timeout);
+typedef long (*dispatch_semaphore_signal_t)(dispatch_semaphore_t dsema);
 
 // Overrides
 
@@ -307,6 +329,63 @@ void dispatch_barrier_sync(dispatch_queue_t queue, DISPATCH_NOESCAPE dispatch_bl
 void dispatch_barrier_sync_f(dispatch_queue_t queue, void *_Nullable context, dispatch_function_t work) {
     CHECK_FUNCTION(dispatch_barrier_sync_f);
     funcptr(queue, context, work);
+}
+
+// Dispatch group
+dispatch_group_t dispatch_group_create(void) {
+    CHECK_FUNCTION(dispatch_group_create);
+    return funcptr();
+}
+
+void dispatch_group_async(dispatch_group_t group, dispatch_queue_t queue, dispatch_block_t block) {
+    CHECK_FUNCTION(dispatch_group_async);
+    funcptr(group, queue, block);
+}
+
+void dispatch_group_async_f(dispatch_group_t group, dispatch_queue_t queue, void *_Nullable context, dispatch_function_t work) {
+    CHECK_FUNCTION(dispatch_group_async_f);
+    funcptr(group, queue, context, work);
+}
+
+long dispatch_group_wait(dispatch_group_t group, dispatch_time_t timeout) {
+    CHECK_FUNCTION(dispatch_group_wait);
+    return funcptr(group, timeout);
+}
+
+void dispatch_group_notify(dispatch_group_t group, dispatch_queue_t queue, dispatch_block_t block) {
+    CHECK_FUNCTION(dispatch_group_notify);
+    funcptr(group, queue, block);
+}
+
+void dispatch_group_notify_f(dispatch_group_t group, dispatch_queue_t queue, void *_Nullable context, dispatch_function_t work) {
+    CHECK_FUNCTION(dispatch_group_notify_f);
+    funcptr(group, queue, context, work);
+}
+
+void dispatch_group_enter(dispatch_group_t group) {
+    CHECK_FUNCTION(dispatch_group_enter);
+    funcptr(group);
+}
+
+void dispatch_group_leave(dispatch_group_t group) {
+    CHECK_FUNCTION(dispatch_group_leave);
+    funcptr(group);
+}
+
+// Dispatch semaphore
+dispatch_semaphore_t dispatch_semaphore_create(long value) {
+    CHECK_FUNCTION(dispatch_semaphore_create);
+    return funcptr(value);
+}
+
+long dispatch_semaphore_wait(dispatch_semaphore_t dsema, dispatch_time_t timeout) {
+    CHECK_FUNCTION(dispatch_semaphore_wait);
+    return funcptr(dsema, timeout);
+}
+
+long dispatch_semaphore_signal(dispatch_semaphore_t dsema) {
+    CHECK_FUNCTION(dispatch_semaphore_signal);
+    return funcptr(dsema);
 }
 
 #endif
