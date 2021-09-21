@@ -61,7 +61,7 @@
 }
 
 - (double)masterGain {
-    return [self getParameterValueForId:kDynamicsProcessorParam_MasterGain];
+    return [self getParameterValueForId:kDynamicsProcessorParam_OverallGain];
 }
 
 - (double)compressionAmount {
@@ -111,7 +111,7 @@
 
 - (void)setMasterGain:(double)masterGain {
     [self setParameterValue: masterGain
-                      forId: kDynamicsProcessorParam_MasterGain];
+                      forId: kDynamicsProcessorParam_OverallGain];
 }
 
 @end
