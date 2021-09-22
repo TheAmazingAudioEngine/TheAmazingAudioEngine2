@@ -134,7 +134,6 @@ typedef void (*dispatch_group_leave_t)(dispatch_group_t group);
 
 typedef dispatch_semaphore_t (*dispatch_semaphore_create_t)(long value);
 typedef long (*dispatch_semaphore_wait_t)(dispatch_semaphore_t dsema, dispatch_time_t timeout);
-typedef long (*dispatch_semaphore_signal_t)(dispatch_semaphore_t dsema);
 
 // Overrides
 
@@ -381,11 +380,6 @@ dispatch_semaphore_t dispatch_semaphore_create(long value) {
 long dispatch_semaphore_wait(dispatch_semaphore_t dsema, dispatch_time_t timeout) {
     CHECK_FUNCTION(dispatch_semaphore_wait);
     return funcptr(dsema, timeout);
-}
-
-long dispatch_semaphore_signal(dispatch_semaphore_t dsema) {
-    CHECK_FUNCTION(dispatch_semaphore_signal);
-    return funcptr(dsema);
 }
 
 #endif
