@@ -259,7 +259,7 @@ static void AEAudioUnitOutputReportRenderTime(__unsafe_unretained AEAudioUnitOut
     
     if ( now - THIS->_firstReportTime > kRenderBudgetWarningInitialDelay
             && renderTime > bufferDuration * kRenderBudgetWarningThreshold ) {
-        if ( @available(iOS 12, *) ) {
+        if ( @available(iOS 12, macOS 10.14, *) ) {
             os_signpost_event_emit(THIS->_log, OS_SIGNPOST_ID_EXCLUSIVE, "Overrun");
         }
         dispatch_async(dispatch_get_main_queue(), ^{
