@@ -188,6 +188,7 @@
 				4CDCACBD1CA25AA8008AAEF1 /* Products */,
 			);
 			sourceTree = "<group>";
+			usesTabs = 0;
 		};
 		4CDCACBD1CA25AA8008AAEF1 /* Products */ = {
 			isa = PBXGroup;
