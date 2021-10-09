@@ -42,6 +42,13 @@ static NSHashTable * __atomicUpdatedDeferredSyncValues = nil;
 static BOOL __atomicUpdateWaitingForCommit = NO;
 static NSMutableArray * __atomicUpdateCompletionBlocks = nil;
 static NSTimer * __atomicUpdateCompletionTimer = nil;
+static pthread_mutex_t __atomicBypassMutex = PTHREAD_MUTEX_INITIALIZER;
+static int __atomicBypassCounter = 0;
+static const int kAtomicBypassSectionTableSize = 31;
+static struct {
+    pthread_t thread;
+    int count;
+} __atomicBypassSectionCounts[kAtomicBypassSectionTableSize];
 
 static linkedlistitem_t * __pendingInstances = NULL;
 static linkedlistitem_t * __servicedInstances = NULL;
@@ -173,22 +180,20 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
     // Remove self from deferred sync list
     [__atomicUpdatedDeferredSyncValues removeObject:self];
     
-    if ( self.usedOnAudioThread ) {
-        // Remove self from instances awaiting service list
-        pthread_mutex_lock(&__pendingInstancesMutex);
-        for ( linkedlistitem_t * entry = __pendingInstances, * prior = NULL; entry; prior = entry, entry = entry->next ) {
-            if ( entry->data == (__bridge void*)self ) {
-                if ( prior ) {
-                    prior->next = entry->next;
-                } else {
-                    __pendingInstances = entry->next;
-                }
-                free(entry);
-                break;
+    // Remove self from instances awaiting service list
+    pthread_mutex_lock(&__pendingInstancesMutex);
+    for ( linkedlistitem_t * entry = __pendingInstances, * prior = NULL; entry; prior = entry, entry = entry->next ) {
+        if ( entry->data == (__bridge void*)self ) {
+            if ( prior ) {
+                prior->next = entry->next;
+            } else {
+                __pendingInstances = entry->next;
             }
+            free(entry);
+            break;
         }
-        pthread_mutex_unlock(&__pendingInstancesMutex);
     }
+    pthread_mutex_unlock(&__pendingInstancesMutex);
     
     // Perform any pending releases
     if ( _value ) {
@@ -328,18 +333,31 @@ void AEManagedValueCommitPendingUpdates() {
 void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     if ( !THIS ) return NULL;
     
-    if ( __atomicUpdateWaitingForCommit || pthread_rwlock_tryrdlock(&__atomicUpdateMutex) != 0 ) {
+    BOOL atomicBypass = NO;
+    if ( __atomicBypassCounter > 0 ) {
+        pthread_t thread = pthread_self();
+        for ( int i=((intptr_t)thread)%kAtomicBypassSectionTableSize, j=0; j<kAtomicBypassSectionTableSize && __atomicBypassSectionCounts[i].thread != NULL; j++, i=(i+1)%kAtomicBypassSectionTableSize ) {
+            if ( __atomicBypassSectionCounts[i].thread == thread ) {
+                atomicBypass = __atomicBypassSectionCounts[i].count > 0;
+                break;
+            }
+        }
+    }
+    
+    if ( !atomicBypass && (__atomicUpdateWaitingForCommit || pthread_rwlock_tryrdlock(&__atomicUpdateMutex) != 0) ) {
         // Atomic update in progress - return previous value
         return THIS->_atomicBatchUpdateLastValue;
     }
     
-    if ( !THIS->_usedOnAudioThread && !pthread_main_np() ) {
+    if ( atomicBypass || (!THIS->_usedOnAudioThread && !pthread_main_np()) ) {
         AEManagedValueServiceReleaseQueue(THIS);
     }
     
     void * value = THIS->_value;
     
-    pthread_rwlock_unlock(&__atomicUpdateMutex);
+    if ( !atomicBypass ) {
+        pthread_rwlock_unlock(&__atomicUpdateMutex);
+    }
     
     return value;
 }
@@ -350,6 +368,38 @@ void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS
         OSAtomicEnqueue(&THIS->_releaseQueue, release, offsetof(linkedlistitem_t, next));
     }
 }
+
+void AEManagedValueBeginAtomicBypassSection(void) {
+    pthread_mutex_lock(&__atomicBypassMutex);
+    pthread_t thread = pthread_self();
+    for ( int i=((intptr_t)thread)%kAtomicBypassSectionTableSize, j=0; j<kAtomicBypassSectionTableSize; j++, i=(i+1)%kAtomicBypassSectionTableSize ) {
+        if ( __atomicBypassSectionCounts[i].thread == NULL || __atomicBypassSectionCounts[i].thread == thread ) {
+            __atomicBypassSectionCounts[i].thread = thread;
+            __atomicBypassSectionCounts[i].count++;
+            __atomicBypassCounter++;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&__atomicBypassMutex);
+}
+
+void AEManagedValueEndAtomicBypassSection(void) {
+    pthread_mutex_lock(&__atomicBypassMutex);
+    pthread_t thread = pthread_self();
+    for ( int i=((intptr_t)thread)%kAtomicBypassSectionTableSize, j=0; j<kAtomicBypassSectionTableSize && __atomicBypassSectionCounts[i].thread != NULL; j++, i=(i+1)%kAtomicBypassSectionTableSize ) {
+        if ( __atomicBypassSectionCounts[i].thread == thread ) {
+            __atomicBypassCounter--;
+            __atomicBypassSectionCounts[i].count--;
+            assert(__atomicBypassSectionCounts[i].count >= 0);
+            if ( __atomicBypassSectionCounts[i].count == 0 ) {
+                __atomicBypassSectionCounts[i].thread = NULL;
+            }
+            break;
+        }
+    }
+    pthread_mutex_unlock(&__atomicBypassMutex);
+}
+
 
 #pragma mark - Helpers
 
