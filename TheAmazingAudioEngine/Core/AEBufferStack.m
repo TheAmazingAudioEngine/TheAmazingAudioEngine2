@@ -31,7 +31,7 @@
 
 const UInt32 AEBufferStackMaxFramesPerSlice = 4096;
 static const int kMaxChannelsPerBuffer = 32;
-const int AEBufferStackDefaultPoolSize = 16;
+const int AEBufferStackDefaultPoolSize = 32;
 
 typedef struct _AEBufferStackBufferLinkedList {
     void * buffer;
