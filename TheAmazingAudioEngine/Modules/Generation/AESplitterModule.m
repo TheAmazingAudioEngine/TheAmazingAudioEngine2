@@ -99,7 +99,7 @@ static void AESplitterModuleProcess(__unsafe_unretained AESplitterModule * THIS,
         const AudioBufferList * buffer = AEBufferStackGet(context->stack, 0);
         if ( buffer ) {
             THIS->_timestamp = *AEBufferStackGetTimeStampForBuffer(context->stack, 0);
-            AEAudioBufferListCopyContents(THIS->_buffer, AEBufferStackGet(context->stack, 0), 0, 0, context->frames);
+            AEAudioBufferListCopyContents(THIS->_buffer, buffer, 0, 0, context->frames);
         } else {
             THIS->_timestamp = *context->timestamp;
             AEAudioBufferListSilence(THIS->_buffer, 0, context->frames);
