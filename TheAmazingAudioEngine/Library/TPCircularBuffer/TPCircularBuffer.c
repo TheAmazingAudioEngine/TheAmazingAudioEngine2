@@ -42,7 +42,7 @@ static inline bool _reportResult(kern_return_t result, const char *operation, co
 }
 
 bool _TPCircularBufferInit(TPCircularBuffer *buffer, int32_t length, size_t structSize) {
-    
+    memset(buffer, 0, sizeof(*buffer));
     assert(length > 0);
     
     if ( structSize != sizeof(TPCircularBuffer) ) {
