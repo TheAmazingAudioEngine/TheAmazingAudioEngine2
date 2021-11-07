@@ -136,3 +136,34 @@ static void AELevelsAnalyzerMixAndAnalyzeChannel(__unsafe_unretained AELevelsAna
 }
 
 @end
+
+
+#pragma mark -
+
+
+
+@interface AEStereoLevelsAnalyzer ()
+@property (nonatomic, strong, readwrite) AELevelsAnalyzer * left;
+@property (nonatomic, strong, readwrite) AELevelsAnalyzer * right;
+@end
+
+@implementation AEStereoLevelsAnalyzer
+
+- (instancetype)init {
+    if ( !(self = [super init]) ) return nil;
+    self.left = [AELevelsAnalyzer new];
+    self.right = [AELevelsAnalyzer new];
+    return self;
+}
+
+void AEStereoLevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AEStereoLevelsAnalyzer * THIS, const AudioBufferList * buffer, UInt32 numberFrames) {
+    AELevelsAnalyzerAnalyzeBufferChannel(THIS->_left, buffer, 0, numberFrames);
+    AELevelsAnalyzerAnalyzeBufferChannel(THIS->_right, buffer, buffer->mNumberBuffers < 2 ? 0 : 1, numberFrames);
+}
+
+void AEStereoLevelsAnalyzerMixAndAnalyzeBuffer(__unsafe_unretained AEStereoLevelsAnalyzer * THIS, const AudioBufferList * buffer, UInt32 numberFrames, BOOL first) {
+    AELevelsAnalyzerMixAndAnalyzeChannel(THIS->_left, buffer, 0, numberFrames, first);
+    AELevelsAnalyzerMixAndAnalyzeChannel(THIS->_right, buffer, buffer->mNumberBuffers < 2 ? 0 : 1, numberFrames, first);
+}
+
+@end

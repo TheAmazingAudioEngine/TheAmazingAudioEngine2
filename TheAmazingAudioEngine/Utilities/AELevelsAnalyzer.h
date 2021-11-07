@@ -55,6 +55,39 @@ void AELevelsAnalyzerAnalyzeBufferChannel(__unsafe_unretained AELevelsAnalyzer *
 @property (nonatomic, readonly) double average; //!< Retrieve the average value, in decibels
 
 @end
+
+/*!
+ * Stereo levels analyzer
+ *
+ *  Encapsulates two levels analyzers, one for each channel
+ */
+@interface AEStereoLevelsAnalyzer : NSObject
+
+/*!
+ * Analyze a buffer
+ *
+ *  If the buffer is mono, will duplicate across both analyzers
+ *
+ * @param analyzer The analyzer instance
+ * @param buffer The audio buffer
+ * @param numberFrames The length of the audio buffer, in frames
+ */
+void AEStereoLevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AEStereoLevelsAnalyzer * analyzer, const AudioBufferList * buffer, UInt32 numberFrames);
+
+/*!
+ * Analyze a buffer, mixing results rather than appending
+ *
+ * @param analyzer The analyzer instance
+ * @param buffer The audio buffer
+ * @param numberFrames The length of the audio buffer, in frames
+ * @param first Whether this is the first buffer; if NO, subsequent analyses will be mixed additively
+ */
+void AEStereoLevelsAnalyzerMixAndAnalyzeBuffer(__unsafe_unretained AEStereoLevelsAnalyzer * analyzer, const AudioBufferList * buffer, UInt32 numberFrames, BOOL first);
+
+@property (nonatomic, strong, readonly) AELevelsAnalyzer * left;
+@property (nonatomic, strong, readonly) AELevelsAnalyzer * right;
+@end
+
  
 #ifdef __cplusplus
 }
