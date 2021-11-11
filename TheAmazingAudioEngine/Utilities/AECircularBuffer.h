@@ -155,8 +155,9 @@ AudioBufferList * AECircularBufferPrepareEmptyAudioBufferList(AECircularBuffer *
  *  AECircularBufferPrepareEmptyAudioBufferList.
  *
  * @param buffer Circular buffer
+ * @param timestamp The timestamp associated with the buffer, or NULL to use the one provided in AECircularBufferPrepareEmptyAudioBufferList
  */
-void AECircularBufferProduceAudioBufferList(AECircularBuffer *buffer);
+void AECircularBufferProduceAudioBufferList(AECircularBuffer *buffer, const AudioTimeStamp *timestamp);
 
 #pragma mark - Consuming
     

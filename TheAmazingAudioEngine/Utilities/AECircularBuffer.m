@@ -69,8 +69,8 @@ AudioBufferList * AECircularBufferPrepareEmptyAudioBufferList(AECircularBuffer *
     return TPCircularBufferPrepareEmptyAudioBufferListWithAudioFormat(&buffer->buffer, &buffer->audioDescription, frameCount, timestamp);
 }
 
-void AECircularBufferProduceAudioBufferList(AECircularBuffer *buffer) {
-    return TPCircularBufferProduceAudioBufferList(&buffer->buffer, NULL);
+void AECircularBufferProduceAudioBufferList(AECircularBuffer *buffer, const AudioTimeStamp * timestamp) {
+    return TPCircularBufferProduceAudioBufferList(&buffer->buffer, timestamp);
 }
 
 UInt32 AECircularBufferPeek(AECircularBuffer *buffer, AudioTimeStamp *outTimestamp) {
