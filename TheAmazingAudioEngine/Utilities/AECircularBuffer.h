@@ -110,9 +110,7 @@ void AECircularBufferSetAtomic(AECircularBuffer *buffer, BOOL atomic);
  * @param channelCount Number of channels of audio you'll be working with
  * @param sampleRate Sample rate of audio, used to work with AudioTimeStamps
  */
-void AECircularBufferSetChannelCountAndSampleRate(AECircularBuffer * buffer,
-                                                  int channelCount,
-                                                  double sampleRate);
+void AECircularBufferSetChannelCountAndSampleRate(AECircularBuffer * buffer, int channelCount, double sampleRate);
 
 #pragma mark - Producing
 
@@ -137,10 +135,7 @@ UInt32 AECircularBufferGetAvailableSpace(AECircularBuffer *buffer);
  * @param frames Length of audio in frames, or AECircularBufferCopyAll to copy the whole buffer
  * @return YES if buffer list was successfully copied; NO if there was insufficient space
  */
-BOOL AECircularBufferEnqueue(AECircularBuffer *buffer,
-                             const AudioBufferList *bufferList,
-                             const AudioTimeStamp *timestamp,
-                             UInt32 frames);
+BOOL AECircularBufferEnqueue(AECircularBuffer *buffer, const AudioBufferList *bufferList, const AudioTimeStamp *timestamp, UInt32 frames);
 
 /*!
  * Prepare an empty buffer list, stored on the circular buffer
@@ -150,9 +145,7 @@ BOOL AECircularBufferEnqueue(AECircularBuffer *buffer,
  * @param timestamp The timestamp associated with the buffer, or NULL.
  * @return The empty buffer list, or NULL if circular buffer has insufficient space
  */
-AudioBufferList * AECircularBufferPrepareEmptyAudioBufferList(AECircularBuffer *buffer,
-                                                              UInt32 frameCount,
-                                                              const AudioTimeStamp *timestamp);
+AudioBufferList * AECircularBufferPrepareEmptyAudioBufferList(AECircularBuffer *buffer, UInt32 frameCount, const AudioTimeStamp *timestamp);
 
 /*!
  * Mark next audio buffer list as ready for reading
