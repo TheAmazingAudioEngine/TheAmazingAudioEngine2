@@ -59,7 +59,7 @@ typedef struct {
 }
 
 + (void)loadInfoForAudioPasteboardItemWithCompletionBlock:(void (^)(NSDictionary *))block {
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         NSData * data = [self dataForAudioOnPasteboard];
         if ( !data ) {
             dispatch_async(dispatch_get_main_queue(), ^{ block(nil); });

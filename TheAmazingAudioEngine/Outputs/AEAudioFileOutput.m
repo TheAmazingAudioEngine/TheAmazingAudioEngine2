@@ -79,7 +79,7 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
     assert(_audioFiles);
     
     // Perform render in background thread
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         
         // Allocate render buffer
         AudioBufferList * abl
@@ -143,7 +143,7 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
     assert(_audioFiles);
     
     // Perform render in background thread
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         
         // Allocate render buffer
         AudioBufferList * abl

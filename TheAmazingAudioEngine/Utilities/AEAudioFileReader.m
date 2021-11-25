@@ -95,7 +95,7 @@ static const UInt32 kMaxAudioFileReadSize = 16384;
     reader.path = path;
     reader.targetAudioDescription = targetAudioDescription;
     reader.loadBlock = block;
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         [reader read];
     });
     return reader;
@@ -121,7 +121,7 @@ static const UInt32 kMaxAudioFileReadSize = 16384;
     reader.readBlock = readBlock;
     reader.readCompletionBlock = completionBlock;
     reader.readBlockSize = blockSize;
-    dispatch_async(dispatch_get_global_queue(QOS_CLASS_BACKGROUND, 0), ^{
+    dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         [reader read];
     });
     return reader;
