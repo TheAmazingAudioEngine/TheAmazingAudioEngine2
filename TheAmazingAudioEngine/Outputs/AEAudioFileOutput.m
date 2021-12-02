@@ -45,7 +45,7 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
     if ( audioFileCount == 1 ) {
         if ( !(_audioFiles[0] = AEExtAudioFileCreate([NSURL fileURLWithPath:path], type, sampleRate, channelCount, error)) ) return nil;
     } else {
-        NSString * pathExtension = type == AEAudioFileTypeM4A ? @"m4a" : type == AEAudioFileTypeWAVInt16 ? @"wav" : @"aiff";
+        NSString * pathExtension = type == AEAudioFileTypeM4A ? @"m4a" : (type == AEAudioFileTypeWAVInt16 || type == AEAudioFileTypeWAVInt24 || type == AEAudioFileTypeWAVFloat32) ? @"wav" : @"aiff";
         for ( int i=0; i<audioFileCount; i++ ) {
             NSString * filename = [[NSString stringWithFormat:@"Track %02d", i+1] stringByAppendingPathExtension:pathExtension];
             if ( !(_audioFiles[i] = AEExtAudioFileCreate([NSURL fileURLWithPath:[path stringByAppendingPathComponent:filename]], type, sampleRate, 2, error)) ) return nil;

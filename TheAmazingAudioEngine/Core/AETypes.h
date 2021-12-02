@@ -51,9 +51,12 @@ AudioStreamBasicDescription AEAudioDescriptionWithChannelsAndRate(int channels, 
  * File types
  */
 typedef enum {
-    AEAudioFileTypeAIFFFloat32, //!< 32-bit floating point AIFF (AIFC)
     AEAudioFileTypeAIFFInt16,   //!< 16-bit signed little-endian integer AIFF
+    AEAudioFileTypeAIFFInt24,   //!< 24-bit signed little-endian integer AIFF
+    AEAudioFileTypeAIFFFloat32, //!< 32-bit floating point AIFF (AIFC)
     AEAudioFileTypeWAVInt16,    //!< 16-bit signed little-endian integer WAV
+    AEAudioFileTypeWAVInt24,    //!< 24-bit signed little-endian integer WAV
+    AEAudioFileTypeWAVFloat32,  //!< 32-bit floating-point WAV
     AEAudioFileTypeM4A,         //!< AAC in an M4A container
 } AEAudioFileType;
 

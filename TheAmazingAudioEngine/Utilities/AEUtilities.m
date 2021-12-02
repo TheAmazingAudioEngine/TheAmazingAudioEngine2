@@ -131,7 +131,7 @@ ExtAudioFileRef AEExtAudioFileCreate(NSURL * url, AEAudioFileType fileType, doub
         }
         fileTypeID = kAudioFileM4AType;
         
-    } else if ( fileType == AEAudioFileTypeAIFFFloat32 ) {
+    } else if ( fileType == AEAudioFileTypeAIFFFloat32 || fileType == AEAudioFileTypeWAVFloat32 ) {
         // 32-bit floating point
         asbd.mFormatID = kAudioFormatLinearPCM;
         asbd.mFormatFlags = kLinearPCMFormatFlagIsFloat | kAudioFormatFlagIsPacked | kAudioFormatFlagIsBigEndian;
@@ -140,6 +140,22 @@ ExtAudioFileRef AEExtAudioFileCreate(NSURL * url, AEAudioFileType fileType, doub
         asbd.mBytesPerFrame = asbd.mBytesPerPacket;
         asbd.mFramesPerPacket = 1;
         fileTypeID = kAudioFileAIFCType;
+        
+    } else if ( fileType == AEAudioFileTypeAIFFInt24 || fileType == AEAudioFileTypeWAVInt24 ) {
+        // 24-bit signed integer
+        asbd.mFormatID = kAudioFormatLinearPCM;
+        asbd.mFormatFlags = kLinearPCMFormatFlagIsSignedInteger | kAudioFormatFlagIsPacked |
+                            (fileType == AEAudioFileTypeAIFFInt24 ? kAudioFormatFlagIsBigEndian : 0);
+        asbd.mBitsPerChannel = 24;
+        asbd.mBytesPerPacket = asbd.mChannelsPerFrame * 3;
+        asbd.mBytesPerFrame = asbd.mBytesPerPacket;
+        asbd.mFramesPerPacket = 1;
+        
+        if ( fileType == AEAudioFileTypeAIFFInt24 ) {
+            fileTypeID = kAudioFileAIFFType;
+        } else {
+            fileTypeID = kAudioFileWAVEType;
+        }
         
     } else {
         // 16-bit signed integer
