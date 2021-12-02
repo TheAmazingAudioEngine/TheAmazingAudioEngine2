@@ -158,12 +158,12 @@ static void AELevelsAnalyzerMixAndAnalyzeChannel(__unsafe_unretained AELevelsAna
 
 void AEStereoLevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AEStereoLevelsAnalyzer * THIS, const AudioBufferList * buffer, UInt32 numberFrames) {
     AELevelsAnalyzerAnalyzeBufferChannel(THIS->_left, buffer, 0, numberFrames);
-    AELevelsAnalyzerAnalyzeBufferChannel(THIS->_right, buffer, buffer->mNumberBuffers < 2 ? 0 : 1, numberFrames);
+    AELevelsAnalyzerAnalyzeBufferChannel(THIS->_right, buffer, !buffer || buffer->mNumberBuffers < 2 ? 0 : 1, numberFrames);
 }
 
 void AEStereoLevelsAnalyzerMixAndAnalyzeBuffer(__unsafe_unretained AEStereoLevelsAnalyzer * THIS, const AudioBufferList * buffer, UInt32 numberFrames, BOOL first) {
     AELevelsAnalyzerMixAndAnalyzeChannel(THIS->_left, buffer, 0, numberFrames, first);
-    AELevelsAnalyzerMixAndAnalyzeChannel(THIS->_right, buffer, buffer->mNumberBuffers < 2 ? 0 : 1, numberFrames, first);
+    AELevelsAnalyzerMixAndAnalyzeChannel(THIS->_right, buffer, !buffer || buffer->mNumberBuffers < 2 ? 0 : 1, numberFrames, first);
 }
 
 @end
