@@ -88,6 +88,11 @@ typedef void (^AEManagedValueReleaseNotificationBlock)(void);
 + (void)performAtomicBatchUpdate:(AEManagedValueUpdateBlock _Nonnull)block withCompletionBlock:(void(^_Nullable)(void))completionBlock;
 
 /*!
+ * Perform a block, bypassing any current atomic updates
+ */
++ (void)performBlockBypassingAtomicBatchUpdate:(AEManagedValueUpdateBlock _Nonnull)block;
+
+/*!
  * Get access to the value on the realtime audio thread
  *
  *  The object or buffer returned is guaranteed to remain valid until the next call to this function.
@@ -114,29 +119,6 @@ void * _Nullable AEManagedValueGetValue(__unsafe_unretained AEManagedValue * _No
  *  will see sporadic crashes on the audio thread.
  */
 void AEManagedValueCommitPendingUpdates(void);
-
-/*!
- * Enter an atomic access bypass section for current thread
- *
- *  Use this method to bracket code to be run outside of an atomic context. It can be used
- *  for example with code normally used on the realtime thread, to run said code in an offline
- *  rendering context on the same thread, bypassing any atomic update mechanism.
- *
- *  End the section by calling AEManagedValueEndAtomicBypassSection.
- *
- *  Calls to AEManagedValueGetValue within this section will return the value immediately
- *  after assignment.
- *
- *  Do not use this method from a realtime thread.
- */
-void AEManagedValueBeginAtomicBypassSection(void);
-
-/*!
- * End an atomic access bypass section
- *
- *  See AEManagedValueBeginAtomicBypassSection for discussion.
- */
-void AEManagedValueEndAtomicBypassSection(void);
 
 /*!
  * Service the release queue for this instance

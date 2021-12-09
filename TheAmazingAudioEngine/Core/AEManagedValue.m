@@ -170,6 +170,36 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
     }
 }
 
++ (void)performBlockBypassingAtomicBatchUpdate:(AEManagedValueUpdateBlock)block {
+    pthread_t thread = pthread_self();
+    pthread_mutex_lock(&__atomicBypassMutex);
+    for ( int i=((intptr_t)thread)%kAtomicBypassSectionTableSize, j=0; j<kAtomicBypassSectionTableSize; j++, i=(i+1)%kAtomicBypassSectionTableSize ) {
+        if ( __atomicBypassSectionCounts[i].thread == NULL || __atomicBypassSectionCounts[i].thread == thread ) {
+            __atomicBypassSectionCounts[i].thread = thread;
+            __atomicBypassSectionCounts[i].count++;
+            __atomicBypassCounter++;
+            break;
+        }
+    }
+    pthread_mutex_unlock(&__atomicBypassMutex);
+    
+    block();
+    
+    pthread_mutex_lock(&__atomicBypassMutex);
+    for ( int i=((intptr_t)thread)%kAtomicBypassSectionTableSize, j=0; j<kAtomicBypassSectionTableSize && __atomicBypassSectionCounts[i].thread != NULL; j++, i=(i+1)%kAtomicBypassSectionTableSize ) {
+        if ( __atomicBypassSectionCounts[i].thread == thread ) {
+            __atomicBypassCounter--;
+            __atomicBypassSectionCounts[i].count--;
+            assert(__atomicBypassSectionCounts[i].count >= 0);
+            if ( __atomicBypassSectionCounts[i].count == 0 ) {
+                __atomicBypassSectionCounts[i].thread = NULL;
+            }
+            break;
+        }
+    }
+    pthread_mutex_unlock(&__atomicBypassMutex);
+}
+
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
     _usedOnAudioThread = YES;
@@ -368,38 +398,6 @@ void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS
         OSAtomicEnqueue(&THIS->_releaseQueue, release, offsetof(linkedlistitem_t, next));
     }
 }
-
-void AEManagedValueBeginAtomicBypassSection(void) {
-    pthread_mutex_lock(&__atomicBypassMutex);
-    pthread_t thread = pthread_self();
-    for ( int i=((intptr_t)thread)%kAtomicBypassSectionTableSize, j=0; j<kAtomicBypassSectionTableSize; j++, i=(i+1)%kAtomicBypassSectionTableSize ) {
-        if ( __atomicBypassSectionCounts[i].thread == NULL || __atomicBypassSectionCounts[i].thread == thread ) {
-            __atomicBypassSectionCounts[i].thread = thread;
-            __atomicBypassSectionCounts[i].count++;
-            __atomicBypassCounter++;
-            break;
-        }
-    }
-    pthread_mutex_unlock(&__atomicBypassMutex);
-}
-
-void AEManagedValueEndAtomicBypassSection(void) {
-    pthread_mutex_lock(&__atomicBypassMutex);
-    pthread_t thread = pthread_self();
-    for ( int i=((intptr_t)thread)%kAtomicBypassSectionTableSize, j=0; j<kAtomicBypassSectionTableSize && __atomicBypassSectionCounts[i].thread != NULL; j++, i=(i+1)%kAtomicBypassSectionTableSize ) {
-        if ( __atomicBypassSectionCounts[i].thread == thread ) {
-            __atomicBypassCounter--;
-            __atomicBypassSectionCounts[i].count--;
-            assert(__atomicBypassSectionCounts[i].count >= 0);
-            if ( __atomicBypassSectionCounts[i].count == 0 ) {
-                __atomicBypassSectionCounts[i].thread = NULL;
-            }
-            break;
-        }
-    }
-    pthread_mutex_unlock(&__atomicBypassMutex);
-}
-
 
 #pragma mark - Helpers
 
