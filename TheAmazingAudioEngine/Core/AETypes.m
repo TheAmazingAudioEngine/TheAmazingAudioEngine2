@@ -46,6 +46,8 @@ AudioStreamBasicDescription AEAudioDescriptionWithChannelsAndRate(int channels, 
 
 AEChannelSet AEChannelSetDefault = {0, 1};
 
+AEChannelSet AEChannelSetNone = {-1, -1};
+
 pthread_t AERealtimeThreadIdentifier = NULL;
 
 @implementation NSValue (AEChannelSet)

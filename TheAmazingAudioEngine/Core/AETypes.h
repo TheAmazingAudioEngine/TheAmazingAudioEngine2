@@ -69,6 +69,7 @@ typedef struct AEChannelSet {
 } AEChannelSet;
     
 extern AEChannelSet AEChannelSetDefault; //!< A default, stereo channel set
+extern AEChannelSet AEChannelSetNone; //!< Invalid channel set
 
 /*!
  * Create an AEChannelSet
