@@ -208,7 +208,10 @@ ExtAudioFileRef AEExtAudioFileCreate(NSURL * url, AEAudioFileType fileType, doub
 
 ExtAudioFileRef _Nullable AEExtAudioFileOpen(NSURL * url, AudioStreamBasicDescription * outAudioDescription,
                                              UInt64 * outLengthInFrames, NSError ** error) {
-         
+    if ( outAudioDescription ) *outAudioDescription = (AudioStreamBasicDescription){};
+    if ( outLengthInFrames ) *outLengthInFrames = 0;
+    if ( error ) *error = NULL;
+    
     // Open the file
     ExtAudioFileRef reader;
     OSStatus result = ExtAudioFileOpenURL((__bridge CFURLRef)url, &reader);
