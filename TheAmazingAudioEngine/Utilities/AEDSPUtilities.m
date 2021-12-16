@@ -16,33 +16,33 @@ static const float kSmoothGainThreshold = kGainSmoothingRampStep;
 static const UInt32 kMinRampDurationForPowerCurve = 8192;
 static const float kPowerCurvePower = 3.0;
 
-void AEDSPApplyGain(const AudioBufferList * bufferList, float gain, UInt32 frames) {
+void AEDSPApplyGain(const AudioBufferList * bufferList, float gain, UInt32 frames, const AudioBufferList * output) {
     for ( int i=0; i < bufferList->mNumberBuffers; i++ ) {
         if ( gain < FLT_EPSILON ) {
-            vDSP_vclr(bufferList->mBuffers[i].mData, 1, frames);
+            vDSP_vclr(output->mBuffers[i].mData, 1, frames);
         } else {
-            vDSP_vsmul(bufferList->mBuffers[i].mData, 1, &gain, bufferList->mBuffers[i].mData, 1, frames);
+            vDSP_vsmul(bufferList->mBuffers[i].mData, 1, &gain, output->mBuffers[i].mData, 1, frames);
         }
     }
 }
 
-void AEDSPApplyRamp(const AudioBufferList * bufferList, float * start, float step, UInt32 frames) {
+void AEDSPApplyRamp(const AudioBufferList * bufferList, float * start, float step, UInt32 frames, const AudioBufferList * output) {
     if ( bufferList->mNumberBuffers == 2 ) {
         // Stereo buffer: use stereo utility
         vDSP_vrampmul2(bufferList->mBuffers[0].mData, bufferList->mBuffers[1].mData, 1, start, &step,
-                       bufferList->mBuffers[0].mData, bufferList->mBuffers[1].mData, 1, frames);
+                       output->mBuffers[0].mData, output->mBuffers[1].mData, 1, frames);
     } else {
         // Mono or multi-channel buffer: treat channel by channel
         float s = *start;
         for ( int i=0; i < bufferList->mNumberBuffers; i++ ) {
             s = *start;
-            vDSP_vrampmul(bufferList->mBuffers[i].mData, 1, &s, &step, bufferList->mBuffers[i].mData, 1, frames);
+            vDSP_vrampmul(bufferList->mBuffers[i].mData, 1, &s, &step, output->mBuffers[i].mData, 1, frames);
         }
         *start = s;
     }
 }
 
-void AEDSPApplyEqualPowerRamp(const AudioBufferList * bufferList, float * start, float step, UInt32 frames, float * scratch) {
+void AEDSPApplyEqualPowerRamp(const AudioBufferList * bufferList, float * start, float step, UInt32 frames, float * scratch, const AudioBufferList * output) {
     static float __staticBuffer[kMaxFramesPerSlice];
     if ( !scratch ) scratch = __staticBuffer;
     
@@ -60,12 +60,11 @@ void AEDSPApplyEqualPowerRamp(const AudioBufferList * bufferList, float * start,
     }
 }
 
-void AEDSPApplyGainSmoothed(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames) {
-    AEDSPApplyGainWithRamp(bufferList, targetGain, currentGain, frames, 0);
+void AEDSPApplyGainSmoothed(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames, const AudioBufferList * output) {
+    AEDSPApplyGainWithRamp(bufferList, targetGain, currentGain, frames, 0, output);
 }
 
-void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames,
-                                    UInt32 rampDuration) {
+void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames, UInt32 rampDuration, const AudioBufferList * output) {
     
     float diff = fabsf(targetGain - *currentGain);
     if ( diff > kSmoothGainThreshold ) {
@@ -85,14 +84,14 @@ void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain
             step = (localTarget - *currentGain) / (float)duration;
         }
         
-        AEDSPApplyRamp(bufferList, currentGain, step, duration);
+        AEDSPApplyRamp(bufferList, currentGain, step, duration, output);
         
         if ( duration < frames && fabsf(targetGain - 1.0f) > FLT_EPSILON ) {
             // Apply constant gain, now, with offset
             *currentGain = targetGain;
             for ( int i=0; i < bufferList->mNumberBuffers; i++ ) {
                 vDSP_vsmul((float*)bufferList->mBuffers[i].mData + duration, 1, &targetGain,
-                           (float*)bufferList->mBuffers[i].mData + duration, 1, frames - duration);
+                           (float*)output->mBuffers[i].mData + duration, 1, frames - duration);
             }
         }
     } else {
@@ -100,34 +99,33 @@ void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain
         
         if ( fabsf(targetGain - 1.0f) > FLT_EPSILON ) {
             // Just apply gain
-            AEDSPApplyGain(bufferList, targetGain, frames);
+            AEDSPApplyGain(bufferList, targetGain, frames, output);
         }
     }
 }
 
-void AEDSPApplyGainSmoothedMono(float * buffer, float targetGain, float * currentGain, UInt32 frames) {
+void AEDSPApplyGainSmoothedMono(float * buffer, float targetGain, float * currentGain, UInt32 frames, float * output) {
     float diff = fabsf(targetGain - *currentGain);
     if ( diff > kSmoothGainThreshold ) {
         // Need to apply ramp
         UInt32 rampDuration = MIN(diff * kGainSmoothingRampDuration, frames);
         float step = targetGain > *currentGain ? kGainSmoothingRampStep : -kGainSmoothingRampStep;
-        vDSP_vrampmul(buffer, 1, currentGain, &step, buffer, 1, rampDuration);
+        vDSP_vrampmul(buffer, 1, currentGain, &step, output, 1, rampDuration);
         
         if ( rampDuration < frames && fabsf(targetGain - 1.0f) > FLT_EPSILON ) {
             // Apply constant gain, now, with offset
-            vDSP_vsmul(buffer + rampDuration, 1, &targetGain, buffer + rampDuration, 1, frames - rampDuration);
+            vDSP_vsmul(buffer + rampDuration, 1, &targetGain, output + rampDuration, 1, frames - rampDuration);
         }
     } else if ( targetGain < FLT_EPSILON ) {
         // Zero
         vDSP_vclr(buffer, 1, frames);
     } else if ( fabsf(targetGain - 1.0f) > FLT_EPSILON ) {
         // Just apply gain
-        vDSP_vsmul(buffer, 1, &targetGain, buffer, 1, frames);
+        vDSP_vsmul(buffer, 1, &targetGain, output, 1, frames);
     }
 }
 
-void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float targetVolume, float * currentVolume,
-                                float targetBalance, float * currentBalance, UInt32 frames) {
+void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float targetVolume, float * currentVolume, float targetBalance, float * currentBalance, UInt32 frames, const AudioBufferList * output) {
     BOOL hasCurrentVol = currentVolume != NULL;
     BOOL hasCurrentBal = currentBalance != NULL;
     if ( !hasCurrentVol ) currentVolume = &targetVolume;
@@ -136,7 +134,7 @@ void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float target
     if ( bufferList->mNumberBuffers == 2 ) {
         if ( fabsf(targetBalance) < FLT_EPSILON && fabsf(*currentBalance) < FLT_EPSILON ) {
             // Balance is centered, can treat both channels the same
-            AEDSPApplyGainSmoothed(bufferList, targetVolume, currentVolume, frames);
+            AEDSPApplyGainSmoothed(bufferList, targetVolume, currentVolume, frames, output);
         } else {
             // Balance non-centered, need to apply different gains to each channel
             float targetGains[] = {
@@ -146,8 +144,8 @@ void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float target
                 *currentVolume * (*currentBalance <= 0.0 ? 1.0 : 1.0-*currentBalance),
                 *currentVolume * (*currentBalance >= 0.0 ? 1.0 : 1.0+*currentBalance) };
             
-            AEDSPApplyGainSmoothedMono(bufferList->mBuffers[0].mData, targetGains[0], &currentGains[0], frames);
-            AEDSPApplyGainSmoothedMono(bufferList->mBuffers[1].mData, targetGains[1], &currentGains[1], frames);
+            AEDSPApplyGainSmoothedMono(bufferList->mBuffers[0].mData, targetGains[0], &currentGains[0], frames, output->mBuffers[0].mData);
+            AEDSPApplyGainSmoothedMono(bufferList->mBuffers[1].mData, targetGains[1], &currentGains[1], frames,  output->mBuffers[0].mData);
             
             if ( hasCurrentVol ) {
                 *currentVolume = fabsf(*currentVolume-targetVolume) < FLT_EPSILON ? targetVolume :
@@ -162,12 +160,11 @@ void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float target
         }
     } else {
         // Mono or non-stereo buffer only - just apply volume
-        AEDSPApplyGainSmoothed(bufferList, targetVolume, currentVolume, frames);
+        AEDSPApplyGainSmoothed(bufferList, targetVolume, currentVolume, frames, output);
     }
 }
 
-void AEDSPMix(const AudioBufferList * abl1, const AudioBufferList * abl2, float gain1, float gain2,
-              BOOL monoToStereo, UInt32 frames, const AudioBufferList * output) {
+void AEDSPMix(const AudioBufferList * abl1, const AudioBufferList * abl2, float gain1, float gain2, BOOL monoToStereo, UInt32 frames, const AudioBufferList * output) {
     
     if ( !frames ) frames = output->mBuffers[0].mDataByteSize / sizeof(float);
     
@@ -183,7 +180,7 @@ void AEDSPMix(const AudioBufferList * abl1, const AudioBufferList * abl2, float 
     
     if ( gain2 != 1.0 ) {
         // Pre-apply gain to second abl
-        AEDSPApplyGain(abl2, gain2, frames);
+        AEDSPApplyGain(abl2, gain2, frames, abl2);
     }
     
     // Mix

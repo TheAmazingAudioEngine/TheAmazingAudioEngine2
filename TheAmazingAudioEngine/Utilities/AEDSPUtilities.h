@@ -39,7 +39,7 @@ extern "C" {
  * @param gain Gain amount (power ratio)
  * @param frames Length of buffer in frames
  */
-void AEDSPApplyGain(const AudioBufferList * bufferList, float gain, UInt32 frames);
+void AEDSPApplyGain(const AudioBufferList * bufferList, float gain, UInt32 frames, const AudioBufferList * output);
 
 /*!
  * Apply a ramp to values in a buffer list
@@ -49,7 +49,7 @@ void AEDSPApplyGain(const AudioBufferList * bufferList, float gain, UInt32 frame
  * @param step Amount per frame to advance gain
  * @param frames Length of buffer in frames
  */
-void AEDSPApplyRamp(const AudioBufferList * bufferList, float * start, float step, UInt32 frames);
+void AEDSPApplyRamp(const AudioBufferList * bufferList, float * start, float step, UInt32 frames, const AudioBufferList * output);
 
 /*!
  * Apply an equal-power ramp to values in a buffer list
@@ -63,7 +63,7 @@ void AEDSPApplyRamp(const AudioBufferList * bufferList, float * start, float ste
  * @param frames Length of buffer in frames
  * @param scratch A scratch buffer to use, or NULL to use an internal buffer. Not thread-safe if the latter is used.
  */
-void AEDSPApplyEqualPowerRamp(const AudioBufferList * bufferList, float * start, float step, UInt32 frames, float * scratch);
+void AEDSPApplyEqualPowerRamp(const AudioBufferList * bufferList, float * start, float step, UInt32 frames, float * scratch, const AudioBufferList * output);
 
 /*!
  * Scale values in a buffer list by some gain value, with smoothing to avoid discontinuities
@@ -74,7 +74,7 @@ void AEDSPApplyEqualPowerRamp(const AudioBufferList * bufferList, float * start,
  *  function on successive calls for a smooth ramp
  * @param frames Length of buffer in frames
  */
-void AEDSPApplyGainSmoothed(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames);
+void AEDSPApplyGainSmoothed(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames, const AudioBufferList * output);
 
 /*!
  * Scale values in a buffer list by some gain value, with smoothing to avoid discontinuities
@@ -85,9 +85,9 @@ void AEDSPApplyGainSmoothed(const AudioBufferList * bufferList, float targetGain
  *  function on successive calls for a smooth ramp
  * @param frames Length of buffer in frames
  * @param rampDuration Duration of full 0.0-1.0/1.0-0.0 transition, in frames
+ * @param output The target buffer
  */
-void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames,
-                                    UInt32 rampDuration);
+void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames, UInt32 rampDuration, const AudioBufferList * output);
     
 /*!
  * Scale values in a single buffer by some gain value, with smoothing to avoid discontinuities
@@ -97,7 +97,7 @@ void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain
  * @param currentGain On input, current gain; on output, the new gain
  * @param frames Length of buffer in frames
  */
-void AEDSPApplyGainSmoothedMono(float * buffer, float targetGain, float * currentGain, UInt32 frames);
+void AEDSPApplyGainSmoothedMono(float * buffer, float targetGain, float * currentGain, UInt32 frames, float * output);
 
 /*!
  * Apply volume and balance controls to the buffer
@@ -114,8 +114,7 @@ void AEDSPApplyGainSmoothedMono(float * buffer, float targetGain, float * curren
  *  back to this function on successive calls for a smooth ramp. If NULL, no smoothing will be applied.
  * @param frames Length of buffer in frames
  */
-void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float targetVolume, float * currentVolume,
-                                float targetBalance, float * currentBalance, UInt32 frames);
+void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float targetVolume, float * currentVolume, float targetBalance, float * currentBalance, UInt32 frames, const AudioBufferList * output);
 
 
 /*!

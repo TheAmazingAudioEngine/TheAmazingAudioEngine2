@@ -519,7 +519,7 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
         UInt32 microfadeFrames = MIN(THIS->_remainingMicrofadeInFrames, frames);
         float start = 1.0 - (float)THIS->_remainingMicrofadeInFrames / (float)THIS->_microfadeFrames;
         float step = 1.0 / (double)THIS->_microfadeFrames;
-        AEDSPApplyRamp(abl, &start, step, microfadeFrames);
+        AEDSPApplyRamp(abl, &start, step, microfadeFrames, abl);
         THIS->_remainingMicrofadeInFrames -= microfadeFrames;
         
     } else if ( THIS->_remainingMicrofadeOutFrames != kNoValue ) {
@@ -528,7 +528,7 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
         if ( microfadeFrames > 0 ) {
             float start = (float)THIS->_remainingMicrofadeOutFrames / (float)THIS->_microfadeFrames;
             float step = -1.0 / (double)THIS->_microfadeFrames;
-            AEDSPApplyRamp(abl, &start, step, microfadeFrames);
+            AEDSPApplyRamp(abl, &start, step, microfadeFrames, abl);
         }
         THIS->_remainingMicrofadeOutFrames -= microfadeFrames;
         if ( THIS->_remainingMicrofadeOutFrames == 0 ) {
@@ -551,9 +551,9 @@ static void AEAudioFilePlayerModuleProcess(__unsafe_unretained AEAudioFilePlayer
             float step = -1.0 / (double)THIS->_microfadeFrames;
             if ( offset > 0 ) {
                 AEAudioBufferListCopyOnStack(offsetAbl, abl, offset);
-                AEDSPApplyRamp(offsetAbl, &start, step, microfadeFrames);
+                AEDSPApplyRamp(offsetAbl, &start, step, microfadeFrames, offsetAbl);
             } else {
-                AEDSPApplyRamp(abl, &start, step, microfadeFrames);
+                AEDSPApplyRamp(abl, &start, step, microfadeFrames, abl);
             }
         }
         if ( playheadInRegionAtBufferEnd >= regionLength ) {

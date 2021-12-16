@@ -292,7 +292,7 @@ const AudioBufferList * AEBufferStackMixWithGain(AEBufferStack * stack, int coun
         AEBufferStackPop(stack, 1);
 
         if ( i == 1 && abl1Gain != 1.0f ) {
-            AEDSPApplyGain(abl1, abl1Gain, stack->frameCount);
+            AEDSPApplyGain(abl1, abl1Gain, stack->frameCount, abl1);
         }
         
         AEDSPMix(abl1, abl2, 1, abl2Gain, YES, stack->frameCount, abl2);
@@ -323,7 +323,7 @@ void AEBufferStackApplyFaders(AEBufferStack * stack,
         memcpy(abl->mBuffers[1].mData, priorBuffer, abl->mBuffers[1].mDataByteSize);
     }
     
-    AEDSPApplyVolumeAndBalance(abl, targetVolume, currentVolume, targetBalance, currentBalance, stack->frameCount);
+    AEDSPApplyVolumeAndBalance(abl, targetVolume, currentVolume, targetBalance, currentBalance, stack->frameCount, abl);
 }
 
 void AEBufferStackSilence(AEBufferStack * stack) {

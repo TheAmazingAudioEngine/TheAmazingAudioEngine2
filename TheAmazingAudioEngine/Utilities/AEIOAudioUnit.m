@@ -314,7 +314,7 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull T
     AECheckOSStatus(status, "AudioUnitRender");
     if ( status == noErr && THIS->_needsInputGainScaling &&
             (fabs(THIS->_inputGain - 1.0) > 1.0e-5 || fabs(THIS->_inputGain - THIS->_currentInputGain) > 1.0e-5) ) {
-        AEDSPApplyGainSmoothed(mutableAbl, THIS->_inputGain, &THIS->_currentInputGain, frames);
+        AEDSPApplyGainSmoothed(mutableAbl, THIS->_inputGain, &THIS->_currentInputGain, frames, mutableAbl);
     }
     return status;
 }
