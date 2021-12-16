@@ -75,9 +75,7 @@ static void AESplitterModuleProcess(__unsafe_unretained AESplitterModule * THIS,
     if ( (UInt64)context->timestamp->mSampleTime != THIS->_bufferedTime ) {
         
         // Run module, cache result
-        #ifdef DEBUG
         int priorStackDepth = AEBufferStackCount(context->stack);
-        #endif
         
         __unsafe_unretained AEModule * module = (__bridge AEModule *)AEManagedValueGetValue(THIS->_moduleValue);
         if ( module ) {
@@ -87,14 +85,15 @@ static void AESplitterModuleProcess(__unsafe_unretained AESplitterModule * THIS,
             AEBufferStackSilence(context->stack);
         }
         
-        #ifdef DEBUG
         if ( AEBufferStackCount(context->stack) != priorStackDepth+1 ) {
+            #ifdef DEBUG
             if ( AERateLimit() ) {
                 printf("A module within AESplitterModule didn't push a buffer! Sure it's a generator?\n");
             }
-            return;
+            #endif
+            AEBufferStackPush(context->stack, 1);
+            AEBufferStackSilence(context->stack);
         }
-        #endif
         
         const AudioBufferList * buffer = AEBufferStackGet(context->stack, 0);
         if ( buffer ) {
