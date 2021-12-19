@@ -145,7 +145,7 @@ void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float target
                 *currentVolume * (*currentBalance >= 0.0 ? 1.0 : 1.0+*currentBalance) };
             
             AEDSPApplyGainSmoothedMono(bufferList->mBuffers[0].mData, targetGains[0], &currentGains[0], frames, output->mBuffers[0].mData);
-            AEDSPApplyGainSmoothedMono(bufferList->mBuffers[1].mData, targetGains[1], &currentGains[1], frames,  output->mBuffers[0].mData);
+            AEDSPApplyGainSmoothedMono(bufferList->mBuffers[1].mData, targetGains[1], &currentGains[1], frames, output->mBuffers[1].mData);
             
             if ( hasCurrentVol ) {
                 *currentVolume = fabsf(*currentVolume-targetVolume) < FLT_EPSILON ? targetVolume :
