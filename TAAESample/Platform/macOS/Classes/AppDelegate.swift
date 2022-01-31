@@ -17,7 +17,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         self.audio = AEAudioController();
         do {
             try self.audio!.start();
-            if let viewController = NSApplication.sharedApplication().mainWindow?.contentViewController as? ViewController {
+            if let viewController = NSApplication.shared.mainWindow?.contentViewController as? ViewController {
                 viewController.audio = self.audio
             }
         } catch {

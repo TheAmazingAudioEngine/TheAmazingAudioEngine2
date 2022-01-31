@@ -61,7 +61,12 @@
 }
 
 - (double)masterGain {
-    return [self getParameterValueForId:kDynamicsProcessorParam_OverallGain];
+    if ( @available(iOS 15.0, macOS 12.0, *) ) {
+        return [self getParameterValueForId:6];
+    }
+    else {
+        return [self getParameterValueForId:kDynamicsProcessorParam_MasterGain];
+    }
 }
 
 - (double)compressionAmount {
@@ -110,8 +115,14 @@
 }
 
 - (void)setMasterGain:(double)masterGain {
-    [self setParameterValue: masterGain
-                      forId: kDynamicsProcessorParam_OverallGain];
+    if ( @available(iOS 15.0, macOS 12.0, *) ) {
+        [self setParameterValue: masterGain
+                          forId: 6];
+    }
+    else {
+        [self setParameterValue: masterGain
+                          forId: kDynamicsProcessorParam_MasterGain];
+    }
 }
 
 @end
