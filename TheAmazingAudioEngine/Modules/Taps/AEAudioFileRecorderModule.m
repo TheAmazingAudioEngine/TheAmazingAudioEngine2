@@ -14,12 +14,12 @@
 #import "AEDSPUtilities.h"
 #import "AEMainThreadEndpoint.h"
 #import <AudioToolbox/AudioToolbox.h>
-#import <pthread.h>
 #import <stdatomic.h>
+#import <os/lock.h>
 
 @interface AEAudioFileRecorderModule () {
     ExtAudioFileRef _audioFile;
-    pthread_mutex_t _audioFileMutex;
+    os_unfair_lock  _audioFileMutex;
     AEHostTicks    _startTime;
     AEHostTicks    _stopTime;
     BOOL           _complete;
@@ -54,7 +54,7 @@
     
     self.processFunction = AEAudioFileRecorderModuleProcess;
     
-    pthread_mutex_init(&_audioFileMutex, NULL);
+    _audioFileMutex = OS_UNFAIR_LOCK_INIT;
     
     return self;
 }
@@ -63,7 +63,6 @@
     if ( _audioFile ) {
         [self finishWriting];
     }
-    pthread_mutex_destroy(&_audioFileMutex);
 }
 
 - (void)setRenderer:(AERenderer *)renderer {
@@ -110,10 +109,10 @@ void AEAudioFileRecorderModuleBeginRecording(__unsafe_unretained AEAudioFileReco
         _stopTime = time;
     } else {
         // Stop immediately
-        pthread_mutex_lock(&_audioFileMutex);
+        os_unfair_lock_lock(&_audioFileMutex);
         [self finishWriting];
         self.recording = NO;
-        pthread_mutex_unlock(&_audioFileMutex);
+        os_unfair_lock_unlock(&_audioFileMutex);
         if ( block ) {
             block();
         }
@@ -123,12 +122,12 @@ void AEAudioFileRecorderModuleBeginRecording(__unsafe_unretained AEAudioFileReco
 static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileRecorderModule * THIS,
                                         const AERenderContext * _Nonnull context) {
     
-    if ( pthread_mutex_trylock(&THIS->_audioFileMutex) != 0 ) {
+    if ( !os_unfair_lock_trylock(&THIS->_audioFileMutex) ) {
         return;
     }
     
     if ( !THIS->_recording || THIS->_complete ) {
-        pthread_mutex_unlock(&THIS->_audioFileMutex);
+        os_unfair_lock_unlock(&THIS->_audioFileMutex);
         return;
     }
     
@@ -139,13 +138,13 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
     if ( stopTime && stopTime < now ) {
         THIS->_complete = YES;
         AEMainThreadEndpointSend(THIS->_stopRecordingNotificationEndpoint, NULL, 0);
-        pthread_mutex_unlock(&THIS->_audioFileMutex);
+        os_unfair_lock_unlock(&THIS->_audioFileMutex);
         return;
     }
     
     AEHostTicks hostTimeAtBufferEnd = now + AEHostTicksFromSeconds((double)context->frames / context->sampleRate);
     if ( startTime && startTime > hostTimeAtBufferEnd ) {
-        pthread_mutex_unlock(&THIS->_audioFileMutex);
+        os_unfair_lock_unlock(&THIS->_audioFileMutex);
         return;
     }
     
@@ -153,7 +152,7 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
     
     const AudioBufferList * abl = AEBufferStackGet(context->stack, 0);
     if ( !abl ) {
-        pthread_mutex_unlock(&THIS->_audioFileMutex);
+        os_unfair_lock_unlock(&THIS->_audioFileMutex);
         return;
     }
     
@@ -197,7 +196,7 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
         AEMainThreadEndpointSend(THIS->_stopRecordingNotificationEndpoint, NULL, 0);
     }
     
-    pthread_mutex_unlock(&THIS->_audioFileMutex);
+    os_unfair_lock_unlock(&THIS->_audioFileMutex);
 }
 
 - (void)finishWriting {

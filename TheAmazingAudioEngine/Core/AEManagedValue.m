@@ -27,6 +27,7 @@
 #import "AEManagedValue.h"
 #import <libkern/OSAtomic.h>
 #import <pthread.h>
+#import <os/lock.h>
 #import "AEUtilities.h"
 #import "AEWeakRetainingProxy.h"
 
@@ -42,7 +43,7 @@ static NSHashTable * __atomicUpdatedDeferredSyncValues = nil;
 static BOOL __atomicUpdateWaitingForCommit = NO;
 static NSMutableArray * __atomicUpdateCompletionBlocks = nil;
 static NSTimer * __atomicUpdateCompletionTimer = nil;
-static pthread_mutex_t __atomicBypassMutex = PTHREAD_MUTEX_INITIALIZER;
+static os_unfair_lock __atomicBypassMutex = OS_UNFAIR_LOCK_INIT;
 static int __atomicBypassCounter = 0;
 static const int kAtomicBypassSectionTableSize = 31;
 static struct {
@@ -52,7 +53,7 @@ static struct {
 
 static linkedlistitem_t * __pendingInstances = NULL;
 static linkedlistitem_t * __servicedInstances = NULL;
-static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
+static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
 
 @interface AEManagedValue () {
     void *      _value;
@@ -172,7 +173,7 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
 
 + (void)performBlockBypassingAtomicBatchUpdate:(AEManagedValueUpdateBlock)block {
     pthread_t thread = pthread_self();
-    pthread_mutex_lock(&__atomicBypassMutex);
+    os_unfair_lock_lock(&__atomicBypassMutex);
     for ( int i=((intptr_t)thread)%kAtomicBypassSectionTableSize, j=0; j<kAtomicBypassSectionTableSize; j++, i=(i+1)%kAtomicBypassSectionTableSize ) {
         if ( __atomicBypassSectionCounts[i].thread == NULL || __atomicBypassSectionCounts[i].thread == thread ) {
             __atomicBypassSectionCounts[i].thread = thread;
@@ -181,11 +182,11 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
             break;
         }
     }
-    pthread_mutex_unlock(&__atomicBypassMutex);
+    os_unfair_lock_unlock(&__atomicBypassMutex);
     
     block();
     
-    pthread_mutex_lock(&__atomicBypassMutex);
+    os_unfair_lock_lock(&__atomicBypassMutex);
     for ( int i=((intptr_t)thread)%kAtomicBypassSectionTableSize, j=0; j<kAtomicBypassSectionTableSize && __atomicBypassSectionCounts[i].thread != NULL; j++, i=(i+1)%kAtomicBypassSectionTableSize ) {
         if ( __atomicBypassSectionCounts[i].thread == thread ) {
             __atomicBypassCounter--;
@@ -197,7 +198,7 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
             break;
         }
     }
-    pthread_mutex_unlock(&__atomicBypassMutex);
+    os_unfair_lock_unlock(&__atomicBypassMutex);
 }
 
 - (instancetype)init {
@@ -211,7 +212,7 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
     [__atomicUpdatedDeferredSyncValues removeObject:self];
     
     // Remove self from instances awaiting service list
-    pthread_mutex_lock(&__pendingInstancesMutex);
+    os_unfair_lock_lock(&__pendingInstancesMutex);
     for ( linkedlistitem_t * entry = __pendingInstances, * prior = NULL; entry; prior = entry, entry = entry->next ) {
         if ( entry->data == (__bridge void*)self ) {
             if ( prior ) {
@@ -223,7 +224,7 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
             break;
         }
     }
-    pthread_mutex_unlock(&__pendingInstancesMutex);
+    os_unfair_lock_unlock(&__pendingInstancesMutex);
     
     // Perform any pending releases
     if ( _value ) {
@@ -307,7 +308,7 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
         
         if ( self.usedOnAudioThread ) {
             // Add self to the list of instances to service on the realtime thread within AEManagedValueCommitPendingUpdates
-            pthread_mutex_lock(&__pendingInstancesMutex);
+            os_unfair_lock_lock(&__pendingInstancesMutex);
             BOOL alreadyPresent = NO;
             for ( linkedlistitem_t * entry = __pendingInstances; entry; entry = entry->next ) {
                 if ( entry->data == (__bridge void*)self ) {
@@ -320,7 +321,7 @@ static pthread_mutex_t __pendingInstancesMutex = PTHREAD_MUTEX_INITIALIZER;
                 entry->data = (__bridge void*)self;
                 __pendingInstances = entry;
             }
-            pthread_mutex_unlock(&__pendingInstancesMutex);
+            os_unfair_lock_unlock(&__pendingInstancesMutex);
         }
     }
 }
@@ -344,7 +345,7 @@ void AEManagedValueCommitPendingUpdates() {
     }
     
     // Service any instances pending an update so we can mark the old value as ready for release
-    if ( pthread_mutex_trylock(&__pendingInstancesMutex) == 0 ) {
+    if ( os_unfair_lock_trylock(&__pendingInstancesMutex) ) {
         linkedlistitem_t * lastEntry = NULL;
         for ( linkedlistitem_t * entry = __pendingInstances; entry; lastEntry = entry, entry = entry->next ) {
             AEManagedValueServiceReleaseQueue((__bridge AEManagedValue*)entry->data);
@@ -356,7 +357,7 @@ void AEManagedValueCommitPendingUpdates() {
             __servicedInstances = __pendingInstances;
             __pendingInstances = NULL;
         }
-        pthread_mutex_unlock(&__pendingInstancesMutex);
+        os_unfair_lock_unlock(&__pendingInstancesMutex);
     }
 }
 
@@ -422,7 +423,7 @@ void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS
     
     if ( self.usedOnAudioThread ) {
         // Remove self from serviced instances list
-        pthread_mutex_lock(&__pendingInstancesMutex);
+        os_unfair_lock_lock(&__pendingInstancesMutex);
         for ( linkedlistitem_t * entry = __servicedInstances, * prior = NULL; entry; prior = entry, entry = entry->next ) {
             if ( entry->data == (__bridge void*)self ) {
                 if ( prior ) {
@@ -434,7 +435,7 @@ void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS
                 break;
             }
         }
-        pthread_mutex_unlock(&__pendingInstancesMutex);
+        os_unfair_lock_unlock(&__pendingInstancesMutex);
     }
 }
 
