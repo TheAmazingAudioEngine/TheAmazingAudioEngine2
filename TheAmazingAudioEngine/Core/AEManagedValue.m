@@ -410,7 +410,7 @@ void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS
             CFBridgingRelease((__bridge CFTypeRef)release->completionBlock);
         }
         if ( release->data ) {
-            NSAssert(release->data != _value, @"About to release value still in use");
+            NSAssert(_isObjectValue || release->data != _value, @"About to release value still in use");
             [self releaseOldValue:release->data];
         }
         free(release);
