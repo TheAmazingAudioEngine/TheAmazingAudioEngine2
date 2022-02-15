@@ -111,28 +111,36 @@ static void AELevelsAnalyzerMixAndAnalyzeChannel(__unsafe_unretained AELevelsAna
     THIS->_meanSumSquare = THIS->_sumSquareAccumulator / THIS->_sumSquareN;
 }
 
-- (double)peak {
-    _lastQuery = AECurrentTimeInSeconds();
-    AESeconds sinceLast = _lastQuery-_lastAnalysis;
+double AELevelsAnalyzerGetPeak(__unsafe_unretained AELevelsAnalyzer * THIS) {
+    THIS->_lastQuery = AECurrentTimeInSeconds();
+    AESeconds sinceLast = THIS->_lastQuery-THIS->_lastAnalysis;
     if ( sinceLast < kAnalysisTimeout ) {
-        return AEDSPRatioToDecibels(_peak);
+        return AEDSPRatioToDecibels(THIS->_peak);
     } else if ( sinceLast > kAnalysisTimeout+kTimeoutAnalysisFalloffInterval ) {
         return -INFINITY;
     } else {
-        return AEDSPRatioToDecibels(_peak * (1.0 - (sinceLast / kTimeoutAnalysisFalloffInterval)));
+        return AEDSPRatioToDecibels(THIS->_peak * (1.0 - (sinceLast / kTimeoutAnalysisFalloffInterval)));
     }
 }
 
-- (double)average {
-    _lastQuery = AECurrentTimeInSeconds();
-    AESeconds sinceLast = _lastQuery-_lastAnalysis;
+double AELevelsAnalyzerGetAverage(__unsafe_unretained AELevelsAnalyzer * THIS) {
+    THIS->_lastQuery = AECurrentTimeInSeconds();
+    AESeconds sinceLast = THIS->_lastQuery-THIS->_lastAnalysis;
     if ( sinceLast < kAnalysisTimeout ) {
-        return AEDSPRatioToDecibels(sqrt(_meanSumSquare));
+        return AEDSPRatioToDecibels(sqrt(THIS->_meanSumSquare));
     } else if ( sinceLast > kAnalysisTimeout+kTimeoutAnalysisFalloffInterval ) {
         return -INFINITY;
     } else {
-        return AEDSPRatioToDecibels(sqrt(_meanSumSquare) * (1.0 - (sinceLast / kTimeoutAnalysisFalloffInterval)));
+        return AEDSPRatioToDecibels(sqrt(THIS->_meanSumSquare) * (1.0 - (sinceLast / kTimeoutAnalysisFalloffInterval)));
     }
+}
+
+- (double)peak {
+    return AELevelsAnalyzerGetPeak(self);
+}
+
+- (double)average {
+    return AELevelsAnalyzerGetAverage(self);
 }
 
 @end

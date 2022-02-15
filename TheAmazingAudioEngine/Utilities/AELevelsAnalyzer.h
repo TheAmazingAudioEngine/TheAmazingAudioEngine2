@@ -51,6 +51,20 @@ void AELevelsAnalyzerMixAndAnalyzeBuffer(__unsafe_unretained AELevelsAnalyzer * 
  */
 void AELevelsAnalyzerAnalyzeBufferChannel(__unsafe_unretained AELevelsAnalyzer * analyzer, const AudioBufferList * buffer, int channel, UInt32 numberFrames);
 
+/*!
+ * Get peak value
+ *
+ * @param analyzer The analyzer instance
+ */
+double AELevelsAnalyzerGetPeak(__unsafe_unretained AELevelsAnalyzer * analyzer);
+
+/*!
+ * Get everage value
+ *
+ * @param analyzer The analyzer instance
+ */
+double AELevelsAnalyzerGetAverage(__unsafe_unretained AELevelsAnalyzer * analyzer);
+
 @property (nonatomic, readonly) double peak; //!< Retrieve the peak value, in decibels
 @property (nonatomic, readonly) double average; //!< Retrieve the average value, in decibels
 
