@@ -100,6 +100,7 @@ void AEAudioFileRecorderModuleBeginRecording(__unsafe_unretained AEAudioFileReco
 - (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(AEAudioFileRecorderModuleCompletionBlock _Nullable)block;
 
 @property (nonatomic, strong, readonly) NSString * _Nonnull path; //!< Path to the output file
+@property (nonatomic) BOOL multiSource; //!< Mix output from multiple AEModuleProcess calls per time-interval (as determined by audio timestamp's mHostTime field)
 @property (nonatomic, readonly) int numberOfChannels; //!< Number of channels that will be recorded
 @property (nonatomic, readonly) BOOL recording; //!< Whether recording is in progress
 @property (nonatomic, readonly) AESeconds recordedTime; //!< Current recording length, in seconds

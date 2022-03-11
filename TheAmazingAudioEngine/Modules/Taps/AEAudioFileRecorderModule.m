@@ -24,12 +24,16 @@
     AEHostTicks    _stopTime;
     BOOL           _complete;
     UInt32         _recordedFrames;
+    AEHostTicks    _lastTimestamp;
+    AudioBufferList * _multiSourceMixBuffer;
+    BOOL           _hasBeenStopped;
 }
 @property (nonatomic) AEAudioFileType type;
 @property (nonatomic, readwrite) int numberOfChannels;
 @property (nonatomic, readwrite) BOOL recording;
 @property (nonatomic, strong, readwrite) NSString * path;
 @property (nonatomic, strong) AEMainThreadEndpoint * stopRecordingNotificationEndpoint;
+@property (nonatomic, strong) NSTimer * stopTimeout;
 @end
 
 @implementation AEAudioFileRecorderModule
@@ -63,6 +67,20 @@
     if ( _audioFile ) {
         [self finishWriting];
     }
+    if ( _multiSourceMixBuffer ) {
+        AEAudioBufferListFree(_multiSourceMixBuffer);
+    }
+    if ( self.stopTimeout ) {
+        [self.stopTimeout invalidate];
+    }
+}
+
+- (void)setMultiSource:(BOOL)multiSource {
+    if ( _multiSource == multiSource ) return;
+    _multiSource = multiSource;
+    if ( _multiSource && !_multiSourceMixBuffer ) {
+        _multiSourceMixBuffer = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(self.numberOfChannels, 0), AEBufferStackMaxFramesPerSlice);
+    }
 }
 
 - (void)setRenderer:(AERenderer *)renderer {
@@ -95,15 +113,28 @@ void AEAudioFileRecorderModuleBeginRecording(__unsafe_unretained AEAudioFileReco
 }
 
 - (void)stopRecordingAtTime:(AEHostTicks)time completionBlock:(AEAudioFileRecorderModuleCompletionBlock)block {
-    if ( time ) {
+    if ( _hasBeenStopped ) return;
+    _hasBeenStopped = YES;
+    
+    if ( time && _lastTimestamp > AECurrentTimeInHostTicks()-AEHostTicksFromSeconds(0.5) ) {
         // Stop after a delay
         __weak typeof(self) weakSelf = self;
         self.stopRecordingNotificationEndpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(void * _Nullable data, size_t length) {
+            [weakSelf.stopTimeout invalidate];
+            weakSelf.stopTimeout = nil;
             weakSelf.stopRecordingNotificationEndpoint = nil;
             [weakSelf finishWriting];
             weakSelf.recording = NO;
             if ( block ) block();
         } bufferCapacity:32];
+        
+        self.stopTimeout = [NSTimer scheduledTimerWithTimeInterval:0.25 repeats:NO block:^(NSTimer * timer) {
+            weakSelf.stopTimeout = nil;
+            weakSelf.stopRecordingNotificationEndpoint = nil;
+            [weakSelf finishWriting];
+            weakSelf.recording = NO;
+            if ( block ) block();
+        }];
         
         atomic_thread_fence(memory_order_release);
         _stopTime = time;
@@ -119,8 +150,7 @@ void AEAudioFileRecorderModuleBeginRecording(__unsafe_unretained AEAudioFileReco
     }
 }
 
-static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileRecorderModule * THIS,
-                                        const AERenderContext * _Nonnull context) {
+static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileRecorderModule * THIS, const AERenderContext * _Nonnull context) {
     
     if ( !os_unfair_lock_trylock(&THIS->_audioFileMutex) ) {
         return;
@@ -148,6 +178,8 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
         return;
     }
     
+    AEHostTicks previousTimestamp = THIS->_lastTimestamp;
+    THIS->_lastTimestamp = now;
     THIS->_startTime = 0;
     
     const AudioBufferList * abl = AEBufferStackGet(context->stack, 0);
@@ -188,12 +220,41 @@ static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileReco
         frames -= truncateFrames;
     }
     
-    AECheckOSStatus(ExtAudioFileWriteAsync(THIS->_audioFile, frames, buffer), "ExtAudioFileWriteAsync");
-    THIS->_recordedFrames += frames;
-    
-    if ( stopTime && stopTime < hostTimeAtBufferEnd ) {
-        THIS->_complete = YES;
-        AEMainThreadEndpointSend(THIS->_stopRecordingNotificationEndpoint, NULL, 0);
+    if ( THIS->_multiSource && previousTimestamp == now ) {
+        // Additional invocation in same time interval: Mix in current buffer
+        if ( frames != AEAudioBufferListGetLength(THIS->_multiSourceMixBuffer, NULL) ) {
+            #ifdef DEBUG
+            if ( AERateLimit() ) NSLog(@"Warning: Buffer length mismatch in %s: %d != %d", __FUNCTION__, frames, AEAudioBufferListGetLength(THIS->_multiSourceMixBuffer, NULL));
+            #endif
+            if ( frames < AEAudioBufferListGetLength(THIS->_multiSourceMixBuffer, NULL) ) {
+                AEAudioBufferListSetLength(THIS->_multiSourceMixBuffer, frames);
+            }
+        }
+        AEDSPMix(THIS->_multiSourceMixBuffer, abl, 1, 1, NO, frames, THIS->_multiSourceMixBuffer);
+        
+    } else if ( THIS->_multiSource ) {
+        // New time interval; write out last interval
+        if ( previousTimestamp ) {
+            UInt32 recordFrames = AEAudioBufferListGetLength(THIS->_multiSourceMixBuffer, NULL);
+            AECheckOSStatus(ExtAudioFileWriteAsync(THIS->_audioFile, recordFrames, THIS->_multiSourceMixBuffer), "ExtAudioFileWriteAsync");
+            THIS->_recordedFrames += recordFrames;
+            if ( stopTime && stopTime < previousTimestamp + AEHostTicksFromSeconds(((double)recordFrames+0.5) / context->sampleRate) ) {
+                THIS->_complete = YES;
+                AEMainThreadEndpointSend(THIS->_stopRecordingNotificationEndpoint, NULL, 0);
+            }
+        }
+        
+        // Save new frames to mix buffer
+        AEAudioBufferListSetLength(THIS->_multiSourceMixBuffer, frames);
+        AEAudioBufferListCopyContents(THIS->_multiSourceMixBuffer, buffer, 0, 0, frames);
+        
+    } else {
+        AECheckOSStatus(ExtAudioFileWriteAsync(THIS->_audioFile, frames, buffer), "ExtAudioFileWriteAsync");
+        THIS->_recordedFrames += frames;
+        if ( stopTime && stopTime < hostTimeAtBufferEnd ) {
+            THIS->_complete = YES;
+            AEMainThreadEndpointSend(THIS->_stopRecordingNotificationEndpoint, NULL, 0);
+        }
     }
     
     os_unfair_lock_unlock(&THIS->_audioFileMutex);
