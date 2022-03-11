@@ -338,7 +338,6 @@ void AEManagedValueCommitPendingUpdates() {
     // Finish atomic update
     if ( pthread_rwlock_tryrdlock(&__atomicUpdateMutex) == 0 ) {
         __atomicUpdateWaitingForCommit = NO;
-        pthread_rwlock_unlock(&__atomicUpdateMutex);
     } else {
         // Still in the middle of an atomic update
         return;
@@ -359,6 +358,8 @@ void AEManagedValueCommitPendingUpdates() {
         }
         os_unfair_lock_unlock(&__pendingInstancesMutex);
     }
+    
+    pthread_rwlock_unlock(&__atomicUpdateMutex);
 }
 
 void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
