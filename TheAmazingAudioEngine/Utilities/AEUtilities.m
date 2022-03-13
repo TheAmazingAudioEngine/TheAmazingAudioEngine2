@@ -119,6 +119,11 @@ ExtAudioFileRef AEExtAudioFileCreate(NSURL * url, AEAudioFileType fileType, doub
         // AAC encoding in M4A container
         // Get the output audio description for encoding AAC
         asbd.mFormatID = kAudioFormatMPEG4AAC;
+        
+        if ( asbd.mSampleRate > 48000.0 ) {
+            asbd.mSampleRate = 48000.0;
+        }
+        
         UInt32 size = sizeof(asbd);
         OSStatus status = AudioFormatGetProperty(kAudioFormatProperty_FormatInfo, 0, NULL, &size, &asbd);
         if ( !AECheckOSStatus(status, "AudioFormatGetProperty(kAudioFormatProperty_FormatInfo") ) {
