@@ -15,6 +15,7 @@
 #import <Accelerate/Accelerate.h>
 
 const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
+static const UInt32 kFramesPerSlice = 1024;
 
 @interface AEAudioFileOutput ()
 @property (nonatomic, readwrite) double sampleRate;
@@ -82,9 +83,7 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         
         // Allocate render buffer
-        AudioBufferList * abl
-            = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(self.numberOfChannels, self.sampleRate),
-                                                AEBufferStackMaxFramesPerSlice);
+        AudioBufferList * abl = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(self.numberOfChannels, self.sampleRate), kFramesPerSlice);
         
         // Run for frame count
         UInt32 remainingFrames = round(duration * self.sampleRate);
@@ -92,7 +91,7 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
         UInt32 remainingDecayFrames = 10 * self.sampleRate;
         OSStatus status = noErr;
         while ( 1 ) {
-            UInt32 frames = MIN(remainingFrames ? remainingFrames : waitForSilence ? MIN(512, remainingDecayFrames) : 0, AEBufferStackMaxFramesPerSlice);
+            UInt32 frames = MIN(remainingFrames ? remainingFrames : waitForSilence ? MIN(512, remainingDecayFrames) : 0, kFramesPerSlice);
             if ( frames == 0 ) break;
             
             AEAudioBufferListSetLength(abl, frames);
@@ -146,20 +145,18 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         
         // Allocate render buffer
-        AudioBufferList * abl
-            = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(self.numberOfChannels, self.sampleRate),
-                                                AEBufferStackMaxFramesPerSlice);
+        AudioBufferList * abl = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(self.numberOfChannels, self.sampleRate), kFramesPerSlice);
         
         // Run while not stopped by condition
         OSStatus status = noErr;
         while ( !conditionBlock() ) {
-            UInt32 frames = AEBufferStackMaxFramesPerSlice;
+            UInt32 frames = kFramesPerSlice;
             
             // Run renderer
-            AERendererRun(self.renderer, abl, AEBufferStackMaxFramesPerSlice, &self->_timestamp);
+            AERendererRun(self.renderer, abl, kFramesPerSlice, &self->_timestamp);
             
             // Write to file
-            if ( ![self writeFrames:AEBufferStackMaxFramesPerSlice fromBuffer:abl] ) {
+            if ( ![self writeFrames:kFramesPerSlice fromBuffer:abl] ) {
                 break;
             }
             
