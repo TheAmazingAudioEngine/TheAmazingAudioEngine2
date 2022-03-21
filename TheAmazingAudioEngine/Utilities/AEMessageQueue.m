@@ -97,7 +97,7 @@ typedef struct {
                 NSUInteger argLength;
                 const char * type = [invocation.methodSignature getArgumentTypeAtIndex:i];
                 NSGetSizeAndAlignment(type, &argLength, NULL);
-                NSAssert(argLength == (arg->isValue ? arg->length : sizeof(void*)), @"AEMessageQueue: Incorrect argument size for selector %s argument %d", selectorString, i-2);
+                assert(argLength == (arg->isValue ? arg->length : sizeof(void*)));
                 
                 // Assign value
                 const void * data = arguments + sizeof(main_thread_message_arg_t);
