@@ -29,7 +29,7 @@ static StereoPair StereoPairMakeMono(float sample) { return (StereoPair) {{sampl
 
 - (void)testGain {
     AudioBufferList * abl = [self bufferWithChannels:2];
-    AEDSPApplyGain(abl, 0.5, kFrames);
+    AEDSPApplyGain(abl, 0.5, kFrames, abl);
     
     __block float position = 0;
     NSString * message = nil;
@@ -45,7 +45,7 @@ static StereoPair StereoPairMakeMono(float sample) { return (StereoPair) {{sampl
 - (void)testRamp {
     AudioBufferList * abl = [self bufferWithChannels:2];
     float start = 1.0;
-    AEDSPApplyRamp(abl, &start, -1.0/kFrames, kFrames);
+    AEDSPApplyRamp(abl, &start, -1.0/kFrames, kFrames, abl);
     
     __block float position = 0;
     NSString * message = nil;
@@ -62,7 +62,7 @@ static StereoPair StereoPairMakeMono(float sample) { return (StereoPair) {{sampl
 - (void)testEqualPowerRamp {
     AudioBufferList * abl = [self bufferWithChannels:2];
     float start = 1.0;
-    AEDSPApplyEqualPowerRamp(abl, &start, -1.0/kFrames, kFrames, NULL);
+    AEDSPApplyEqualPowerRamp(abl, &start, -1.0/kFrames, kFrames, NULL, abl);
     
     __block float position = 0;
     NSString * message = nil;
@@ -79,7 +79,7 @@ static StereoPair StereoPairMakeMono(float sample) { return (StereoPair) {{sampl
 - (void)testGainSmoothed {
     AudioBufferList * abl = [self bufferWithChannels:2];
     float currentGain = 1.0;
-    AEDSPApplyGainSmoothed(abl, 0.0, &currentGain, kFrames);
+    AEDSPApplyGainSmoothed(abl, 0.0, &currentGain, kFrames, abl);
     
     XCTAssertEqual(currentGain, 0.0);
     
@@ -98,7 +98,7 @@ static StereoPair StereoPairMakeMono(float sample) { return (StereoPair) {{sampl
 - (void)testGainSmoothedMono {
     AudioBufferList * abl = [self bufferWithChannels:1];
     float currentGain = 1.0;
-    AEDSPApplyGainSmoothedMono(abl->mBuffers[0].mData, 0.0, &currentGain, kFrames);
+    AEDSPApplyGainSmoothedMono(abl->mBuffers[0].mData, 0.0, &currentGain, kFrames, abl->mBuffers[0].mData);
     
     XCTAssertEqual(currentGain, 0.0);
     
@@ -118,7 +118,7 @@ static StereoPair StereoPairMakeMono(float sample) { return (StereoPair) {{sampl
     AudioBufferList * abl = [self bufferWithChannels:2];
     float currentVolume = 1.0;
     float currentBalance = 0.0;
-    AEDSPApplyVolumeAndBalance(abl, 0.5, &currentVolume, -1.0, &currentBalance, kFrames);
+    AEDSPApplyVolumeAndBalance(abl, 0.5, &currentVolume, -1.0, &currentBalance, kFrames, abl);
     
     XCTAssertEqual(currentVolume, 0.5f);
     XCTAssertEqual(currentBalance, -1.0f);
