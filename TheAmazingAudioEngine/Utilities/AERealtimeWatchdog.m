@@ -26,11 +26,22 @@
 //
 
 #import "AERealtimeWatchdog.h"
+#import <objc/runtime.h>
+
+static BOOL __paused = NO;
+
+void AERealtimeWatchdogPause(void) {
+    __paused = YES;
+}
+
+void AERealtimeWatchdogResume(void) {
+    __paused = NO;
+}
+
 #ifdef REALTIME_WATCHDOG_ENABLED
 
 #import <dlfcn.h>
 #import <stdio.h>
-#import <objc/runtime.h>
 #import <pthread.h>
 #import <string.h>
 #include <sys/socket.h>
@@ -38,8 +49,6 @@
 
 // Uncomment the following to report every time we spot something bad, not just the first time
 //#define REPORT_EVERY_INFRACTION
-
-
 
 
 static void AERealtimeWatchdogUnsafeActivityWarning(const char * activity) {
@@ -76,9 +85,6 @@ BOOL AERealtimeWatchdogIsOnRealtimeThread(void) {
     
     return NO;
 }
-
-
-
 
 
 #pragma mark - Overrides
@@ -145,7 +151,7 @@ typedef long (*dispatch_semaphore_wait_t)(dispatch_semaphore_t dsema, dispatch_t
     dispatch_once(&onceToken, ^{                                \
         funcptr = (name##_t) dlsym(RTLD_NEXT, #name);        \
     }); \
-    if ( AERealtimeWatchdogIsOnRealtimeThread() ) AERealtimeWatchdogUnsafeActivityWarning(msg);
+    if ( !__paused && AERealtimeWatchdogIsOnRealtimeThread() ) AERealtimeWatchdogUnsafeActivityWarning(msg);
 
 #define CHECK_FUNCTION(name) CHECK_FUNCTION_MSG(name, #name)
 

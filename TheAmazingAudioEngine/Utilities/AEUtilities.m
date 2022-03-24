@@ -26,6 +26,7 @@
 
 #import "AEUtilities.h"
 #import "AETime.h"
+#import "AERealtimeWatchdog.h"
 
 AudioComponentDescription AEAudioComponentDescriptionMake(OSType manufacturer, OSType type, OSType subtype) {
     AudioComponentDescription description;
@@ -97,12 +98,14 @@ BOOL AERateLimit(void) {
 
 void AEError(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line) {
     if ( AERateLimit() ) {
+        AERealtimeWatchdogPause();
         int fourCC = CFSwapInt32HostToBig(result);
         if ( isascii(((char*)&fourCC)[0]) && isascii(((char*)&fourCC)[1]) && isascii(((char*)&fourCC)[2]) ) {
             NSLog(@"%s:%d: %s: '%4.4s' (%d)", file, line, operation, (char*)&fourCC, (int)result);
         } else {
             NSLog(@"%s:%d: %s: %d", file, line, operation, (int)result);
         }
+        AERealtimeWatchdogResume();
     }
 }
 
