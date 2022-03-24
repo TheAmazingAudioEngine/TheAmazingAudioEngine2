@@ -33,7 +33,7 @@
 #import <AVFoundation/AVFoundation.h>
 
 @interface AEAudioUnitInputModule ()
-@property (nonatomic, weak) AEIOAudioUnit * ioUnit;
+@property (nonatomic, unsafe_unretained) AEIOAudioUnit * ioUnit;
 @property (nonatomic, readwrite) int numberOfInputChannels;
 @property (nonatomic, strong) id ioUnitStreamChangeObserverToken;
 @property (nonatomic) BOOL ownsIOUnit;
@@ -55,7 +55,7 @@
     if ( audioUnit ) {
         self.ioUnit = audioUnit;
     } else {
-        // We need to add a bridging retain, because the property is weak
+        // We need to add a bridging retain, because the property is unsafe_unretained
         self.ioUnit = (__bridge AEIOAudioUnit*) CFBridgingRetain([AEIOAudioUnit new]);
         self.ioUnit.inputEnabled = YES;
         self.ioUnit.sampleRate = self.renderer.sampleRate;
