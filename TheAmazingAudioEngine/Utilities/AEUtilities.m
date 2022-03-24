@@ -89,7 +89,9 @@ BOOL AERateLimit(void) {
     }
     if ( ++messageCount >= 10 ) {
         if ( messageCount == 10 ) {
+            AERealtimeWatchdogPause();
             NSLog(@"TAAE: Suppressing some messages");
+            AERealtimeWatchdogResume();
         }
         return NO;
     }

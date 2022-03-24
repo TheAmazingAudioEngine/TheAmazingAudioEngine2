@@ -35,6 +35,7 @@
 #import "AEAudioBufferListUtilities.h"
 #import "AEAudioUnitInputModule.h"
 #import <AVFoundation/AVFoundation.h>
+#import "AERealtimeWatchdog.h"
 #import <pthread.h>
 
 NSString * const AEAudioUnitOutputDidChangeSampleRateNotification = @"AEAudioUnitOutputDidChangeSampleRateNotification";
@@ -254,11 +255,13 @@ AudioUnit _Nullable AEAudioUnitOutputGetAudioUnit(__unsafe_unretained AEAudioUni
 static void AEAudioUnitOutputReportRenderTime(__unsafe_unretained AEAudioUnitOutput * THIS,
                                               AESeconds renderTime,
                                               AESeconds bufferDuration) {
+    
     AESeconds now = AECurrentTimeInSeconds();
     if ( !THIS->_firstReportTime ) THIS->_firstReportTime = now;
     
     if ( now - THIS->_firstReportTime > kRenderBudgetWarningInitialDelay
             && renderTime > bufferDuration * kRenderBudgetWarningThreshold ) {
+        AERealtimeWatchdogPause();
         if ( @available(iOS 12, *) ) {
             os_signpost_event_emit(THIS->_log, OS_SIGNPOST_ID_EXCLUSIVE, "Overrun");
         }
@@ -266,6 +269,7 @@ static void AEAudioUnitOutputReportRenderTime(__unsafe_unretained AEAudioUnitOut
             NSLog(@"Warning: render took %lfs, %0.4lf%% of buffer duration.",
                   renderTime, (renderTime / bufferDuration) * 100.0);
         });
+        AERealtimeWatchdogResume();
     }
     
     if ( kRenderTimeReportInterval > 0 ) {
@@ -278,11 +282,13 @@ static void AEAudioUnitOutputReportRenderTime(__unsafe_unretained AEAudioUnitOut
             AESeconds average = THIS->_averageRenderDurationAccumulator / THIS->_averageRenderDurationSampleCount;
             AESeconds maximum = THIS->_maximumRenderDuration;
             
+            AERealtimeWatchdogPause();
             dispatch_async(dispatch_get_main_queue(), ^{
                 AESeconds bufferDuration = THIS.ioUnit.IOBufferDuration;
                 NSLog(@"Render time report: %lfs/%0.4lf%% average, %lfs/%0.4lf%% maximum",
                       average, (average/bufferDuration)*100.0, maximum, (maximum/bufferDuration)*100.0);
             });
+            AERealtimeWatchdogResume();
             
             THIS->_lastReportTime = now;
             THIS->_averageRenderDurationAccumulator = 0;
