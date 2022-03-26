@@ -34,6 +34,8 @@ NSString * const AERendererDidChangeNumberOfOutputChannelsNotification = @"AERen
 
 @interface AERenderer () {
     UInt32 _sampleTime;
+    AEHostTicks _lastRenderTimestamp;
+    AEHostTicks _nextRenderTimestamp;
 }
 @property (nonatomic, strong) AEManagedValue * blockValue;
 @property (nonatomic, readwrite) AEManagedValue * stackValue;
@@ -53,8 +55,9 @@ NSString * const AERendererDidChangeNumberOfOutputChannelsNotification = @"AERen
     return self;
 }
 
-void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList * bufferList, UInt32 frames,
-                   const AudioTimeStamp * timestamp) {
+void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList * bufferList, UInt32 frames, const AudioTimeStamp * timestamp) {
+    THIS->_lastRenderTimestamp = timestamp->mHostTime;
+    THIS->_nextRenderTimestamp = timestamp->mHostTime + AEHostTicksFromSeconds(frames/THIS->_sampleRate);
     
     AEBufferStack * stack = (AEBufferStack *)AEManagedValueGetValue(THIS->_stackValue);
     
@@ -87,6 +90,14 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList 
         
         block(&context);
     }
+}
+
+AEHostTicks AERendererGetLastRenderTimestamp(__unsafe_unretained AERenderer * THIS) {
+    return THIS->_lastRenderTimestamp;
+}
+
+AEHostTicks AERendererGetNextRenderTimestamp(__unsafe_unretained AERenderer * THIS) {
+    return THIS->_nextRenderTimestamp;
 }
 
 - (void)setBlock:(AERenderLoopBlock)block {

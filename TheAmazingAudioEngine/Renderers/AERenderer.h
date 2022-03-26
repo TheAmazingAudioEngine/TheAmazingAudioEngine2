@@ -31,6 +31,7 @@ extern "C" {
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import "AERenderContext.h"
+#import "AETime.h"
 
 /*!
  * Render loop block
@@ -88,6 +89,17 @@ void AERendererRun(__unsafe_unretained AERenderer * _Nonnull renderer,
                    const AudioBufferList * _Nonnull bufferList,
                    UInt32 frames,
                    const AudioTimeStamp * _Nonnull timestamp);
+
+/*!
+ * Get timestamp corresponding to the start of the previous render interval
+ */
+AEHostTicks AERendererGetLastRenderTimestamp(__unsafe_unretained AERenderer * _Nonnull renderer);
+
+
+/*!
+ * Get timestamp corresponding to the start of the next render interval
+ */
+AEHostTicks AERendererGetNextRenderTimestamp(__unsafe_unretained AERenderer * _Nonnull renderer);
 
 @property (nonatomic, copy) AERenderLoopBlock _Nullable block; //!< The output loop block. Assignment is thread-safe.
 @property (nonatomic) double sampleRate; //!< The sample rate
