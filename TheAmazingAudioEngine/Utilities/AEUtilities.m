@@ -27,6 +27,7 @@
 #import "AEUtilities.h"
 #import "AETime.h"
 #import "AERealtimeWatchdog.h"
+#import <pthread.h>
 
 AudioComponentDescription AEAudioComponentDescriptionMake(OSType manufacturer, OSType type, OSType subtype) {
     AudioComponentDescription description;
@@ -99,6 +100,12 @@ BOOL AERateLimit(void) {
 }
 
 void AEError(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line) {
+//#ifndef DEBUG
+    if ( pthread_self() == AERealtimeThreadIdentifier ) {
+        // Don't do error logging on audio thread
+        return;
+    }
+//#endif
     if ( AERateLimit() ) {
         AERealtimeWatchdogPause();
         int fourCC = CFSwapInt32HostToBig(result);
