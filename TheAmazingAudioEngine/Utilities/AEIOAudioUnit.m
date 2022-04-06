@@ -409,11 +409,11 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 
 - (void)setInputEnabled:(BOOL)inputEnabled {
     if ( _inputEnabled == inputEnabled ) return;
-    _inputEnabled = inputEnabled;
+    
     if ( _audioUnit ) {
         BOOL wasRunning = self.running;
         AECheckOSStatus(AudioUnitUninitialize(_audioUnit), "AudioUnitUninitialize");
-        UInt32 flag = _inputEnabled ? 1 : 0;
+        UInt32 flag = inputEnabled ? 1 : 0;
         OSStatus result =
             AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_EnableIO, kAudioUnitScope_Input, 1, &flag, sizeof(flag));
         if ( AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_EnableIO)") ) {
@@ -423,6 +423,8 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
             }
         }
     }
+    
+    _inputEnabled = inputEnabled;
 }
 
 - (void)setInputGain:(double)inputGain {
