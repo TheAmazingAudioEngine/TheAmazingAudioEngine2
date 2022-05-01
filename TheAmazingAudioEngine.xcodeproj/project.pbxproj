@@ -377,7 +377,7 @@
 		4C94E2A41CAE6AFF006EB497 /* AEAudioFileRecorderModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEAudioFileRecorderModule.m; sourceTree = "<group>"; };
 		4C9F0F201CB1E9FC0032903E /* AEIOAudioUnit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEIOAudioUnit.h; sourceTree = "<group>"; };
 		4C9F0F211CB1E9FC0032903E /* AEIOAudioUnit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEIOAudioUnit.m; sourceTree = "<group>"; };
-		4C9F0F741CB265F90032903E /* libTheAmazingAudioEngine OS X.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTheAmazingAudioEngine OS X.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4C9F0F741CB265F90032903E /* libTheAmazingAudioEngine macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTheAmazingAudioEngine macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C9F0FBC1CB269C30032903E /* libTheAmazingAudioEngine tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTheAmazingAudioEngine tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C9F0FBD1CB339180032903E /* AEManagedValueTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEManagedValueTests.m; sourceTree = "<group>"; };
 		4CB2267422DC8C180064651A /* AEBlockModule.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AEBlockModule.h; sourceTree = "<group>"; };
@@ -535,7 +535,7 @@
 			children = (
 				4CDCAC981CA25A29008AAEF1 /* libTheAmazingAudioEngine.a */,
 				4CDCACA81CA25A6E008AAEF1 /* Tests.xctest */,
-				4C9F0F741CB265F90032903E /* libTheAmazingAudioEngine OS X.a */,
+				4C9F0F741CB265F90032903E /* libTheAmazingAudioEngine macOS.a */,
 				4C9F0FBC1CB269C30032903E /* libTheAmazingAudioEngine tvOS.a */,
 			);
 			name = Products;
@@ -873,9 +873,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		4C9F0F2B1CB265F90032903E /* TheAmazingAudioEngine OS X */ = {
+		4C9F0F2B1CB265F90032903E /* TheAmazingAudioEngine macOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4C9F0F711CB265F90032903E /* Build configuration list for PBXNativeTarget "TheAmazingAudioEngine OS X" */;
+			buildConfigurationList = 4C9F0F711CB265F90032903E /* Build configuration list for PBXNativeTarget "TheAmazingAudioEngine macOS" */;
 			buildPhases = (
 				4C9F0F2C1CB265F90032903E /* Sources */,
 				4C9F0F4D1CB265F90032903E /* Frameworks */,
@@ -886,9 +886,9 @@
 			);
 			dependencies = (
 			);
-			name = "TheAmazingAudioEngine OS X";
+			name = "TheAmazingAudioEngine macOS";
 			productName = TheAmazingAudioEngine;
-			productReference = 4C9F0F741CB265F90032903E /* libTheAmazingAudioEngine OS X.a */;
+			productReference = 4C9F0F741CB265F90032903E /* libTheAmazingAudioEngine macOS.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		4C9F0F751CB269C30032903E /* TheAmazingAudioEngine tvOS */ = {
@@ -976,7 +976,7 @@
 			projectRoot = "";
 			targets = (
 				4CDCAC971CA25A29008AAEF1 /* TheAmazingAudioEngine */,
-				4C9F0F2B1CB265F90032903E /* TheAmazingAudioEngine OS X */,
+				4C9F0F2B1CB265F90032903E /* TheAmazingAudioEngine macOS */,
 				4C9F0F751CB269C30032903E /* TheAmazingAudioEngine tvOS */,
 				4CDCACA71CA25A6E008AAEF1 /* Tests */,
 			);
@@ -1272,6 +1272,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PUBLIC_HEADERS_FOLDER_PATH = "$(PROJECT_NAME)";
@@ -1323,6 +1324,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PUBLIC_HEADERS_FOLDER_PATH = "$(PROJECT_NAME)";
 				SDKROOT = iphoneos;
@@ -1369,7 +1371,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4C9F0F711CB265F90032903E /* Build configuration list for PBXNativeTarget "TheAmazingAudioEngine OS X" */ = {
+		4C9F0F711CB265F90032903E /* Build configuration list for PBXNativeTarget "TheAmazingAudioEngine macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4C9F0F721CB265F90032903E /* Debug */,

@@ -15,8 +15,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4C9F0F2B1CB265F90032903E"
-               BuildableName = "libTheAmazingAudioEngine OS X.a"
-               BlueprintName = "TheAmazingAudioEngine OS X"
+               BuildableName = "libTheAmazingAudioEngine macOS.a"
+               BlueprintName = "TheAmazingAudioEngine macOS"
                ReferencedContainer = "container:TheAmazingAudioEngine.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -31,8 +31,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4C9F0F2B1CB265F90032903E"
-            BuildableName = "libTheAmazingAudioEngine OS X.a"
-            BlueprintName = "TheAmazingAudioEngine OS X"
+            BuildableName = "libTheAmazingAudioEngine macOS.a"
+            BlueprintName = "TheAmazingAudioEngine macOS"
             ReferencedContainer = "container:TheAmazingAudioEngine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -63,8 +63,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4C9F0F2B1CB265F90032903E"
-            BuildableName = "libTheAmazingAudioEngine OS X.a"
-            BlueprintName = "TheAmazingAudioEngine OS X"
+            BuildableName = "libTheAmazingAudioEngine macOS.a"
+            BlueprintName = "TheAmazingAudioEngine macOS"
             ReferencedContainer = "container:TheAmazingAudioEngine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -79,8 +79,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4C9F0F2B1CB265F90032903E"
-            BuildableName = "libTheAmazingAudioEngine OS X.a"
-            BlueprintName = "TheAmazingAudioEngine OS X"
+            BuildableName = "libTheAmazingAudioEngine macOS.a"
+            BlueprintName = "TheAmazingAudioEngine macOS"
             ReferencedContainer = "container:TheAmazingAudioEngine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
