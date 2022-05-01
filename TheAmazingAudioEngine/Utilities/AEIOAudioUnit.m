@@ -39,7 +39,9 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
 NSString * const AEIOAudioUnitSessionInterruptionBeganNotification = @"AEIOAudioUnitSessionInterruptionBeganNotification";
 NSString * const AEIOAudioUnitSessionInterruptionEndedNotification = @"AEIOAudioUnitSessionInterruptionEndedNotification";
 
+#if TARGET_OS_IPHONE
 static const double kAVAudioSession0dBGain = 0.75;
+#endif
 
 @interface AEIOAudioUnit ()
 @property (nonatomic, strong) AEManagedValue * renderBlockValue;
