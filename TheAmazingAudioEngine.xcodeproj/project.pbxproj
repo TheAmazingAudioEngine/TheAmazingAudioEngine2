@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		223660501D96E34800CFA5B8 /* AENewTimePitchModuleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2236604F1D96E34800CFA5B8 /* AENewTimePitchModuleTests.m */; };
 		3071AEFF1DC970C500A8C7E7 /* AEAudioPasteboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CE5A98C1D6C01800034D7F7 /* AEAudioPasteboard.m */; };
+		4C0F3249283DC60F00CE4D97 /* AEAudioPasteboard.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CE5A98C1D6C01800034D7F7 /* AEAudioPasteboard.m */; };
+		4C0F324A283DC61900CE4D97 /* AEAudioPasteboard.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CE5A98B1D6C01800034D7F7 /* AEAudioPasteboard.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C3183101CDDEFDE0085634F /* AEMixerModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C31830E1CDDEFDE0085634F /* AEMixerModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C3183111CDDEFDE0085634F /* AEMixerModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C31830E1CDDEFDE0085634F /* AEMixerModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C3183121CDDEFDE0085634F /* AEMixerModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C31830E1CDDEFDE0085634F /* AEMixerModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -715,6 +717,7 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4C0F324A283DC61900CE4D97 /* AEAudioPasteboard.h in Headers */,
 				4CB2F3001D49ABC6008F745F /* AETypes.h in Headers */,
 				4C9F0F521CB265F90032903E /* AEDelayModule.h in Headers */,
 				4C9F0F531CB265F90032903E /* AEUtilities.h in Headers */,
@@ -1041,6 +1044,7 @@
 				4C9F0F491CB265F90032903E /* TPCircularBuffer.c in Sources */,
 				4C7756A41CD2E5E3004415A2 /* AECircularBuffer.m in Sources */,
 				4C7756711CCB42AA004415A2 /* AESubrendererModule.m in Sources */,
+				4C0F3249283DC60F00CE4D97 /* AEAudioPasteboard.m in Sources */,
 				4C9F0F4B1CB265F90032903E /* AEAudioUnitModule.m in Sources */,
 				4CE5F4D21CD3169C00322F03 /* AEAudioThreadEndpoint.m in Sources */,
 				4C7F3DD31FCFCDE300127BE6 /* AELevelsAnalyzer.m in Sources */,

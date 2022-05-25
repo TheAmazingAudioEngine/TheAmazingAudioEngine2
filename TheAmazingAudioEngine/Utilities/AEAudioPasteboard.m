@@ -7,11 +7,16 @@
 //
 
 #import "AEAudioPasteboard.h"
-#import <MobileCoreServices/UTCoreTypes.h>
 #import "AEUtilities.h"
 #import "AEAudioBufferListUtilities.h"
-#import <UIKit/UIKit.h>
 #import <AVFoundation/AVFoundation.h>
+
+#if TARGET_OS_IPHONE
+#import <MobileCoreServices/UTCoreTypes.h>
+#import <UIKit/UIKit.h>
+#else
+#import <AppKit/AppKit.h>
+#endif
 
 NSString * const AEAudioPasteboardInfoNumberOfChannelsKey = @"channels";
 NSString * const AEAudioPasteboardInfoLengthInFramesKey = @"length";
@@ -36,6 +41,7 @@ typedef struct {
 @implementation AEAudioPasteboard
 
 + (void)load {
+#if TARGET_OS_IPHONE
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
         // UIPasteboard does not send its change notification when an app is in the background. So we need to
@@ -43,10 +49,10 @@ typedef struct {
         __block NSInteger lastPasteboardChange;
         NSNotificationCenter * nc = [NSNotificationCenter defaultCenter];
         [nc addObserverForName:UIApplicationWillResignActiveNotification object:nil queue:nil usingBlock:^(NSNotification * note) {
-            lastPasteboardChange = [UIPasteboard generalPasteboard].changeCount;
+            lastPasteboardChange = UIPasteboard.generalPasteboard.changeCount;
         }];
         [nc addObserverForName:UIApplicationWillEnterForegroundNotification object:nil queue:nil usingBlock:^(NSNotification * note) {
-            if ( [UIPasteboard generalPasteboard].changeCount != lastPasteboardChange ) {
+            if ( UIPasteboard.generalPasteboard.changeCount != lastPasteboardChange ) {
                 [[NSNotificationCenter defaultCenter] postNotificationName:AEAudioPasteboardChangedNotification object:nil];
             }
         }];
@@ -56,6 +62,7 @@ typedef struct {
             [[NSNotificationCenter defaultCenter] postNotificationName:AEAudioPasteboardChangedNotification object:nil];
         }];
     });
+#endif
 }
 
 + (void)loadInfoForAudioPasteboardItemWithCompletionBlock:(void (^)(NSDictionary *))block {
@@ -231,7 +238,12 @@ typedef struct {
         
         dispatch_async(dispatch_get_main_queue(), ^{
             // Assign to clipboard
-            [[UIPasteboard generalPasteboard] setData:audioData forPasteboardType:(NSString *)kUTTypeAudio];
+#if TARGET_OS_IPHONE
+            [UIPasteboard.generalPasteboard setData:audioData forPasteboardType:(NSString *)kUTTypeAudio];
+#else
+            [NSPasteboard.generalPasteboard declareTypes:@[(NSString *)kUTTypeAudio] owner:nil];
+            [NSPasteboard.generalPasteboard setData:audioData forType:(NSString *)kUTTypeAudio];
+#endif
             
             completionBlock(nil);
         });
@@ -241,15 +253,26 @@ typedef struct {
 #pragma mark - Helpers
 
 + (NSData *)dataForAudioOnPasteboard {
-    UIPasteboard * pasteboard = [UIPasteboard generalPasteboard];
+#if TARGET_OS_IPHONE
+    UIPasteboard * pasteboard = UIPasteboard.generalPasteboard;
+#else
+    NSPasteboard * pasteboard = NSPasteboard.generalPasteboard;
+#endif
     
     NSArray * supportedTypes = @[(NSString *)kUTTypeAudio, AVFileTypeWAVE, AVFileTypeAIFC, AVFileTypeAIFF, AVFileTypeAppleM4A, AVFileTypeAC3, AVFileTypeMPEGLayer3, AVFileTypeCoreAudioFormat];
     
+#if TARGET_OS_IPHONE
     if ( ![pasteboard containsPasteboardTypes:supportedTypes] ) {
         return NULL;
     }
+#else
+    if ( ![pasteboard canReadItemWithDataConformingToTypes:supportedTypes] ) {
+        return NULL;
+    }
+#endif
     
     for ( NSString * type in supportedTypes ) {
+#if TARGET_OS_IPHONE
         NSIndexSet * itemSet = [pasteboard itemSetWithPasteboardTypes:@[type]];
         if ( itemSet.count > 0 ) {
             NSArray <NSData *> * dataArray = [pasteboard dataForPasteboardType:type inItemSet:itemSet];
@@ -263,6 +286,12 @@ typedef struct {
                 return data;
             }
         }
+#else
+        NSData * data = [pasteboard dataForType:type];
+        if ( data ) {
+            return data;
+        }
+#endif
     }
     
     return NULL;
