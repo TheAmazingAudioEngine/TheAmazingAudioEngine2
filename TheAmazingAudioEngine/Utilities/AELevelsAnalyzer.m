@@ -29,6 +29,7 @@ static const AESeconds kQueryTimeout = 0.5;
     double _sumSquareAccumulator;
     int _sumSquareN;
     float _meanSumSquare;
+    BOOL _nextBufferIsFirst;
 }
 @end
 
@@ -48,6 +49,9 @@ void AELevelsAnalyzerAnalyzeBufferChannel(__unsafe_unretained AELevelsAnalyzer *
 }
 
 static void AELevelsAnalyzerMixAndAnalyzeChannel(__unsafe_unretained AELevelsAnalyzer * THIS, const AudioBufferList * buffer, int channel, UInt32 numberFrames, BOOL first) {
+    first |= THIS->_nextBufferIsFirst;
+    THIS->_nextBufferIsFirst = NO;
+    
     AESeconds now = AECurrentTimeInSeconds();
     if ( now-THIS->_lastQuery > kQueryTimeout ) {
         memset(&THIS->_sumSquareBuffer, 0, sizeof(THIS->_sumSquareBuffer));
@@ -119,6 +123,10 @@ static void AELevelsAnalyzerMixAndAnalyzeChannel(__unsafe_unretained AELevelsAna
     THIS->_meanSumSquare = THIS->_sumSquareAccumulator / THIS->_sumSquareN;
 }
 
+void AELevelsAnalyzerSetNextBufferIsFirst(__unsafe_unretained AELevelsAnalyzer * THIS) {
+    THIS->_nextBufferIsFirst = YES;
+}
+
 double AELevelsAnalyzerGetPeak(__unsafe_unretained AELevelsAnalyzer * THIS) {
     THIS->_lastQuery = AECurrentTimeInSeconds();
     AESeconds sinceLast = THIS->_lastQuery-THIS->_lastAnalysis;
@@ -180,6 +188,11 @@ void AEStereoLevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AEStereoLevelsAnaly
 void AEStereoLevelsAnalyzerMixAndAnalyzeBuffer(__unsafe_unretained AEStereoLevelsAnalyzer * THIS, const AudioBufferList * buffer, UInt32 numberFrames, BOOL first) {
     AELevelsAnalyzerMixAndAnalyzeChannel(THIS->_left, buffer, 0, numberFrames, first);
     AELevelsAnalyzerMixAndAnalyzeChannel(THIS->_right, buffer, !buffer || buffer->mNumberBuffers < 2 ? 0 : 1, numberFrames, first);
+}
+
+void AEStereoLevelsAnalyzerSetNextBufferIsFirst(__unsafe_unretained AEStereoLevelsAnalyzer * THIS) {
+    AELevelsAnalyzerSetNextBufferIsFirst(THIS->_left);
+    AELevelsAnalyzerSetNextBufferIsFirst(THIS->_right);
 }
 
 @end

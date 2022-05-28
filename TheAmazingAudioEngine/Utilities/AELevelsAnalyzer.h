@@ -37,9 +37,19 @@ void AELevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AELevelsAnalyzer * analyz
  * @param analyzer The analyzer instance
  * @param buffer The audio buffer
  * @param numberFrames The length of the audio buffer, in frames
- * @param first Whether this is the first buffer; if NO, subsequent analyses will be mixed additively
+ * @param first Whether this is the first buffer of the current time interval; if NO, subsequent analyses will be mixed additively
  */
 void AELevelsAnalyzerMixAndAnalyzeBuffer(__unsafe_unretained AELevelsAnalyzer * analyzer, const AudioBufferList * buffer, UInt32 numberFrames, BOOL first);
+
+/*!
+ * Mark next buffer as first of time interval, for use with `AELevelsAnalyzerMixAndAnalyzeBuffer`
+ *
+ *  As an alternative to passing YES for the `first` parameter of `AELevelsAnalyzerMixAndAnalyzeBuffer`, use this method mark the next call as the first for the current time interval.
+ *  This will override the next `first` parameter value of the next call to `AELevelsAnalyzerMixAndAnalyzeBuffer`.
+ *
+ * @param analyzer The analyzer instance
+ */
+void AELevelsAnalyzerSetNextBufferIsFirst(__unsafe_unretained AELevelsAnalyzer * analyzer);
 
 /*!
  * Analyze a single buffer channel
@@ -97,6 +107,16 @@ void AEStereoLevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AEStereoLevelsAnaly
  * @param first Whether this is the first buffer; if NO, subsequent analyses will be mixed additively
  */
 void AEStereoLevelsAnalyzerMixAndAnalyzeBuffer(__unsafe_unretained AEStereoLevelsAnalyzer * analyzer, const AudioBufferList * buffer, UInt32 numberFrames, BOOL first);
+
+/*!
+ * Mark next buffer as first of time interval, for use with `AEStereoLevelsAnalyzerMixAndAnalyzeBuffer`
+ *
+ *  As an alternative to passing YES for the `first` parameter of `AEStereoLevelsAnalyzerMixAndAnalyzeBuffer`, use this method mark the next call as the first for the current time interval.
+ *  This will override the next `first` parameter value of the next call to `AEStereoLevelsAnalyzerMixAndAnalyzeBuffer`.
+ *
+ * @param analyzer The analyzer instance
+ */
+void AEStereoLevelsAnalyzerSetNextBufferIsFirst(__unsafe_unretained AEStereoLevelsAnalyzer * analyzer);
 
 @property (nonatomic, strong, readonly) AELevelsAnalyzer * left;
 @property (nonatomic, strong, readonly) AELevelsAnalyzer * right;
