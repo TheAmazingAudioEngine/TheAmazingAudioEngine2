@@ -42,17 +42,27 @@ typedef struct {
 extern AEArgument AEArgumentNone;
 
 /*!
+ * Create an object argument for use with AEMessageQueuePerformSelectorOnMainThread
+ *
+ *  Includes bridged cast to void * to stop the compiler emitting any objc_storeStrong calls.
+ *
+ *  To create a literal structure argument, use AEArgumentStruct;
+ *  to create an argument that points a memory region, use AEArgumentData.
+ *
+ * @param argument The argument value
+ * @return The initialized argument
+ */
+#define AEArgumentObject(argument) \
+    (AEArgument){ YES, &(void*){(__bridge void*)argument}, sizeof(void*) }
+
+/*!
  * Create a scalar argument for use with AEMessageQueuePerformSelectorOnMainThread
  *
  *  For example, to create a literal int argument:
  *
  *      AEArgumentScalar(1);
  *
- *  To create a pointer argument:
- *
- *      __unsafe_unretained MyClass * myPointer;
- *      AEArgumentScalar(myPointer);
- *
+ *  To create an argument that points to an Objective-C object, use AEArgumentObject;
  *  To create a literal structure argument, use AEArgumentStruct;
  *  to create an argument that points a memory region, use AEArgumentData.
  *
