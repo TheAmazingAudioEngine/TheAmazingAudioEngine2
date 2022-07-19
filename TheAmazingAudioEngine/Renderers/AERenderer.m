@@ -56,8 +56,6 @@ NSString * const AERendererDidChangeNumberOfOutputChannelsNotification = @"AERen
 }
 
 void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList * bufferList, UInt32 frames, const AudioTimeStamp * timestamp) {
-    THIS->_lastRenderTimestamp = timestamp->mHostTime;
-    THIS->_nextRenderTimestamp = timestamp->mHostTime + AEHostTicksFromSeconds(frames/THIS->_sampleRate);
     
     AEBufferStack * stack = (AEBufferStack *)AEManagedValueGetValue(THIS->_stackValue);
     
@@ -90,6 +88,9 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList 
         
         block(&context);
     }
+    
+    THIS->_lastRenderTimestamp = timestamp->mHostTime;
+    THIS->_nextRenderTimestamp = timestamp->mHostTime + AEHostTicksFromSeconds(frames/THIS->_sampleRate);
 }
 
 AEHostTicks AERendererGetLastRenderTimestamp(__unsafe_unretained AERenderer * THIS) {
