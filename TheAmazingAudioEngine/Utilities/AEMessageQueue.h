@@ -197,6 +197,11 @@ BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueu
 - (void)endMessageGroup;
 
 /*!
+ * Service any pending main-thread messages
+ */
+- (void)serviceMessages;
+
+/*!
  * Poll for pending messages on realtime thread
  *
  *  Call this periodically from the realtime thread to process pending message blocks.

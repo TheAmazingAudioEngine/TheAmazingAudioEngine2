@@ -224,6 +224,10 @@ BOOL AEMessageQueuePerformSelectorOnMainThread(__unsafe_unretained AEMessageQueu
     [self.audioThreadEndpoint endMessageGroup];
 }
 
+- (void)serviceMessages {
+    [self.mainThreadEndpoint serviceMessages];
+}
+
 void AEMessageQueuePoll(__unsafe_unretained AEMessageQueue * _Nonnull THIS) {
     AEAudioThreadEndpointPoll(THIS->_audioThreadEndpoint);
 }

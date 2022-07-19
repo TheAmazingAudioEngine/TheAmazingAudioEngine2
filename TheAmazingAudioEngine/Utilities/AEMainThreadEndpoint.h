@@ -74,6 +74,11 @@ typedef void (^AEMainThreadEndpointHandler)(void * _Nullable data, size_t length
 - (instancetype _Nullable)initWithHandler:(AEMainThreadEndpointHandler _Nonnull)handler bufferCapacity:(size_t)bufferCapacity;
 
 /*!
+ * Service any pending messages
+ */
+- (void)serviceMessages;
+
+/*!
  * Send a message to the main thread endpoint
  *
  *  Use this on the audio thread to send messages to the endpoint instance. It will be

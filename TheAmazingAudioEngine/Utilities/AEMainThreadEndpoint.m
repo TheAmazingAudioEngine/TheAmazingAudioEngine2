@@ -41,6 +41,7 @@ static AEMainThreadEndpointThread * __sharedThread = nil;
 @interface AEMainThreadEndpoint () {
     TPCircularBuffer _buffer;
     BOOL _hasPendingMainThreadMessages;
+    pthread_mutex_t _mutex;
 }
 @property (nonatomic, copy) AEMainThreadEndpointHandler handler;
 @property (nonatomic) semaphore_t semaphore;
@@ -81,12 +82,15 @@ static AEMainThreadEndpointThread * __sharedThread = nil;
     [self.thread addEndpoint:self];
     self.semaphore = self.thread.semaphore;
     
+    pthread_mutex_init(&_mutex, NULL);
+    
     return self;
 }
 
 - (void)dealloc {
     [self.thread handleReleasedEndpoint];
     TPCircularBufferCleanup(&_buffer);
+    pthread_mutex_destroy(&_mutex);
 }
 
 BOOL AEMainThreadEndpointSend(__unsafe_unretained AEMainThreadEndpoint * THIS, const void * data, size_t length) {
@@ -138,35 +142,44 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 }
 
 - (void)serviceMessages {
+    pthread_mutex_lock(&_mutex);
     for ( int i=0; i<kMaxMessagesEachService; i++ ) {
         // Get pointer to readable bytes
         int32_t availableBytes;
         void * tail = TPCircularBufferTail(&_buffer, &availableBytes);
-        if ( availableBytes == 0 ) return;
+        if ( availableBytes == 0 ) {
+            pthread_mutex_unlock(&_mutex);
+            return;
+        }
         
         // Get length and data
         size_t length = *((size_t*)tail);
         void * data = length > 0 ? (tail + sizeof(size_t)) : NULL;
         
-        if ( length < kMaxMessageLengthForCopy ) {
-            // Copy data so we can run asynchronously
-            void * dataCopy = malloc(length);
-            memcpy(dataCopy, data, length);
-            dispatch_async(dispatch_get_main_queue(), ^{
-                // Run handler
-                self.handler(dataCopy, length);
-                free(dataCopy);
-            });
+        if ( pthread_main_np() ) {
+            self.handler(data, length);
         } else {
-            // Run handler synchronously
-            dispatch_sync(dispatch_get_main_queue(), ^{
-                self.handler(data, length);
-            });
+            if ( length < kMaxMessageLengthForCopy ) {
+                // Copy data so we can run asynchronously
+                void * dataCopy = malloc(length);
+                memcpy(dataCopy, data, length);
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    // Run handler
+                    self.handler(dataCopy, length);
+                    free(dataCopy);
+                });
+            } else {
+                // Run handler synchronously
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    self.handler(data, length);
+                });
+            }
         }
         
         // Mark as read
         TPCircularBufferConsume(&_buffer, (int32_t)(sizeof(size_t) + length));
     }
+    pthread_mutex_unlock(&_mutex);
 }
 
 @end
