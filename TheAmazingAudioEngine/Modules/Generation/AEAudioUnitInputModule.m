@@ -57,6 +57,7 @@
     } else {
         // We need to add a bridging retain, because the property is unsafe_unretained
         self.ioUnit = (__bridge AEIOAudioUnit*) CFBridgingRetain([AEIOAudioUnit new]);
+        self.ioUnit.outputEnabled = NO;
         self.ioUnit.inputEnabled = YES;
         self.ioUnit.sampleRate = self.renderer.sampleRate;
         self.ownsIOUnit = YES;
