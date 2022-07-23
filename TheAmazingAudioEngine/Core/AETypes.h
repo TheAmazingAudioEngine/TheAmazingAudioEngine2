@@ -32,6 +32,23 @@ extern "C" {
 #import <AudioToolbox/AudioToolbox.h>
 
 /*!
+ * The maximum number of frames per rendering block
+ */
+UInt32 AEGetMaxFramesPerSlice(void);
+
+/*!
+ * Set the max frames per slice
+ *
+ *  Only use this method prior to beginning of rendering
+ */
+void AESetMaxFramesPerSlice(UInt32 maxFramesPerSlice);
+
+/*!
+ * Max frames per slice change notification
+ */
+extern NSString * const AEDidChangeMaxFramesPerSliceNotification;
+
+/*!
  * The audio description used throughout TAAE
  *
  *  This is 32-bit floating-point, non-interleaved stereo PCM.

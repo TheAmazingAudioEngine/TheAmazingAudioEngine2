@@ -112,8 +112,9 @@ static const double kAVAudioSession0dBGain = 0.75;
     }
     
     // Set the maximum frames per slice to render
+    UInt32 framesPerSlice = AEGetMaxFramesPerSlice();
     result = AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global,
-                                  0, &AEBufferStackMaxFramesPerSlice, sizeof(AEBufferStackMaxFramesPerSlice));
+                                  0, &framesPerSlice, sizeof(framesPerSlice));
     AECheckOSStatus(result, "AudioUnitSetProperty(kAudioUnitProperty_MaximumFramesPerSlice)");
     
     // Enable/disable input

@@ -9,7 +9,7 @@
 #import "AEDSPUtilities.h"
 #import <Accelerate/Accelerate.h>
 
-static const UInt32 kMaxFramesPerSlice = 4096;
+static const UInt32 kMaxFramesPerSlice = 8192;
 static const UInt32 kGainSmoothingRampDuration = 128;
 static const float kGainSmoothingRampStep = 1.0 / kGainSmoothingRampDuration;
 static const float kSmoothGainThreshold = kGainSmoothingRampStep;

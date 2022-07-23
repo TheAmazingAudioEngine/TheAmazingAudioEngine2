@@ -79,7 +79,7 @@
     if ( _multiSource == multiSource ) return;
     _multiSource = multiSource;
     if ( _multiSource && !_multiSourceMixBuffer ) {
-        _multiSourceMixBuffer = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(self.numberOfChannels, 0), AEBufferStackMaxFramesPerSlice);
+        _multiSourceMixBuffer = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(self.numberOfChannels, 0), AEGetMaxFramesPerSlice());
     }
 }
 

@@ -29,7 +29,6 @@
 #import "AEDSPUtilities.h"
 #import "AEUtilities.h"
 
-const UInt32 AEBufferStackMaxFramesPerSlice = 4096;
 static const int kMaxChannelsPerBuffer = 32;
 const int AEBufferStackDefaultPoolSize = 32;
 
@@ -77,9 +76,9 @@ AEBufferStack * AEBufferStackNewWithOptions(int poolSize, int numberOfSingleChan
     
     AEBufferStack * stack = (AEBufferStack*)calloc(1, sizeof(AEBufferStack));
     stack->poolSize = poolSize;
-    stack->frameCount = AEBufferStackMaxFramesPerSlice;
+    stack->frameCount = AEGetMaxFramesPerSlice();
     
-    size_t bytesPerBufferChannel = AEBufferStackMaxFramesPerSlice * AEAudioDescription.mBytesPerFrame;
+    size_t bytesPerBufferChannel = AEGetMaxFramesPerSlice() * AEAudioDescription.mBytesPerFrame;
     AEBufferStackPoolInit(&stack->audioPool, numberOfSingleChannelBuffers, bytesPerBufferChannel);
     
     size_t bytesPerBufferListEntry = sizeof(AEBufferStackBuffer) + ((kMaxChannelsPerBuffer-1) * sizeof(AudioBuffer));
@@ -95,7 +94,7 @@ void AEBufferStackFree(AEBufferStack * stack) {
 }
 
 void AEBufferStackSetFrameCount(AEBufferStack * stack, UInt32 frameCount) {
-    assert(frameCount <= AEBufferStackMaxFramesPerSlice);
+    assert(frameCount <= AEGetMaxFramesPerSlice());
     stack->frameCount = frameCount;
 }
 

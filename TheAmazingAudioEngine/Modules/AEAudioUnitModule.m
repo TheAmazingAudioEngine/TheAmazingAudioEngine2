@@ -242,8 +242,9 @@ static void AEAudioUnitModuleReset(__unsafe_unretained AEAudioUnitModule * THIS)
     }
     
     // Set the maximum frames per slice to render
+    UInt32 framesPerSlice = AEGetMaxFramesPerSlice();
     AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_MaximumFramesPerSlice, kAudioUnitScope_Global,
-                                         0, &AEBufferStackMaxFramesPerSlice, sizeof(AEBufferStackMaxFramesPerSlice)),
+                                         0, &framesPerSlice, sizeof(framesPerSlice)),
                     "AudioUnitSetProperty(kAudioUnitProperty_MaximumFramesPerSlice)");
     
     // Set the stream format

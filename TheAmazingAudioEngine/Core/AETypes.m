@@ -26,6 +26,17 @@
 
 #import "AETypes.h"
 
+NSString * const AEDidChangeMaxFramesPerSliceNotification = @"AEDidChangeMaxFramesPerSliceNotification";
+
+UInt32 AEMaxFramesPerSlice = 4096;
+UInt32 AEGetMaxFramesPerSlice(void) {
+    return AEMaxFramesPerSlice;
+}
+void AESetMaxFramesPerSlice(UInt32 maxFramesPerSlice) {
+    AEMaxFramesPerSlice = maxFramesPerSlice;
+    [NSNotificationCenter.defaultCenter postNotificationName:AEDidChangeMaxFramesPerSliceNotification object:nil];
+}
+
 AudioStreamBasicDescription const AEAudioDescription = {
     .mFormatID          = kAudioFormatLinearPCM,
     .mFormatFlags       = kAudioFormatFlagIsFloat | kAudioFormatFlagIsPacked | kAudioFormatFlagIsNonInterleaved,

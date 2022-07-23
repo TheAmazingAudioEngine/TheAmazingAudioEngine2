@@ -47,7 +47,7 @@
 - (instancetype)initWithRenderer:(AERenderer *)renderer module:(AEModule *)module {
     if ( !(self = [super initWithRenderer:renderer]) ) return nil;
     _numberOfChannels = 2;
-    _buffer = AEAudioBufferListCreate(AEBufferStackMaxFramesPerSlice);
+    _buffer = AEAudioBufferListCreate(AEGetMaxFramesPerSlice());
     _bufferedTime = UINT32_MAX;
     self.moduleValue = [AEManagedValue new];
     self.module = module;
@@ -67,7 +67,7 @@
     _numberOfChannels = numberOfChannels;
     AEAudioBufferListFree(_buffer);
     _buffer = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(_numberOfChannels, 0),
-                                                AEBufferStackMaxFramesPerSlice);
+                                                AEGetMaxFramesPerSlice());
 }
 
 static void AESplitterModuleProcess(__unsafe_unretained AESplitterModule * THIS, const AERenderContext * _Nonnull context) {

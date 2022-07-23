@@ -32,7 +32,6 @@ extern "C" {
 #import <AudioToolbox/AudioToolbox.h>
 #import "AETypes.h"
 
-extern const UInt32 AEBufferStackMaxFramesPerSlice;
 extern const int AEBufferStackDefaultPoolSize;
 
 typedef struct AEBufferStack AEBufferStack;
