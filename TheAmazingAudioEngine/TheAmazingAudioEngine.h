@@ -28,57 +28,59 @@
 extern "C" {
 #endif
 
-#import <TheAmazingAudioEngine/AEBufferStack.h>
-#import <TheAmazingAudioEngine/AETypes.h>
+#import "AEBufferStack.h"
+#import "AETypes.h"
 
-#import <TheAmazingAudioEngine/AEModule.h>
-#import <TheAmazingAudioEngine/AESubrendererModule.h>
-#import <TheAmazingAudioEngine/AEBlockModule.h>
-#import <TheAmazingAudioEngine/AEAudioUnitModule.h>
-#import <TheAmazingAudioEngine/AEAudioUnitInputModule.h>
-#import <TheAmazingAudioEngine/AEAudioFilePlayerModule.h>
-#import <TheAmazingAudioEngine/AEOscillatorModule.h>
-#import <TheAmazingAudioEngine/AEMixerModule.h>
-#import <TheAmazingAudioEngine/AESplitterModule.h>
-#import <TheAmazingAudioEngine/AEBandpassModule.h>
-#import <TheAmazingAudioEngine/AEDelayModule.h>
-#import <TheAmazingAudioEngine/AEDistortionModule.h>
-#import <TheAmazingAudioEngine/AEDynamicsProcessorModule.h>
-#import <TheAmazingAudioEngine/AEHighPassModule.h>
-#import <TheAmazingAudioEngine/AEHighShelfModule.h>
-#import <TheAmazingAudioEngine/AELowPassModule.h>
-#import <TheAmazingAudioEngine/AELowShelfModule.h>
-#import <TheAmazingAudioEngine/AENewTimePitchModule.h>
-#import <TheAmazingAudioEngine/AEParametricEqModule.h>
-#import <TheAmazingAudioEngine/AEPeakLimiterModule.h>
-#import <TheAmazingAudioEngine/AEVarispeedModule.h>
-#import <TheAmazingAudioEngine/AEAudioFileRecorderModule.h>
-#import <TheAmazingAudioEngine/AEAudioPasteboard.h>
+#import "AEModule.h"
+#import "AESubrendererModule.h"
+#import "AEBlockModule.h"
+#import "AEAudioUnitModule.h"
+#import "AEAudioUnitInputModule.h"
+#import "AEAudioFilePlayerModule.h"
+#import "AEOscillatorModule.h"
+#import "AEMixerModule.h"
+#import "AESplitterModule.h"
+#import "AEBandpassModule.h"
+#import "AEDelayModule.h"
+#import "AEDistortionModule.h"
+#import "AEDynamicsProcessorModule.h"
+#import "AEHighPassModule.h"
+#import "AEHighShelfModule.h"
+#import "AELowPassModule.h"
+#import "AELowShelfModule.h"
+#import "AENewTimePitchModule.h"
+#import "AEParametricEqModule.h"
+#import "AEPeakLimiterModule.h"
+#import "AEVarispeedModule.h"
+#import "AEAudioFileRecorderModule.h"
+#import "AEAudioPasteboard.h"
+
+#import "AERenderer.h"
+#import "AERenderContext.h"
+#import "AEAudioUnitOutput.h"
+#import "AEAudioFileOutput.h"
+
+#import "AEUtilities.h"
+#import "AEAudioBufferListUtilities.h"
+#import "TPCircularBuffer.h"
+#import "AECircularBuffer.h"
+#import "AEDSPUtilities.h"
+#import "AEMainThreadEndpoint.h"
+#import "AEAudioThreadEndpoint.h"
+#import "AEMessageQueue.h"
+#import "AETime.h"
+#import "AEArray.h"
+#import "AEManagedValue.h"
+#import "AEIOAudioUnit.h"
+#import "AEAudioFileReader.h"
+#import "AEWeakRetainingProxy.h"
+#import "AELevelsAnalyzer.h"
+
 
 #if TARGET_OS_IPHONE
-#import <TheAmazingAudioEngine/AEReverbModule.h>
+#import "AEReverbModule.h"
 #endif
 
-#import <TheAmazingAudioEngine/AERenderer.h>
-#import <TheAmazingAudioEngine/AERenderContext.h>
-#import <TheAmazingAudioEngine/AEAudioUnitOutput.h>
-#import <TheAmazingAudioEngine/AEAudioFileOutput.h>
-
-#import <TheAmazingAudioEngine/AEUtilities.h>
-#import <TheAmazingAudioEngine/AEAudioBufferListUtilities.h>
-#import <TheAmazingAudioEngine/TPCircularBuffer.h>
-#import <TheAmazingAudioEngine/AECircularBuffer.h>
-#import <TheAmazingAudioEngine/AEDSPUtilities.h>
-#import <TheAmazingAudioEngine/AEMainThreadEndpoint.h>
-#import <TheAmazingAudioEngine/AEAudioThreadEndpoint.h>
-#import <TheAmazingAudioEngine/AEMessageQueue.h>
-#import <TheAmazingAudioEngine/AETime.h>
-#import <TheAmazingAudioEngine/AEArray.h>
-#import <TheAmazingAudioEngine/AEManagedValue.h>
-#import <TheAmazingAudioEngine/AEIOAudioUnit.h>
-#import <TheAmazingAudioEngine/AEAudioFileReader.h>
-#import <TheAmazingAudioEngine/AEWeakRetainingProxy.h>
-#import <TheAmazingAudioEngine/AELevelsAnalyzer.h>
 
 
 /*!
