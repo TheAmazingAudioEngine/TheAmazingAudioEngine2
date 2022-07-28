@@ -302,6 +302,8 @@
 		4CE5F4D11CD3169C00322F03 /* AEAudioThreadEndpoint.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CE5F4CD1CD3169C00322F03 /* AEAudioThreadEndpoint.m */; };
 		4CE5F4D21CD3169C00322F03 /* AEAudioThreadEndpoint.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CE5F4CD1CD3169C00322F03 /* AEAudioThreadEndpoint.m */; };
 		4CE5F4D31CD3169C00322F03 /* AEAudioThreadEndpoint.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CE5F4CD1CD3169C00322F03 /* AEAudioThreadEndpoint.m */; };
+		4CF30DD4289227C6001B29BD /* AEAudioDevice.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CF30DD2289227C6001B29BD /* AEAudioDevice.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		4CF30DD5289227C6001B29BD /* AEAudioDevice.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CF30DD3289227C6001B29BD /* AEAudioDevice.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -460,6 +462,8 @@
 		4CE5F4CA1CD3135800322F03 /* AECrossThreadMessagingTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AECrossThreadMessagingTests.m; sourceTree = "<group>"; };
 		4CE5F4CC1CD3169C00322F03 /* AEAudioThreadEndpoint.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAudioThreadEndpoint.h; sourceTree = "<group>"; };
 		4CE5F4CD1CD3169C00322F03 /* AEAudioThreadEndpoint.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEAudioThreadEndpoint.m; sourceTree = "<group>"; };
+		4CF30DD2289227C6001B29BD /* AEAudioDevice.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AEAudioDevice.h; sourceTree = "<group>"; };
+		4CF30DD3289227C6001B29BD /* AEAudioDevice.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AEAudioDevice.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -643,6 +647,8 @@
 				4C636E201D0D7BED005A380B /* AERealtimeWatchdog-simulator-x86_64.s */,
 				4CE5A98B1D6C01800034D7F7 /* AEAudioPasteboard.h */,
 				4CE5A98C1D6C01800034D7F7 /* AEAudioPasteboard.m */,
+				4CF30DD2289227C6001B29BD /* AEAudioDevice.h */,
+				4CF30DD3289227C6001B29BD /* AEAudioDevice.m */,
 			);
 			path = Utilities;
 			sourceTree = "<group>";
@@ -759,6 +765,7 @@
 				4C9F0F6C1CB265F90032903E /* AEAudioBufferListUtilities.h in Headers */,
 				4C9F0F6D1CB265F90032903E /* AEAudioUnitOutput.h in Headers */,
 				4C9F0F6E1CB265F90032903E /* AEAudioFileRecorderModule.h in Headers */,
+				4CF30DD4289227C6001B29BD /* AEAudioDevice.h in Headers */,
 				4C9F0F6F1CB265F90032903E /* AEVarispeedModule.h in Headers */,
 				4C7F3DD01FCFCDE300127BE6 /* AELevelsAnalyzer.h in Headers */,
 				4C9F0F701CB265F90032903E /* AELowShelfModule.h in Headers */,
@@ -1017,6 +1024,7 @@
 				4C9F0F371CB265F90032903E /* AEMessageQueue.m in Sources */,
 				4CB2F2F11D49ABC6008F745F /* AEManagedValue.m in Sources */,
 				4C3183141CDDEFDE0085634F /* AEMixerModule.m in Sources */,
+				4CF30DD5289227C6001B29BD /* AEAudioDevice.m in Sources */,
 				4CB2F3031D49ABC6008F745F /* AETypes.m in Sources */,
 				4CBCF2A21CFBC3D200CA2EA0 /* AESplitterModule.m in Sources */,
 				4C9F0F381CB265F90032903E /* AELowShelfModule.m in Sources */,

@@ -32,6 +32,11 @@ extern "C" {
 #import <AudioToolbox/AudioToolbox.h>
 #import "AETime.h"
 
+#if TARGET_OS_OSX
+#import "AEAudioDevice.h"
+#endif
+
+
 /*!
  * Render block
  *
@@ -244,6 +249,13 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 @property (nonatomic) BOOL latencyCompensation;
 
 #endif
+
+#if TARGET_OS_OSX
+
+@property (nonatomic, strong, nonnull) AEAudioDevice * audioDevice;
+
+#endif
+
 @end
 
 #ifdef __cplusplus

@@ -79,6 +79,8 @@ extern "C" {
 
 #if TARGET_OS_IPHONE
 #import "AEReverbModule.h"
+#elif TARGET_OS_OSX
+#import "AEAudioDevice.h"
 #endif
 
 
