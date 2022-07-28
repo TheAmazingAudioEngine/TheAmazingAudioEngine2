@@ -270,6 +270,7 @@ static const double kAVAudioSession0dBGain = 0.75;
     AECheckOSStatus(AudioUnitUninitialize(_audioUnit), "AudioUnitUninitialize");
     AECheckOSStatus(AudioComponentInstanceDispose(_audioUnit), "AudioComponentInstanceDispose");
     _audioUnit = NULL;
+    self.hasSetInitialStreamFormat = NO;
 }
 
 - (BOOL)start:(NSError *__autoreleasing *)error {
