@@ -689,7 +689,7 @@ static void AEIOAudioUnitIAAConnectionChanged(void *inRefCon, AudioUnit inUnit, 
             }
         }
         
-        if ( self.numberOfInputChannels > 0 && (hasInputChanges || self.hasSetInitialStreamFormat) ) {
+        if ( self.numberOfInputChannels > 0 && (hasInputChanges || !self.hasSetInitialStreamFormat) ) {
             if ( running && !stoppedUnit ) {
                 AECheckOSStatus(AudioOutputUnitStop(_audioUnit), "AudioOutputUnitStop");
                 stoppedUnit = YES;
