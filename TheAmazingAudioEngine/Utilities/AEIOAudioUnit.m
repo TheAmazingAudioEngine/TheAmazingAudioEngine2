@@ -65,6 +65,8 @@ static const double kAVAudioSession0dBGain = 0.75;
 @property (nonatomic) NSTimeInterval inputLatency;
 #else
 @property (nonatomic) AudioBufferList * savedAudioBuffer;
+@property (nonatomic, strong) id defaultDeviceObserverToken;
+@property (nonatomic, strong) id deviceAvailabilityObserverToken;
 #endif
 @end
 
@@ -252,6 +254,22 @@ static const double kAVAudioSession0dBGain = 0.75;
     AECheckOSStatus(AudioUnitAddPropertyListener(_audioUnit, kAudioUnitProperty_IsInterAppConnected,
                                                  AEIOAudioUnitIAAConnectionChanged, (__bridge void*)self),
                     "AudioUnitAddPropertyListener(kAudioUnitProperty_IsInterAppConnected)");
+    
+#else
+    __weak typeof(self) weakSelf = self;
+    self.defaultDeviceObserverToken = [NSNotificationCenter.defaultCenter addObserverForName:self.outputEnabled ? AEAudioDeviceDefaultOutputDeviceChangedNotification : AEAudioDeviceDefaultInputDeviceChangedNotification object:nil queue:nil usingBlock:^(NSNotification * note) {
+        if ( weakSelf.audioDevice.isDefault ) {
+            // Replace audio device with new default
+            weakSelf.audioDevice = weakSelf.outputEnabled ? AEAudioDevice.defaultOutputAudioDevice : AEAudioDevice.defaultInputAudioDevice;
+        }
+    }];
+    self.deviceAvailabilityObserverToken = [NSNotificationCenter.defaultCenter addObserverForName:AEAudioDeviceAvailableDevicesChangedNotification object:nil queue:nil usingBlock:^(NSNotification * note) {
+        NSArray <AEAudioDevice *> * availableDevices = AEAudioDevice.availableAudioDevices;
+        if ( ![availableDevices containsObject:weakSelf.audioDevice] ) {
+            // Replace audio device with new default if device disappears
+            weakSelf.audioDevice = weakSelf.outputEnabled ? AEAudioDevice.defaultOutputAudioDevice : AEAudioDevice.defaultInputAudioDevice;
+        }
+    }];
 #endif
     
     // Notify
@@ -269,6 +287,10 @@ static const double kAVAudioSession0dBGain = 0.75;
     [[NSNotificationCenter defaultCenter] removeObserver:self.routeChangeObserverToken];
     self.routeChangeObserverToken = nil;
 #else
+    [[NSNotificationCenter defaultCenter] removeObserver:self.deviceAvailabilityObserverToken];
+    self.deviceAvailabilityObserverToken = nil;
+    [[NSNotificationCenter defaultCenter] removeObserver:self.defaultDeviceObserverToken];
+    self.defaultDeviceObserverToken = nil;
     AEAudioBufferListFree(self.savedAudioBuffer);
     self.savedAudioBuffer = NULL;
 #endif

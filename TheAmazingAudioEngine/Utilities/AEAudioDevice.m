@@ -10,7 +10,12 @@
 #import "AEUtilities.h"
 #import <AVFoundation/AVFoundation.h>
 
+NSString * const AEAudioDeviceDefaultInputDeviceChangedNotification = @"AEAudioDeviceDefaultInputDeviceChangedNotification";
+NSString * const AEAudioDeviceDefaultOutputDeviceChangedNotification = @"AEAudioDeviceDefaultOutputDeviceChangedNotification";
+NSString * const AEAudioDeviceAvailableDevicesChangedNotification = @"AEAudioDeviceAvailableDevicesChangedNotification";
+
 @interface AEAudioDevice ()
+@property (nonatomic, readwrite) BOOL isDefault;
 @property (nonatomic, readwrite) AudioObjectID objectID;
 @property (nonatomic, strong, readwrite) NSString * UID;
 @property (nonatomic, strong, readwrite) NSString * name;
@@ -19,6 +24,12 @@
 @end
 
 @implementation AEAudioDevice
+
++ (void)initialize {
+    AudioObjectAddPropertyListener(kAudioObjectSystemObject, &(AudioObjectPropertyAddress){kAudioHardwarePropertyDefaultInputDevice, kAudioObjectPropertyScopeGlobal}, AEAudioDeviceDefaultInputChanged, NULL);
+    AudioObjectAddPropertyListener(kAudioObjectSystemObject, &(AudioObjectPropertyAddress){kAudioHardwarePropertyDefaultOutputDevice, kAudioObjectPropertyScopeGlobal}, AEAudioDeviceDefaultOutputChanged, NULL);
+    AudioObjectAddPropertyListener(kAudioObjectSystemObject, &(AudioObjectPropertyAddress){kAudioHardwarePropertyDevices, kAudioObjectPropertyScopeGlobal}, AEAudioDeviceAvailableDevicesChanged, NULL);
+}
 
 + (NSArray<AEAudioDevice *> *)availableAudioDevices {
     AudioObjectPropertyAddress deviceListAddr = {kAudioHardwarePropertyDevices, kAudioObjectPropertyScopeGlobal};
@@ -54,7 +65,9 @@
     if ( !AECheckOSStatus(AudioObjectGetPropertyData(kAudioObjectSystemObject, &addr, 0, NULL, &size, &deviceId), "kAudioHardwarePropertyDefaultInputDevice") ) {
         return nil;
     }
-    return [[AEAudioDevice alloc] initWithObjectID:deviceId];
+    AEAudioDevice * device = [[AEAudioDevice alloc] initWithObjectID:deviceId];
+    device.isDefault = YES;
+    return device;
 }
 
 + (AEAudioDevice *)defaultOutputAudioDevice {
@@ -64,7 +77,9 @@
     if ( !AECheckOSStatus(AudioObjectGetPropertyData(kAudioObjectSystemObject, &addr, 0, NULL, &size, &deviceId), "kAudioHardwarePropertyDefaultOutputDevice") ) {
         return nil;
     }
-    return [[AEAudioDevice alloc] initWithObjectID:deviceId];
+    AEAudioDevice * device = [[AEAudioDevice alloc] initWithObjectID:deviceId];
+    device.isDefault = YES;
+    return device;
 }
 
 + (AEAudioDevice *)audioDeviceWithUID:(NSString *)UID {
@@ -82,6 +97,14 @@
     if ( !(self = [super init]) ) return nil;
     self.objectID = objectID;
     return self;
+}
+
+- (BOOL)isEqual:(id)object {
+    return [object isKindOfClass:[self class]] && [((AEAudioDevice *)object).UID isEqualToString:self.UID];
+}
+
+- (NSUInteger)hash {
+    return ((NSUInteger)7079)*self.UID.hash;
 }
 
 - (NSString *)description {
@@ -219,6 +242,27 @@
     AudioObjectPropertyAddress addr = {kAudioDevicePropertyNominalSampleRate, kAudioObjectPropertyScopeGlobal};
     Float64 rate = sampleRate;
     AECheckOSStatus(AudioObjectSetPropertyData(_objectID, &addr, 0, NULL, sizeof(rate), &rate), "kAudioDevicePropertyNominalSampleRate");
+}
+
+static OSStatus AEAudioDeviceDefaultInputChanged(AudioObjectID inObjectID, UInt32 inNumberAddresses, const AudioObjectPropertyAddress *inAddresses, void *inClientData) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSNotificationCenter.defaultCenter postNotificationName:AEAudioDeviceDefaultInputDeviceChangedNotification object:nil];
+    });
+    return noErr;
+}
+
+static OSStatus AEAudioDeviceDefaultOutputChanged(AudioObjectID inObjectID, UInt32 inNumberAddresses, const AudioObjectPropertyAddress *inAddresses, void *inClientData) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSNotificationCenter.defaultCenter postNotificationName:AEAudioDeviceDefaultOutputDeviceChangedNotification object:nil];
+    });
+    return noErr;
+}
+
+static OSStatus AEAudioDeviceAvailableDevicesChanged(AudioObjectID inObjectID, UInt32 inNumberAddresses, const AudioObjectPropertyAddress *inAddresses, void *inClientData) {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [NSNotificationCenter.defaultCenter postNotificationName:AEAudioDeviceAvailableDevicesChangedNotification object:nil];
+    });
+    return noErr;
 }
 
 @end

@@ -11,6 +11,10 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
+extern NSString * const AEAudioDeviceDefaultInputDeviceChangedNotification;
+extern NSString * const AEAudioDeviceDefaultOutputDeviceChangedNotification;
+extern NSString * const AEAudioDeviceAvailableDevicesChangedNotification;
+
 @interface AEAudioDevice : NSObject
 + (NSArray <AEAudioDevice *> *)availableAudioDevices;
 + (AEAudioDevice *)defaultInputAudioDevice;
@@ -19,6 +23,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (double)closestSupportedSampleRateTo:(double)sampleRate;
 
+@property (nonatomic, readonly) BOOL isDefault;
 @property (nonatomic, readonly) AudioObjectID objectID;
 @property (nonatomic, strong, readonly) NSString * UID;
 @property (nonatomic, strong, readonly) NSString * name;
