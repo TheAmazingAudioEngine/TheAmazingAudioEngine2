@@ -63,6 +63,8 @@ static const double kAVAudioSession0dBGain = 0.75;
 @property (nonatomic, strong) id routeChangeObserverToken;
 @property (nonatomic) NSTimeInterval outputLatency;
 @property (nonatomic) NSTimeInterval inputLatency;
+#else
+@property (nonatomic) AudioBufferList * savedAudioBuffer;
 #endif
 @end
 
@@ -266,7 +268,11 @@ static const double kAVAudioSession0dBGain = 0.75;
     self.mediaResetObserverToken = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self.routeChangeObserverToken];
     self.routeChangeObserverToken = nil;
+#else
+    AEAudioBufferListFree(self.savedAudioBuffer);
+    self.savedAudioBuffer = NULL;
 #endif
+    
     AECheckOSStatus(AudioUnitUninitialize(_audioUnit), "AudioUnitUninitialize");
     AECheckOSStatus(AudioComponentInstanceDispose(_audioUnit), "AudioComponentInstanceDispose");
     _audioUnit = NULL;
@@ -327,14 +333,20 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull T
         return 0;
     }
     
+#if TARGET_OS_OSX
+    OSStatus status = noErr;
+    AEAudioBufferListCopyContents(buffer, THIS->_savedAudioBuffer, 0, 0, frames);
+#else
     AudioUnitRenderActionFlags flags = 0;
     AudioTimeStamp timestamp = THIS->_inputTimestamp;
     AEAudioBufferListCopyOnStack(mutableAbl, buffer, 0);
     OSStatus status = AudioUnitRender(THIS->_audioUnit, &flags, &timestamp, 1, frames, mutableAbl);
     AECheckOSStatus(status, "AudioUnitRender");
+#endif
+    
     if ( status == noErr && THIS->_needsInputGainScaling &&
             (fabs(THIS->_inputGain - 1.0) > 1.0e-5 || fabs(THIS->_inputGain - THIS->_currentInputGain) > 1.0e-5) ) {
-        AEDSPApplyGainSmoothed(mutableAbl, THIS->_inputGain, &THIS->_currentInputGain, frames, mutableAbl);
+        AEDSPApplyGainSmoothed(buffer, THIS->_inputGain, &THIS->_currentInputGain, frames, buffer);
     }
     return status;
 }
@@ -581,6 +593,10 @@ static OSStatus AEIOAudioUnitInputCallback(void *inRefCon, AudioUnitRenderAction
     if ( THIS->_latencyCompensation ) {
         timestamp.mHostTime -= AEHostTicksFromSeconds(THIS->_inputLatency);
     }
+#else
+    // Render now, into saved buffer
+    AEAudioBufferListSetLength(THIS->_savedAudioBuffer, inNumberFrames);
+    AECheckOSStatus(AudioUnitRender(THIS->_audioUnit, ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, THIS->_savedAudioBuffer), "AudioUnitRender");
 #endif
     
     THIS->_inputTimestamp = timestamp;
@@ -720,9 +736,18 @@ static void AEIOAudioUnitIAAConnectionChanged(void *inRefCon, AudioUnit inUnit, 
             asbd = AEAudioDescription;
             asbd.mChannelsPerFrame = self.numberOfInputChannels;
             asbd.mSampleRate = self.currentSampleRate;
-            AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1,
-                                                 &asbd, sizeof(asbd)),
-                            "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
+            
+            #if TARGET_OS_OSX
+            if ( self.savedAudioBuffer && self.savedAudioBuffer->mNumberBuffers != asbd.mChannelsPerFrame ) {
+                AEAudioBufferListFree(self.savedAudioBuffer);
+                self.savedAudioBuffer = NULL;
+            }
+            if ( !self.savedAudioBuffer ) {
+                self.savedAudioBuffer = AEAudioBufferListCreateWithFormat(asbd, AEGetMaxFramesPerSlice());
+            }
+            #endif
+            
+            AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1, &asbd, sizeof(asbd)), "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
         } else {
             memset(&_inputTimestamp, 0, sizeof(_inputTimestamp));
         }
