@@ -31,6 +31,7 @@ extern "C" {
 #import <Foundation/Foundation.h>
 #import <AudioToolbox/AudioToolbox.h>
 #import "AETime.h"
+#import "AEIOAudioUnit.h"
 
 @class AERenderer;
 @class AEAudioUnitInputModule;
@@ -104,6 +105,11 @@ AudioUnit _Nullable AEAudioUnitOutputGetAudioUnit(__unsafe_unretained AEAudioUni
 AESeconds AEAudioUnitOutputGetOutputLatency(__unsafe_unretained AEAudioUnitOutput * _Nonnull output);
 
 #endif
+
+/*!
+ * Get the underlying IO unit instance
+ */
+- (AEIOAudioUnit * _Nonnull)ioUnit;
 
 //! The renderer. You may change this at any time; assignment is thread-safe.
 @property (nonatomic, strong) AERenderer * _Nullable renderer;

@@ -30,6 +30,7 @@ extern "C" {
 
 #import "AEModule.h"
 #import "AETime.h"
+#import "AEIOAudioUnit.h"
 
 /*!
  * Audio input module
@@ -109,6 +110,11 @@ AudioTimeStamp AEAudioUnitInputModuleGetInputTimestamp(__unsafe_unretained AEAud
 AESeconds AEAudioUnitInputModuleGetInputLatency(__unsafe_unretained AEAudioUnitInputModule * _Nonnull module);
 
 #endif
+
+/*!
+ * Get the underlying IO unit instance
+ */
+- (AEIOAudioUnit * _Nonnull)ioUnit;
 
 @property (nonatomic, readonly) AudioUnit _Nullable audioUnit; //!< The audio unit
 @property (nonatomic, readonly) BOOL running; //!< Whether unit is currently active
