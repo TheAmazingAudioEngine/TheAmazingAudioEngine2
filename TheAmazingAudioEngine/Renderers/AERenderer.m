@@ -29,9 +29,6 @@
 #import "AEManagedValue.h"
 #import "AEAudioBufferListUtilities.h"
 
-NSString * const AERendererDidChangeSampleRateNotification = @"AERendererDidChangeSampleRateNotification";
-NSString * const AERendererDidChangeNumberOfOutputChannelsNotification = @"AERendererDidChangeNumberOfOutputChannelsNotification";
-
 @interface AERenderer () {
     UInt32 _sampleTime;
     AEHostTicks _lastRenderTimestamp;
@@ -43,6 +40,14 @@ NSString * const AERendererDidChangeNumberOfOutputChannelsNotification = @"AERen
 
 @implementation AERenderer
 @dynamic block;
+
++ (BOOL)automaticallyNotifiesObserversOfSampleRate {
+    return NO;
+}
+
++ (BOOL)automaticallyNotifiesObserversOfNumberOfOutputChannels {
+    return NO;
+}
 
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
@@ -111,16 +116,18 @@ AEHostTicks AERendererGetNextRenderTimestamp(__unsafe_unretained AERenderer * TH
 
 - (void)setSampleRate:(double)sampleRate {
     if ( fabs(sampleRate - _sampleRate) < DBL_EPSILON ) return;
+    [self willChangeValueForKey:NSStringFromSelector(@selector(sampleRate))];
     _sampleRate = sampleRate;
-    
-    [[NSNotificationCenter defaultCenter] postNotificationName:AERendererDidChangeSampleRateNotification object:self];
+    [self didChangeValueForKey:NSStringFromSelector(@selector(sampleRate))];
 }
 
 - (void)setNumberOfOutputChannels:(int)numberOfOutputChannels {
     if ( _numberOfOutputChannels == numberOfOutputChannels ) return;
+    
+    [self willChangeValueForKey:NSStringFromSelector(@selector(numberOfOutputChannels))];
     _numberOfOutputChannels = numberOfOutputChannels;
     self.stackValue.pointerValue = AEBufferStackNewWithOptions(AEBufferStackDefaultPoolSize, (_numberOfOutputChannels * 4) + (AEBufferStackDefaultPoolSize * 2));
-    [[NSNotificationCenter defaultCenter] postNotificationName:AERendererDidChangeNumberOfOutputChannelsNotification object:self];
+    [self didChangeValueForKey:NSStringFromSelector(@selector(numberOfOutputChannels))];
 }
 
 @end

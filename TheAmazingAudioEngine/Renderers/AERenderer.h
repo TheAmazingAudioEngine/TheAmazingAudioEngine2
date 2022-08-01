@@ -48,16 +48,6 @@ extern "C" {
  * @param context The rendering context
  */
 typedef void (^AERenderLoopBlock)(const AERenderContext * _Nonnull context);
-    
-/*!
- * Sample rate change notification
- */
-extern NSString * const _Nonnull AERendererDidChangeSampleRateNotification;
-
-/*!
- * Channel count change notification
- */
-extern NSString * const _Nonnull AERendererDidChangeNumberOfOutputChannelsNotification;
 
 
 /*!

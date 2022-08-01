@@ -27,6 +27,9 @@
 #import "AEModule.h"
 #import "AERenderer.h"
 
+static void * kRendererSampleRateChanged = &kRendererSampleRateChanged;
+static void * kRendererOutputChannelsChanged = &kRendererOutputChannelsChanged;
+
 @implementation AEModule
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
@@ -59,17 +62,13 @@
 }
 
 - (void)startObservingRenderer {
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rendererDidChangeSampleRate)
-                                                 name:AERendererDidChangeSampleRateNotification object:_renderer];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(rendererDidChangeNumberOfChannels)
-                                                 name:AERendererDidChangeNumberOfOutputChannelsNotification object:_renderer];
+    [_renderer addObserver:self forKeyPath:NSStringFromSelector(@selector(sampleRate)) options:0 context:kRendererSampleRateChanged];
+    [_renderer addObserver:self forKeyPath:NSStringFromSelector(@selector(numberOfOutputChannels)) options:0 context:kRendererOutputChannelsChanged];
 }
 
 - (void)stopObservingRenderer {
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:AERendererDidChangeSampleRateNotification
-                                                  object:_renderer];
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:AERendererDidChangeNumberOfOutputChannelsNotification
-                                                  object:_renderer];
+    [_renderer removeObserver:self forKeyPath:NSStringFromSelector(@selector(sampleRate)) context:kRendererSampleRateChanged];
+    [_renderer removeObserver:self forKeyPath:NSStringFromSelector(@selector(numberOfOutputChannels)) context:kRendererOutputChannelsChanged];
 }
 
 - (void)rendererDidChangeSampleRate {
@@ -97,6 +96,16 @@ BOOL AEModuleIsActive(__unsafe_unretained AEModule * _Nonnull module) {
 void AEModuleReset(__unsafe_unretained AEModule * _Nonnull module) {
     if ( module->_resetFunction ) {
         module->_resetFunction(module);
+    }
+}
+
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+    if ( context == kRendererSampleRateChanged ) {
+        [self rendererDidChangeSampleRate];
+    } else if ( context == kRendererOutputChannelsChanged ) {
+        [self rendererDidChangeNumberOfChannels];
+    } else {
+        [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
     }
 }
 
