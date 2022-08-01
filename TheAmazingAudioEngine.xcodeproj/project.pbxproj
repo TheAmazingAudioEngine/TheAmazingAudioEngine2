@@ -61,7 +61,7 @@
 		4C7756A51CD2E5E3004415A2 /* AECircularBuffer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C77569F1CD2E5E3004415A2 /* AECircularBuffer.m */; };
 		4C7F3DCF1FCFCDE300127BE6 /* AELevelsAnalyzer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7F3DCD1FCFCDE300127BE6 /* AELevelsAnalyzer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C7F3DD01FCFCDE300127BE6 /* AELevelsAnalyzer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7F3DCD1FCFCDE300127BE6 /* AELevelsAnalyzer.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		4C7F3DD11FCFCDE300127BE6 /* AELevelsAnalyzer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7F3DCD1FCFCDE300127BE6 /* AELevelsAnalyzer.h */; };
+		4C7F3DD11FCFCDE300127BE6 /* AELevelsAnalyzer.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C7F3DCD1FCFCDE300127BE6 /* AELevelsAnalyzer.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C7F3DD21FCFCDE300127BE6 /* AELevelsAnalyzer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7F3DCE1FCFCDE300127BE6 /* AELevelsAnalyzer.m */; };
 		4C7F3DD31FCFCDE300127BE6 /* AELevelsAnalyzer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7F3DCE1FCFCDE300127BE6 /* AELevelsAnalyzer.m */; };
 		4C7F3DD41FCFCDE300127BE6 /* AELevelsAnalyzer.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C7F3DCE1FCFCDE300127BE6 /* AELevelsAnalyzer.m */; };
@@ -99,7 +99,6 @@
 		4C9F0F471CB265F90032903E /* AEIOAudioUnit.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C9F0F211CB1E9FC0032903E /* AEIOAudioUnit.m */; };
 		4C9F0F491CB265F90032903E /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 4CDCAD1E1CA3A67A008AAEF1 /* TPCircularBuffer.c */; };
 		4C9F0F4B1CB265F90032903E /* AEAudioUnitModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CDCAD9B1CA90F98008AAEF1 /* AEAudioUnitModule.m */; };
-		4C9F0F4F1CB265F90032903E /* TheAmazingAudioEngine.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4CDCAC9B1CA25A29008AAEF1 /* TheAmazingAudioEngine.h */; };
 		4C9F0F521CB265F90032903E /* AEDelayModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CDCAD601CA5484D008AAEF1 /* AEDelayModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C9F0F531CB265F90032903E /* AEUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CDCAD351CA3C31C008AAEF1 /* AEUtilities.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C9F0F541CB265F90032903E /* AENewTimePitchModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CDCAD6E1CA5484D008AAEF1 /* AENewTimePitchModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -152,7 +151,6 @@
 		4C9F0F911CB269C30032903E /* AEIOAudioUnit.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C9F0F211CB1E9FC0032903E /* AEIOAudioUnit.m */; };
 		4C9F0F931CB269C30032903E /* TPCircularBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 4CDCAD1E1CA3A67A008AAEF1 /* TPCircularBuffer.c */; };
 		4C9F0F951CB269C30032903E /* AEAudioUnitModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CDCAD9B1CA90F98008AAEF1 /* AEAudioUnitModule.m */; };
-		4C9F0F981CB269C30032903E /* TheAmazingAudioEngine.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4CDCAC9B1CA25A29008AAEF1 /* TheAmazingAudioEngine.h */; };
 		4C9F0F9B1CB269C30032903E /* AEDelayModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CDCAD601CA5484D008AAEF1 /* AEDelayModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C9F0F9C1CB269C30032903E /* AEUtilities.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CDCAD351CA3C31C008AAEF1 /* AEUtilities.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C9F0F9D1CB269C30032903E /* AENewTimePitchModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CDCAD6E1CA5484D008AAEF1 /* AENewTimePitchModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -228,7 +226,6 @@
 		4CBCF2A11CFBC3D200CA2EA0 /* AESplitterModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CBCF29D1CFBC3D200CA2EA0 /* AESplitterModule.m */; };
 		4CBCF2A21CFBC3D200CA2EA0 /* AESplitterModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CBCF29D1CFBC3D200CA2EA0 /* AESplitterModule.m */; };
 		4CBCF2A31CFBC3D200CA2EA0 /* AESplitterModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CBCF29D1CFBC3D200CA2EA0 /* AESplitterModule.m */; };
-		4CDCAC9C1CA25A29008AAEF1 /* TheAmazingAudioEngine.h in CopyFiles */ = {isa = PBXBuildFile; fileRef = 4CDCAC9B1CA25A29008AAEF1 /* TheAmazingAudioEngine.h */; };
 		4CDCACAB1CA25A6E008AAEF1 /* AEArrayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CDCACAA1CA25A6E008AAEF1 /* AEArrayTests.m */; };
 		4CDCACAD1CA25A6E008AAEF1 /* libTheAmazingAudioEngine.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4CDCAC981CA25A29008AAEF1 /* libTheAmazingAudioEngine.a */; };
 		4CDCACEB1CA25B6F008AAEF1 /* TheAmazingAudioEngine.h in Headers */ = {isa = PBXBuildFile; fileRef = 4CDCAC9B1CA25A29008AAEF1 /* TheAmazingAudioEngine.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -315,39 +312,6 @@
 			remoteInfo = TheAmazingAudioEngine;
 		};
 /* End PBXContainerItemProxy section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		4C9F0F4E1CB265F90032903E /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "include/$(PRODUCT_NAME)";
-			dstSubfolderSpec = 16;
-			files = (
-				4C9F0F4F1CB265F90032903E /* TheAmazingAudioEngine.h in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4C9F0F971CB269C30032903E /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "include/$(PRODUCT_NAME)";
-			dstSubfolderSpec = 16;
-			files = (
-				4C9F0F981CB269C30032903E /* TheAmazingAudioEngine.h in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4CDCAC961CA25A29008AAEF1 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "include/$(PRODUCT_NAME)";
-			dstSubfolderSpec = 16;
-			files = (
-				4CDCAC9C1CA25A29008AAEF1 /* TheAmazingAudioEngine.h in CopyFiles */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		2236604F1D96E34800CFA5B8 /* AENewTimePitchModuleTests.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AENewTimePitchModuleTests.m; sourceTree = "<group>"; };
@@ -889,7 +853,6 @@
 			buildPhases = (
 				4C9F0F2C1CB265F90032903E /* Sources */,
 				4C9F0F4D1CB265F90032903E /* Frameworks */,
-				4C9F0F4E1CB265F90032903E /* CopyFiles */,
 				4C9F0F501CB265F90032903E /* Headers */,
 			);
 			buildRules = (
@@ -907,7 +870,6 @@
 			buildPhases = (
 				4C9F0F761CB269C30032903E /* Sources */,
 				4C9F0F961CB269C30032903E /* Frameworks */,
-				4C9F0F971CB269C30032903E /* CopyFiles */,
 				4C9F0F991CB269C30032903E /* Headers */,
 			);
 			buildRules = (
@@ -925,7 +887,6 @@
 			buildPhases = (
 				4CDCAC941CA25A29008AAEF1 /* Sources */,
 				4CDCAC951CA25A29008AAEF1 /* Frameworks */,
-				4CDCAC961CA25A29008AAEF1 /* CopyFiles */,
 				4CDCACE61CA25B5D008AAEF1 /* Headers */,
 			);
 			buildRules = (
