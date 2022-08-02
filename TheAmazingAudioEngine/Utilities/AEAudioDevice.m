@@ -87,7 +87,7 @@ NSString * const AEAudioDeviceAvailableDevicesChangedNotification = @"AEAudioDev
     UInt32 size = sizeof(deviceId);
     CFStringRef UIDStr = (__bridge CFStringRef)UID;
     AudioObjectPropertyAddress addr = {kAudioHardwarePropertyTranslateUIDToDevice, kAudioObjectPropertyScopeGlobal};
-    if ( !AECheckOSStatus(AudioObjectGetPropertyData(kAudioObjectSystemObject, &addr, sizeof(UIDStr), UIDStr, &size, &deviceId), "kAudioHardwarePropertyTranslateUIDToDevice") ) {
+    if ( !AECheckOSStatus(AudioObjectGetPropertyData(kAudioObjectSystemObject, &addr, sizeof(UIDStr), &UIDStr, &size, &deviceId), "kAudioHardwarePropertyTranslateUIDToDevice") ) {
         return nil;
     }
     return [[AEAudioDevice alloc] initWithObjectID:deviceId];
@@ -131,6 +131,20 @@ NSString * const AEAudioDeviceAvailableDevicesChangedNotification = @"AEAudioDev
         return nil;
     }
     return _name = (__bridge_transfer NSString *)value;
+}
+
+- (BOOL)hasInput {
+    UInt32 size;
+    AudioObjectPropertyAddress addr = {kAudioDevicePropertyStreams, kAudioDevicePropertyScopeInput};
+    if ( !AECheckOSStatus(AudioObjectGetPropertyDataSize(_objectID, &addr, 0, NULL, &size), "kAudioDevicePropertyStreams") ) return 0;
+    return size > 0;
+}
+
+- (BOOL)hasOutput {
+    UInt32 size;
+    AudioObjectPropertyAddress addr = {kAudioDevicePropertyStreams, kAudioDevicePropertyScopeOutput};
+    if ( !AECheckOSStatus(AudioObjectGetPropertyDataSize(_objectID, &addr, 0, NULL, &size), "kAudioDevicePropertyStreams") ) return 0;
+    return size > 0;
 }
 
 - (AudioStreamBasicDescription)inputStreamFormat {

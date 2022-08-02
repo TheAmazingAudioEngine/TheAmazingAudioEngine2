@@ -27,6 +27,8 @@ extern NSString * const AEAudioDeviceAvailableDevicesChangedNotification;
 @property (nonatomic, readonly) AudioObjectID objectID;
 @property (nonatomic, strong, readonly) NSString * UID;
 @property (nonatomic, strong, readonly) NSString * name;
+@property (nonatomic, readonly) BOOL hasInput;
+@property (nonatomic, readonly) BOOL hasOutput;
 @property (nonatomic, readonly) AudioStreamBasicDescription inputStreamFormat;
 @property (nonatomic, readonly) AudioStreamBasicDescription outputStreamFormat;
 @property (nonatomic) UInt32 inputBufferDuration;
