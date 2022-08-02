@@ -32,10 +32,12 @@
 #import "AEManagedValue.h"
 #import "AEAudioBufferListUtilities.h"
 #import "AEDSPUtilities.h"
+#import "AECircularBuffer.h"
 #import <AVFoundation/AVFoundation.h>
 
 #if TARGET_OS_OSX
 #import "AEAudioDevice.h"
+static const OSStatus kEmptyBufferErr = -1;
 #endif
 
 NSString * const AEIOAudioUnitDidUpdateStreamFormatNotification = @"AEIOAudioUnitDidUpdateStreamFormatNotification";
@@ -64,15 +66,29 @@ static const double kAVAudioSession0dBGain = 0.75;
 @property (nonatomic) NSTimeInterval outputLatency;
 @property (nonatomic) NSTimeInterval inputLatency;
 #else
-@property (nonatomic) AudioBufferList * savedAudioBuffer;
 @property (nonatomic, strong) id defaultDeviceObserverToken;
 @property (nonatomic, strong) id deviceAvailabilityObserverToken;
+@property (nonatomic) AudioConverterRef audioConverter;
+@property (nonatomic) UInt32 lowWaterMark;
+@property (nonatomic) UInt32 lowWaterMarkSampleCount;
+@property (nonatomic) AECircularBuffer ringBuffer;
+@property (nonatomic) AudioBufferList * scratchBuffer;
 #endif
 @end
 
+#if TARGET_OS_OSX
+struct _conversion_proc_arg_t {
+    __unsafe_unretained AEIOAudioUnit * THIS;
+    const AudioTimeStamp * timestamp;
+};
+#endif
+
 @implementation AEIOAudioUnit
 @dynamic renderBlock, IOBufferDuration;
+
+#if TARGET_OS_OSX
 @synthesize audioDevice = _audioDevice;
+#endif
 
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
@@ -291,8 +307,11 @@ static const double kAVAudioSession0dBGain = 0.75;
     self.deviceAvailabilityObserverToken = nil;
     [[NSNotificationCenter defaultCenter] removeObserver:self.defaultDeviceObserverToken];
     self.defaultDeviceObserverToken = nil;
-    AEAudioBufferListFree(self.savedAudioBuffer);
-    self.savedAudioBuffer = NULL;
+    if ( _ringBuffer.buffer.buffer ) AECircularBufferCleanup(&_ringBuffer);
+    if ( _audioConverter ) AudioConverterDispose(_audioConverter);
+    _audioConverter = NULL;
+    if ( _scratchBuffer ) AEAudioBufferListFree(_scratchBuffer);
+    _scratchBuffer = NULL;
 #endif
     
     AECheckOSStatus(AudioUnitUninitialize(_audioUnit), "AudioUnitUninitialize");
@@ -355,14 +374,25 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull T
         return 0;
     }
     
-#if TARGET_OS_OSX
     OSStatus status = noErr;
-    AEAudioBufferListCopyContents(buffer, THIS->_savedAudioBuffer, 0, 0, frames);
+    
+#if TARGET_OS_OSX
+    if ( THIS->_audioConverter ) {
+        AEAudioBufferListCopyOnStack(mutableAbl, buffer, 0);
+        status = AudioConverterFillComplexBuffer(THIS->_audioConverter, AEIOAudioUnitConversionDataProc, &(struct _conversion_proc_arg_t){THIS}, &frames, mutableAbl, NULL);
+        if ( status == kEmptyBufferErr ) {
+            AEAudioBufferListSilence(buffer, 0, frames);
+        } else {
+            AECheckOSStatus(status, "AudioConverterFillComplexBuffer");
+        }
+    } else {
+        AECircularBufferDequeue(&THIS->_ringBuffer, &frames, buffer, NULL);
+    }
 #else
     AudioUnitRenderActionFlags flags = 0;
     AudioTimeStamp timestamp = THIS->_inputTimestamp;
     AEAudioBufferListCopyOnStack(mutableAbl, buffer, 0);
-    OSStatus status = AudioUnitRender(THIS->_audioUnit, &flags, &timestamp, 1, frames, mutableAbl);
+    status = AudioUnitRender(THIS->_audioUnit, &flags, &timestamp, 1, frames, mutableAbl);
     AECheckOSStatus(status, "AudioUnitRender");
 #endif
     
@@ -583,6 +613,9 @@ static OSStatus AEIOAudioUnitRenderCallback(void *inRefCon, AudioUnitRenderActio
     
     // Render
     __unsafe_unretained AEIOAudioUnit * THIS = (__bridge AEIOAudioUnit *)inRefCon;
+    if ( ioData->mBuffers[0].mData == NULL ) {
+        return noErr;
+    }
     
     AudioTimeStamp timestamp = *inTimeStamp;
     
@@ -592,14 +625,20 @@ static OSStatus AEIOAudioUnitRenderCallback(void *inRefCon, AudioUnitRenderActio
     }
 #endif
     
-    __unsafe_unretained AEIOAudioUnitRenderBlock renderBlock
-        = (__bridge AEIOAudioUnitRenderBlock)AEManagedValueGetValue(THIS->_renderBlockValue);
-    if ( renderBlock ) {
-        renderBlock(ioData, inNumberFrames, &timestamp);
-    } else {
-        *ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
-    }
+    __unsafe_unretained AEIOAudioUnitRenderBlock renderBlock = (__bridge AEIOAudioUnitRenderBlock)AEManagedValueGetValue(THIS->_renderBlockValue);
     
+#if TARGET_OS_OSX
+    if ( THIS->_audioConverter ) {
+        AECheckOSStatus(AudioConverterFillComplexBuffer(THIS->_audioConverter, AEIOAudioUnitConversionDataProc, &(struct _conversion_proc_arg_t){THIS, inTimeStamp}, &inNumberFrames, ioData, NULL), "AudioConverterFillComplexBuffer");
+    } else
+#endif
+    {
+        if ( renderBlock ) {
+            renderBlock(ioData, inNumberFrames, &timestamp);
+        } else {
+            *ioActionFlags |= kAudioUnitRenderAction_OutputIsSilence;
+        }
+    }
     return noErr;
 }
 
@@ -617,8 +656,10 @@ static OSStatus AEIOAudioUnitInputCallback(void *inRefCon, AudioUnitRenderAction
     }
 #else
     // Render now, into saved buffer
-    AEAudioBufferListSetLength(THIS->_savedAudioBuffer, inNumberFrames);
-    AECheckOSStatus(AudioUnitRender(THIS->_audioUnit, ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, THIS->_savedAudioBuffer), "AudioUnitRender");
+    AudioBufferList * abl = AECircularBufferPrepareEmptyAudioBufferList(&THIS->_ringBuffer, inNumberFrames, inTimeStamp);
+    if (abl && AECheckOSStatus(AudioUnitRender(THIS->_audioUnit, ioActionFlags, inTimeStamp, inBusNumber, inNumberFrames, abl), "AudioUnitRender") ) {
+        AECircularBufferProduceAudioBufferList(&THIS->_ringBuffer, inTimeStamp);
+    }
 #endif
     
     THIS->_inputTimestamp = timestamp;
@@ -651,6 +692,46 @@ static void AEIOAudioUnitIAAConnectionChanged(void *inRefCon, AudioUnit inUnit, 
             [self start:NULL];
         }
     });
+}
+#endif
+
+#if TARGET_OS_OSX
+static OSStatus AEIOAudioUnitConversionDataProc(AudioConverterRef inAudioConverter, UInt32 * ioNumberDataPackets, AudioBufferList * ioData, AudioStreamPacketDescription * __nullable * __nullable outDataPacketDescription, void * inUserData) {
+    __unsafe_unretained AEIOAudioUnit * THIS = ((struct _conversion_proc_arg_t *)inUserData)->THIS;
+    
+    AEAudioBufferListSetLength(THIS->_scratchBuffer, *ioNumberDataPackets);
+    AEAudioBufferListAssign(ioData, THIS->_scratchBuffer, 0, *ioNumberDataPackets);
+    
+    if ( THIS->_inputEnabled ) {
+        // Input
+        UInt32 available = AECircularBufferPeek(&THIS->_ringBuffer, NULL);
+        if ( available < *ioNumberDataPackets ) {
+            THIS->_lowWaterMark = 0;
+            *ioNumberDataPackets = 0;
+            return kEmptyBufferErr;
+        }
+        available -= *ioNumberDataPackets;
+        THIS->_lowWaterMark = MIN(THIS->_lowWaterMark, available);
+        if ( THIS->_lowWaterMarkSampleCount++ > 25 ) {
+            if ( THIS->_lowWaterMark > 32 ) {
+                UInt32 discard = THIS->_lowWaterMark;
+                AECircularBufferDequeue(&THIS->_ringBuffer, &discard, NULL, NULL);
+                available -= discard;
+            }
+            THIS->_lowWaterMark = available;
+            THIS->_lowWaterMarkSampleCount = 1;
+        }
+        AECircularBufferDequeue(&THIS->_ringBuffer, ioNumberDataPackets, ioData, NULL);
+    } else {
+        // Output
+        __unsafe_unretained AEIOAudioUnitRenderBlock renderBlock = (__bridge AEIOAudioUnitRenderBlock)AEManagedValueGetValue(THIS->_renderBlockValue);
+        if ( renderBlock ) {
+            renderBlock(THIS->_scratchBuffer, *ioNumberDataPackets, ((struct _conversion_proc_arg_t *)inUserData)->timestamp);
+        } else {
+            AEAudioBufferListSilence(THIS->_scratchBuffer, 0, *ioNumberDataPackets);
+        }
+    }
+    return noErr;
 }
 #endif
 
@@ -714,9 +795,31 @@ static void AEIOAudioUnitIAAConnectionChanged(void *inRefCon, AudioUnit inUnit, 
             asbd = AEAudioDescription;
             asbd.mChannelsPerFrame = self.numberOfOutputChannels;
             asbd.mSampleRate = self.currentSampleRate;
-            AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0,
-                                                 &asbd, sizeof(asbd)),
-                            "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
+            
+            #if TARGET_OS_OSX
+            double availableRate = [self.audioDevice closestSupportedSampleRateTo:self.currentSampleRate];
+            if ( fabs(availableRate - asbd.mSampleRate) > 0.1 ) {
+                // This sample rate not supported; need to add an audio converter
+                AudioStreamBasicDescription sourceAsbd = asbd;
+                asbd.mSampleRate = availableRate;
+                AECircularBufferSetChannelCountAndSampleRate(&_ringBuffer, asbd.mChannelsPerFrame, asbd.mSampleRate);
+                if ( _audioConverter ) AudioConverterDispose(_audioConverter);
+                AECheckOSStatus(AudioConverterNew(&sourceAsbd, &asbd, &_audioConverter), "AudioConverterNew");
+                if ( _scratchBuffer && _scratchBuffer->mNumberBuffers != sourceAsbd.mChannelsPerFrame ) {
+                    AEAudioBufferListFree(_scratchBuffer);
+                    _scratchBuffer = NULL;
+                }
+                if ( !_scratchBuffer ) _scratchBuffer = AEAudioBufferListCreateWithFormat(sourceAsbd, AEGetMaxFramesPerSlice());
+            } else {
+                if ( _audioConverter ) AudioConverterDispose(_audioConverter);
+                _audioConverter = nil;
+                if ( _scratchBuffer ) AEAudioBufferListFree(_scratchBuffer);
+                _scratchBuffer = NULL;
+            }
+            self.audioDevice.sampleRate = availableRate;
+            #endif
+            
+            AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 0, &asbd, sizeof(asbd)), "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
         }
     }
     
@@ -724,9 +827,7 @@ static void AEIOAudioUnitIAAConnectionChanged(void *inRefCon, AudioUnit inUnit, 
         // Get the current input number of input channels
         AudioStreamBasicDescription asbd;
         UInt32 size = sizeof(asbd);
-        AECheckOSStatus(AudioUnitGetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input,
-                                             1, &asbd, &size),
-                        "AudioUnitGetProperty(kAudioUnitProperty_StreamFormat)");
+        AECheckOSStatus(AudioUnitGetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Input, 1, &asbd, &size), "AudioUnitGetProperty(kAudioUnitProperty_StreamFormat)");
         
         if ( iaaInput ) {
             asbd.mChannelsPerFrame = 2;
@@ -760,13 +861,32 @@ static void AEIOAudioUnitIAAConnectionChanged(void *inRefCon, AudioUnit inUnit, 
             asbd.mSampleRate = self.currentSampleRate;
             
             #if TARGET_OS_OSX
-            if ( self.savedAudioBuffer && self.savedAudioBuffer->mNumberBuffers != asbd.mChannelsPerFrame ) {
-                AEAudioBufferListFree(self.savedAudioBuffer);
-                self.savedAudioBuffer = NULL;
+            if ( _ringBuffer.buffer.buffer && _ringBuffer.audioDescription.mChannelsPerFrame != asbd.mChannelsPerFrame ) {
+                AECircularBufferCleanup(&_ringBuffer);
             }
-            if ( !self.savedAudioBuffer ) {
-                self.savedAudioBuffer = AEAudioBufferListCreateWithFormat(asbd, AEGetMaxFramesPerSlice());
+            if ( !_ringBuffer.buffer.buffer ) {
+                AECircularBufferInit(&_ringBuffer, AEGetMaxFramesPerSlice(), asbd.mChannelsPerFrame, asbd.mSampleRate);
             }
+            double availableRate = [self.audioDevice closestSupportedSampleRateTo:self.currentSampleRate];
+            if ( fabs(availableRate - asbd.mSampleRate) > 0.1 ) {
+                // This sample rate not supported; need to add an audio converter
+                AudioStreamBasicDescription targetAsbd = asbd;
+                asbd.mSampleRate = availableRate;
+                AECircularBufferSetChannelCountAndSampleRate(&_ringBuffer, asbd.mChannelsPerFrame, asbd.mSampleRate);
+                if ( _audioConverter ) AudioConverterDispose(_audioConverter);
+                AECheckOSStatus(AudioConverterNew(&asbd, &targetAsbd, &_audioConverter), "AudioConverterNew");
+                if ( _scratchBuffer && _scratchBuffer->mNumberBuffers != asbd.mChannelsPerFrame ) {
+                    AEAudioBufferListFree(_scratchBuffer);
+                    _scratchBuffer = NULL;
+                }
+                if ( !_scratchBuffer ) _scratchBuffer = AEAudioBufferListCreateWithFormat(asbd, AEGetMaxFramesPerSlice());
+            } else {
+                if ( _audioConverter ) AudioConverterDispose(_audioConverter);
+                _audioConverter = nil;
+                if ( _scratchBuffer ) AEAudioBufferListFree(_scratchBuffer);
+                _scratchBuffer = NULL;
+            }
+            self.audioDevice.sampleRate = availableRate;
             #endif
             
             AECheckOSStatus(AudioUnitSetProperty(_audioUnit, kAudioUnitProperty_StreamFormat, kAudioUnitScope_Output, 1, &asbd, sizeof(asbd)), "AudioUnitSetProperty(kAudioUnitProperty_StreamFormat)");
