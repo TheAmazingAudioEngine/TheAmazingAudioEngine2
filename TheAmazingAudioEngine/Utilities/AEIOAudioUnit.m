@@ -445,6 +445,7 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
         AudioObjectID deviceId = audioDevice.objectID;
         OSStatus result = AudioUnitSetProperty(_audioUnit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &deviceId, sizeof(deviceId));
         AECheckOSStatus(result, "AudioUnitSetProperty(kAudioOutputUnitProperty_CurrentDevice)");
+        self.hasSetInitialStreamFormat = NO;
         [self updateStreamFormat];
         if ( wasRunning ) {
             [self start:NULL];
