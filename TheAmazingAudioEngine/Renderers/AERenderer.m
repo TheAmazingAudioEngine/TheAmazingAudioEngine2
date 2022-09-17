@@ -87,7 +87,7 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList 
             .frames = frames,
             .sampleRate = THIS->_sampleRate,
             .timestamp = &time,
-            .offlineRendering = THIS->_isOffline,
+            .flags = THIS->_flags,
             .stack = stack
         };
         

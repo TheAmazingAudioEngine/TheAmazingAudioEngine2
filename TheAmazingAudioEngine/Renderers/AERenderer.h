@@ -94,7 +94,7 @@ AEHostTicks AERendererGetNextRenderTimestamp(__unsafe_unretained AERenderer * _N
 @property (nonatomic, copy) AERenderLoopBlock _Nullable block; //!< The output loop block. Assignment is thread-safe.
 @property (nonatomic) double sampleRate; //!< The sample rate
 @property (nonatomic) int numberOfOutputChannels; //!< The number of output channels
-@property (nonatomic) BOOL isOffline; //!< Whether rendering is offline (faster than realtime), default NO
+@property (nonatomic) AERendererContextFlags flags; //!< Rendering context flags
 @property (nonatomic, readonly) AEBufferStack * _Nonnull stack; //!< Buffer stack
 @end
 

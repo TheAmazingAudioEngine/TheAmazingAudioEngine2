@@ -32,6 +32,14 @@ extern "C" {
 #import <AudioToolbox/AudioToolbox.h>
 #import "AEBufferStack.h"
 
+
+//! Renderer context flags
+typedef enum {
+    AERendererContextFlagNone = 0, //!< No flags
+    AERendererContextFlagIsOffline = 1<<0, //!< Offline rendering (faster than realtime)
+    AERendererContextFlagIsVariableRate = 1<<1, //!< Running within variable-rate renderer, like a time/pitch processor
+} AERendererContextFlags;
+
 /*!
  * Render context
  *
@@ -52,11 +60,11 @@ typedef struct {
     //! The current audio timestamp
     const AudioTimeStamp * _Nonnull timestamp;
     
-    //! Whether rendering is offline (faster than realtime)
-    BOOL offlineRendering;
-    
     //! The buffer stack. Use this as a workspace for generating and processing audio.
     AEBufferStack * _Nonnull stack;
+    
+    //! Bitmask of flags
+    AERendererContextFlags flags;
     
 } AERenderContext;
 

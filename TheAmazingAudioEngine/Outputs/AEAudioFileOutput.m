@@ -73,7 +73,7 @@ static const UInt32 kFramesPerSlice = 1024;
     _renderer = renderer;
     _renderer.sampleRate = self.sampleRate;
     _renderer.numberOfOutputChannels = self.numberOfChannels;
-    _renderer.isOffline = YES;
+    _renderer.flags = AERendererContextFlagIsOffline;
 }
 
 - (void)runForDuration:(AESeconds)duration completionBlock:(AEAudioFileOutputCompletionBlock)completionBlock {

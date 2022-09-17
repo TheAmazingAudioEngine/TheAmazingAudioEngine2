@@ -185,7 +185,7 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
 - (void)setRenderer:(AERenderer *)renderer {
     renderer.sampleRate = self.ioUnit.currentSampleRate;
     renderer.numberOfOutputChannels = self.ioUnit.numberOfOutputChannels;
-    renderer.isOffline = NO;
+    renderer.flags = 0;
     
     self.rendererValue.objectValue = renderer;
 }
