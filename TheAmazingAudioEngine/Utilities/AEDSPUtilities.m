@@ -66,6 +66,7 @@ void AEDSPApplyGainSmoothed(const AudioBufferList * bufferList, float targetGain
 
 void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames, UInt32 rampDuration, const AudioBufferList * output) {
     
+    if ( rampDuration == 0 ) *currentGain = targetGain;
     float diff = fabsf(targetGain - *currentGain);
     if ( diff > kSmoothGainThreshold ) {
         // Need to apply ramp
