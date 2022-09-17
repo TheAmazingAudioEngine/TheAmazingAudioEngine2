@@ -81,6 +81,24 @@ void AERendererRun(__unsafe_unretained AERenderer * _Nonnull renderer,
                    const AudioTimeStamp * _Nonnull timestamp);
 
 /*!
+ * Perform one pass of the render loop (multiple output bus version)
+ *
+ * @param renderer The renderer instance
+ * @param primaryBufferList Main AudioBufferList to write audio to. If mData pointers are NULL, will set these
+ *      to the top buffer's mData pointers instead.
+ * @param auxiliaryBufferListCount Number of auxiliary buffers
+ * @param auxiliaryBuffers Array of auxiliary buffers
+ * @param frames The number of frames to process
+ * @param timestamp The timestamp of the current period
+ */
+void AERendererRunMultiOutput(__unsafe_unretained AERenderer * _Nonnull renderer,
+                   const AudioBufferList * _Nonnull primaryBufferList,
+                   int auxiliaryBufferListCount,
+                   const AEAuxiliaryBuffer * _Nullable auxiliaryBuffers,
+                   UInt32 frames,
+                   const AudioTimeStamp * _Nonnull timestamp);
+
+/*!
  * Get timestamp corresponding to the start of the previous render interval
  */
 AEHostTicks AERendererGetLastRenderTimestamp(__unsafe_unretained AERenderer * _Nonnull renderer);

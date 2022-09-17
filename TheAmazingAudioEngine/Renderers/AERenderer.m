@@ -61,6 +61,10 @@
 }
 
 void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList * bufferList, UInt32 frames, const AudioTimeStamp * timestamp) {
+    AERendererRunMultiOutput(THIS, bufferList, 0, NULL, frames, timestamp);
+}
+
+void AERendererRunMultiOutput(__unsafe_unretained AERenderer * THIS, const AudioBufferList * primaryBufferList, int auxiliaryBufferListCount, const AEAuxiliaryBuffer * auxiliaryBuffers, UInt32 frames, const AudioTimeStamp * timestamp) {
     
     AEBufferStack * stack = (AEBufferStack *)AEManagedValueGetValue(THIS->_stackValue);
     
@@ -70,7 +74,12 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList 
     AEBufferStackSetTimeStamp(stack, timestamp);
     
     // Clear the output buffer
-    AEAudioBufferListSilence(bufferList, 0, frames);
+    AEAudioBufferListSilence(primaryBufferList, 0, frames);
+    
+    // Clear the auxiliary buffers
+    for ( int i=0; i<auxiliaryBufferListCount; i++ ) {
+        AEAudioBufferListSilence(auxiliaryBuffers[i].bufferList, 0, frames);
+    }
     
     // Run the block
     __unsafe_unretained AERenderLoopBlock block = (__bridge AERenderLoopBlock)AEManagedValueGetValue(THIS->_blockValue);
@@ -83,7 +92,9 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList 
         THIS->_sampleTime += frames;
         
         AERenderContext context = {
-            .output = bufferList,
+            .output = primaryBufferList,
+            .auxiliaryBufferCount = auxiliaryBufferListCount,
+            .auxiliaryBuffers = auxiliaryBuffers,
             .frames = frames,
             .sampleRate = THIS->_sampleRate,
             .timestamp = &time,

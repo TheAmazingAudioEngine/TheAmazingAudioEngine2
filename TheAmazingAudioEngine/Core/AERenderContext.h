@@ -40,6 +40,12 @@ typedef enum {
     AERendererContextFlagIsVariableRate = 1<<1, //!< Running within variable-rate renderer, like a time/pitch processor
 } AERendererContextFlags;
 
+//! Auxiliary buffer, for use with AERendererRunMultiOutput
+typedef struct {
+    uint64_t identifier;
+    AudioBufferList * _Nonnull bufferList;
+} AEAuxiliaryBuffer;
+
 /*!
  * Render context
  *
@@ -50,6 +56,12 @@ typedef struct {
     
     //! The output buffer list. You should write to this to produce audio.
     const AudioBufferList * _Nonnull output;
+    
+    //! The number of auxiliary buffers (if AERendererRunMultiOutput in use)
+    int auxiliaryBufferCount;
+    
+    //! Array of auxiliary buffers
+    const AEAuxiliaryBuffer * _Nullable auxiliaryBuffers;
     
     //! The number of frames to render to the output
     UInt32 frames;
