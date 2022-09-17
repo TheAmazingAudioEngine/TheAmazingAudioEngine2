@@ -274,7 +274,7 @@ static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
     void * oldValue = _value;
     _value = value;
     
-    if ( __atomicUpdateCounter == 0 && !__atomicUpdateWaitingForCommit ) {
+    if ( (__atomicUpdateCounter == 0 && !__atomicUpdateWaitingForCommit) || AEManagedValueIsBypassingAtomicUpdate(self) ) {
         // Sync value for recall on realtime thread during atomic batch update
         _atomicBatchUpdateLastValue = _value;
     } else {
@@ -365,17 +365,7 @@ void AEManagedValueCommitPendingUpdates() {
 void * AEManagedValueGetValue(__unsafe_unretained AEManagedValue * THIS) {
     if ( !THIS ) return NULL;
     
-    BOOL atomicBypass = NO;
-    if ( __atomicBypassCounter > 0 ) {
-        pthread_t thread = pthread_self();
-        for ( int i=((intptr_t)thread)%kAtomicBypassSectionTableSize, j=0; j<kAtomicBypassSectionTableSize && __atomicBypassSectionCounts[i].thread != NULL; j++, i=(i+1)%kAtomicBypassSectionTableSize ) {
-            if ( __atomicBypassSectionCounts[i].thread == thread ) {
-                atomicBypass = __atomicBypassSectionCounts[i].count > 0;
-                break;
-            }
-        }
-    }
-    
+    BOOL atomicBypass = AEManagedValueIsBypassingAtomicUpdate(THIS);
     if ( !atomicBypass && (__atomicUpdateWaitingForCommit || pthread_rwlock_tryrdlock(&__atomicUpdateMutex) != 0) ) {
         // Atomic update in progress - return previous value
         return THIS->_atomicBatchUpdateLastValue;
@@ -451,6 +441,21 @@ void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS
     if ( _releaseNotificationBlock ) {
         _releaseNotificationBlock();
     }
+}
+
+static BOOL AEManagedValueIsBypassingAtomicUpdate(__unsafe_unretained AEManagedValue * THIS) {
+    if ( __atomicBypassCounter == 0 ) {
+        return NO;
+    }
+    
+    pthread_t thread = pthread_self();
+    for ( int i=((intptr_t)thread)%kAtomicBypassSectionTableSize, j=0; j<kAtomicBypassSectionTableSize && __atomicBypassSectionCounts[i].thread != NULL; j++, i=(i+1)%kAtomicBypassSectionTableSize ) {
+        if ( __atomicBypassSectionCounts[i].thread == thread ) {
+            return __atomicBypassSectionCounts[i].count > 0;
+        }
+    }
+
+    return NO;
 }
 
 @end

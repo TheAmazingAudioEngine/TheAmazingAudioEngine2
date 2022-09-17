@@ -89,6 +89,10 @@ typedef void (^AEManagedValueReleaseNotificationBlock)(void);
 
 /*!
  * Perform a block, bypassing any current atomic updates
+ *
+ *  Inside the given block, calls to AEManagedValueGetValue will return the current value regardless
+ *  of any currently-running updates using performAtomicBatchUpdate:. Similarly, any assignment calls
+ *  will result in the new value being immediately available via AEManagedValueGetValue.
  */
 + (void)performBlockBypassingAtomicBatchUpdate:(AEManagedValueUpdateBlock _Nonnull)block;
 
