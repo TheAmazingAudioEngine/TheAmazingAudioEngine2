@@ -398,6 +398,7 @@ void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS
 #pragma mark - Helpers
 
 - (void)pollReleaseList {
+    __strong typeof(self) strongSelf = self;
     linkedlistitem_t * release;
     while ( (release = OSAtomicDequeue(&_releaseQueue, offsetof(linkedlistitem_t, next))) ) {
         if ( release->completionBlock ) {
