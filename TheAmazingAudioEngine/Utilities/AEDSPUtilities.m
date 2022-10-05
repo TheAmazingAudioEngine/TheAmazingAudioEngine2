@@ -61,17 +61,17 @@ void AEDSPApplyEqualPowerRamp(const AudioBufferList * bufferList, float * start,
 }
 
 void AEDSPApplyGainSmoothed(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames, const AudioBufferList * output) {
-    AEDSPApplyGainWithRamp(bufferList, targetGain, currentGain, frames, 0, output);
+    AEDSPApplyGainWithRamp(bufferList, targetGain, currentGain, frames, kGainSmoothingRampDuration, output);
 }
 
 void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames, UInt32 rampDuration, const AudioBufferList * output) {
     
     if ( rampDuration == 0 ) *currentGain = targetGain;
     float diff = fabsf(targetGain - *currentGain);
-    if ( diff > kSmoothGainThreshold ) {
+    UInt32 duration = MIN(round(diff * rampDuration), frames);
+    if ( duration > 0 ) {
         // Need to apply ramp
-        UInt32 duration = MIN(diff * (rampDuration ? rampDuration : kGainSmoothingRampDuration), frames);
-        float step = (targetGain > *currentGain ? 1.0 : -1.0) * (rampDuration ? 1.0/rampDuration : kGainSmoothingRampStep);
+        float step = (targetGain > *currentGain ? 1.0 : -1.0) * (1.0/rampDuration);
         
         if ( rampDuration > kMinRampDurationForPowerCurve ) {
             // We're going to use a power function curve for more linear-sounding transitions.
