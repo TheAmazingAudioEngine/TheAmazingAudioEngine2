@@ -235,6 +235,10 @@ static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
         OSAtomicEnqueue(&_releaseQueue, release, offsetof(linkedlistitem_t, next));
     }
     [self pollReleaseList];
+    
+    if ( self.pollTimer ) {
+        [self.pollTimer invalidate];
+    }
 }
 
 - (id)objectValue {
