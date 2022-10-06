@@ -10,9 +10,8 @@
 #import <Accelerate/Accelerate.h>
 
 static const UInt32 kMaxFramesPerSlice = 8192;
-static const UInt32 kGainSmoothingRampDuration = 128;
-static const float kGainSmoothingRampStep = 1.0 / kGainSmoothingRampDuration;
-static const float kSmoothGainThreshold = kGainSmoothingRampStep;
+static const float kGainSmoothingRampStep = 1.0 / 8192;
+static const UInt32 kGainSmoothingRampMaxDuration = 512;
 static const UInt32 kMinRampDurationForPowerCurve = 8192;
 static const float kPowerCurvePower = 3.0;
 
@@ -61,19 +60,20 @@ void AEDSPApplyEqualPowerRamp(const AudioBufferList * bufferList, float * start,
 }
 
 void AEDSPApplyGainSmoothed(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames, const AudioBufferList * output) {
-    AEDSPApplyGainWithRamp(bufferList, targetGain, currentGain, frames, kGainSmoothingRampDuration, output);
+    AEDSPApplyGainWithRamp(bufferList, targetGain, currentGain, frames, kGainSmoothingRampStep, kGainSmoothingRampMaxDuration, output);
 }
 
-void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames, UInt32 rampDuration, const AudioBufferList * output) {
-    
-    if ( rampDuration == 0 ) *currentGain = targetGain;
+void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames, float step, UInt32 maximumRampDuration, const AudioBufferList * output) {
+    if ( step == 0 || step == INFINITY ) *currentGain = targetGain;
     float diff = fabsf(targetGain - *currentGain);
-    UInt32 duration = MIN(round(diff * rampDuration), frames);
+    UInt32 duration = round(diff / step);
+    if ( maximumRampDuration ) duration = MIN(maximumRampDuration, duration);
+    
     if ( duration > 0 ) {
         // Need to apply ramp
-        float step = (targetGain > *currentGain ? 1.0 : -1.0) * (1.0/rampDuration);
+        float step = (targetGain - *currentGain) / duration;
         
-        if ( rampDuration > kMinRampDurationForPowerCurve ) {
+        if ( duration > kMinRampDurationForPowerCurve ) {
             // We're going to use a power function curve for more linear-sounding transitions.
             // Invert power function to get current t
             float t = powf(*currentGain, 1.0/kPowerCurvePower);
@@ -82,9 +82,10 @@ void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain
             float localTarget = powf(t + (step * duration), kPowerCurvePower);
             
             // Calculate step
-            step = (localTarget - *currentGain) / (float)duration;
+            step = (localTarget - *currentGain) / duration;
         }
         
+        duration = MIN(duration, frames);
         AEDSPApplyRamp(bufferList, currentGain, step, duration, output);
         
         if ( duration < frames && fabsf(targetGain - 1.0f) > FLT_EPSILON ) {
@@ -107,15 +108,16 @@ void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain
 
 void AEDSPApplyGainSmoothedMono(float * buffer, float targetGain, float * currentGain, UInt32 frames, float * output) {
     float diff = fabsf(targetGain - *currentGain);
-    if ( diff > kSmoothGainThreshold ) {
+    UInt32 duration = MIN(diff / kGainSmoothingRampStep, kGainSmoothingRampMaxDuration);
+    if ( duration > 0 ) {
         // Need to apply ramp
-        UInt32 rampDuration = MIN(diff * kGainSmoothingRampDuration, frames);
-        float step = targetGain > *currentGain ? kGainSmoothingRampStep : -kGainSmoothingRampStep;
-        vDSP_vrampmul(buffer, 1, currentGain, &step, output, 1, rampDuration);
+        float step = (targetGain - *currentGain) / duration;
+        duration = MIN(duration, frames);
+        vDSP_vrampmul(buffer, 1, currentGain, &step, output, 1, duration);
         
-        if ( rampDuration < frames && fabsf(targetGain - 1.0f) > FLT_EPSILON ) {
+        if ( duration < frames && fabsf(targetGain - 1.0f) > FLT_EPSILON ) {
             // Apply constant gain, now, with offset
-            vDSP_vsmul(buffer + rampDuration, 1, &targetGain, output + rampDuration, 1, frames - rampDuration);
+            vDSP_vsmul(buffer + duration, 1, &targetGain, output + duration, 1, frames - duration);
         }
     } else if ( targetGain < FLT_EPSILON ) {
         // Zero
@@ -149,14 +151,12 @@ void AEDSPApplyVolumeAndBalance(const AudioBufferList * bufferList, float target
             AEDSPApplyGainSmoothedMono(bufferList->mBuffers[1].mData, targetGains[1], &currentGains[1], frames, output->mBuffers[1].mData);
             
             if ( hasCurrentVol ) {
-                *currentVolume = fabsf(*currentVolume-targetVolume) < FLT_EPSILON ? targetVolume :
-                    *currentVolume < targetVolume ? MIN(targetVolume, *currentVolume + kGainSmoothingRampStep*frames) :
-                    /* *currentVolume > targetVolume */ MAX(targetVolume, *currentVolume - kGainSmoothingRampStep*frames);
+                *currentVolume = MAX(currentGains[0], currentGains[1]);
             }
             if ( hasCurrentBal ) {
-                *currentBalance = fabsf(*currentBalance-targetBalance) < FLT_EPSILON ? targetBalance :
-                    *currentBalance < targetBalance ? MIN(targetBalance, *currentBalance + 2*kGainSmoothingRampStep*frames) :
-                    /* *currentBalance > targetBalance */ MAX(targetBalance, *currentBalance - 2*kGainSmoothingRampStep*frames);
+                float vol = MAX(currentGains[0], currentGains[1]);
+                float balGains[] = {currentGains[0]/vol, currentGains[1]/vol};
+                *currentBalance = vol == 0.0 ? 0.0 : balGains[0] < 1.0 ? 1.0-balGains[0] : balGains[1] < 1.0 ? -(1.0-balGains[1]) : 0;
             }
         }
     } else {

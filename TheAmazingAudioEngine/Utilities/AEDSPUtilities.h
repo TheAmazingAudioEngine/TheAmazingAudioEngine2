@@ -84,10 +84,11 @@ void AEDSPApplyGainSmoothed(const AudioBufferList * bufferList, float targetGain
  * @param currentGain On input, current gain; on output, the new gain. Store this and pass it back to this
  *  function on successive calls for a smooth ramp
  * @param frames Length of buffer in frames
- * @param rampDuration Duration of full 0.0-1.0/1.0-0.0 transition, in frames
+ * @param step Amount per frame to advance gain
+ * @param maximumRampDuration Longest 0.0-1.0/1.0-0.0 transition to allow, in frames (or zero, to not limit transition duration)
  * @param output The target buffer
  */
-void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames, UInt32 rampDuration, const AudioBufferList * output);
+void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames, float step, UInt32 maximumRampDuration, const AudioBufferList * output);
     
 /*!
  * Scale values in a single buffer by some gain value, with smoothing to avoid discontinuities
