@@ -433,6 +433,7 @@ void AEManagedValueServiceReleaseQueue(__unsafe_unretained AEManagedValue * THIS
         }
         os_unfair_lock_unlock(&__pendingInstancesMutex);
     }
+    (void)strongSelf;
 }
 
 - (void)releaseOldValue:(void *)value {
