@@ -35,9 +35,6 @@ static void * kRendererOutputChannelsChanged = &kRendererOutputChannelsChanged;
 - (instancetype)initWithRenderer:(AERenderer *)renderer {
     if ( !(self = [super init]) ) return nil;
     self.renderer = renderer;
-    if ( self.renderer ) {
-        [self startObservingRenderer];
-    }
     return self;
 }
 
