@@ -10,7 +10,8 @@
 #import "AEDSPUtilities.h"
 #import <Accelerate/Accelerate.h>
 
-static const UInt32 kFrames = 256;
+static const UInt32 kGainSmoothingRampMaxDuration = 512;
+static const UInt32 kFrames = kGainSmoothingRampMaxDuration;
 static const float kOscillatorRate = 440.0/44100.0;
 static const float kErrorTolerance = 1.0e-6;
 
@@ -86,7 +87,7 @@ static StereoPair StereoPairMakeMono(float sample) { return (StereoPair) {{sampl
     __block float position = 0;
     NSString * message = nil;
     BOOL matches = [self compareBuffer:abl against:^StereoPair(int index) {
-        float gain = index < 128 ? (1.0f-((float)index/128)) : 0.0f;
+        float gain = index < kGainSmoothingRampMaxDuration ? (1.0f-((float)index/kGainSmoothingRampMaxDuration)) : 0.0f;
         return StereoPairMakeMono(AEDSPGenerateOscillator(kOscillatorRate, &position) * gain);
     } message:&message];
     
@@ -105,7 +106,7 @@ static StereoPair StereoPairMakeMono(float sample) { return (StereoPair) {{sampl
     __block float position = 0;
     NSString * message = nil;
     BOOL matches = [self compareBuffer:abl against:^StereoPair(int index) {
-        float gain = index < 128 ? (1.0f-((float)index/128)) : 0.0f;
+        float gain = index < kGainSmoothingRampMaxDuration ? (1.0f-((float)index/kGainSmoothingRampMaxDuration)) : 0.0f;
         return StereoPairMakeMono(AEDSPGenerateOscillator(kOscillatorRate, &position) * gain);
     } message:&message];
     
@@ -127,8 +128,8 @@ static StereoPair StereoPairMakeMono(float sample) { return (StereoPair) {{sampl
     NSString * message = nil;
     BOOL matches = [self compareBuffer:abl against:^StereoPair(int index) {
         float sample = AEDSPGenerateOscillator(kOscillatorRate, &position);
-        return StereoPairMake(sample * (index < 64 ? (0.5f*(1.0f-((float)index/64)))+0.5f : 0.5f),
-                              sample * (index < 128 ? (1.0f-((float)index/128)) : 0.0f));
+        return StereoPairMake(sample * (index < kGainSmoothingRampMaxDuration ? (0.5f*(1.0f-((float)index/kGainSmoothingRampMaxDuration)))+0.5f : 0.5f),
+                              sample * (index < kGainSmoothingRampMaxDuration ? (1.0f-((float)index/kGainSmoothingRampMaxDuration)) : 0.0f));
     } message:&message];
     
     XCTAssertTrue(matches, @"%@", message);
