@@ -71,6 +71,15 @@
 		4C94E29A1CADFFB6006EB497 /* AEDSPUtilities.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C94E2981CADFFB6006EB497 /* AEDSPUtilities.m */; };
 		4C94E2A51CAE6AFF006EB497 /* AEAudioFileRecorderModule.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C94E2A31CAE6AFF006EB497 /* AEAudioFileRecorderModule.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C94E2A61CAE6AFF006EB497 /* AEAudioFileRecorderModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C94E2A41CAE6AFF006EB497 /* AEAudioFileRecorderModule.m */; };
+		4C97792928F50197000B2C47 /* AEBufferStackTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C94E2851CAC9EAA006EB497 /* AEBufferStackTests.m */; };
+		4C97792A28F50197000B2C47 /* AEDSPUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C3183461CE8307A0085634F /* AEDSPUtilitiesTests.m */; };
+		4C97792B28F50197000B2C47 /* AECrossThreadMessagingTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CE5F4CA1CD3135800322F03 /* AECrossThreadMessagingTests.m */; };
+		4C97792C28F50197000B2C47 /* AEAudioFileReadWriteTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C43E5AF1CF14A340000DB62 /* AEAudioFileReadWriteTests.m */; };
+		4C97792D28F50197000B2C47 /* AEAudioBufferListUtilitiesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C31835F1CEAE6830085634F /* AEAudioBufferListUtilitiesTests.m */; };
+		4C97792E28F50197000B2C47 /* AEManagedValueTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C9F0FBD1CB339180032903E /* AEManagedValueTests.m */; };
+		4C97792F28F50197000B2C47 /* AENewTimePitchModuleTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 2236604F1D96E34800CFA5B8 /* AENewTimePitchModuleTests.m */; };
+		4C97793028F50197000B2C47 /* AEArrayTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CDCACAA1CA25A6E008AAEF1 /* AEArrayTests.m */; };
+		4C97793A28F501C1000B2C47 /* libTheAmazingAudioEngine macOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C9F0F741CB265F90032903E /* libTheAmazingAudioEngine macOS.a */; };
 		4C9F0F231CB1E9FC0032903E /* AEIOAudioUnit.m in Sources */ = {isa = PBXBuildFile; fileRef = 4C9F0F211CB1E9FC0032903E /* AEIOAudioUnit.m */; };
 		4C9F0F251CB224D70032903E /* AEIOAudioUnit.h in Headers */ = {isa = PBXBuildFile; fileRef = 4C9F0F201CB1E9FC0032903E /* AEIOAudioUnit.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		4C9F0F2D1CB265F90032903E /* AEParametricEqModule.m in Sources */ = {isa = PBXBuildFile; fileRef = 4CDCAD711CA5484D008AAEF1 /* AEParametricEqModule.m */; };
@@ -304,6 +313,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		4C97793B28F501C6000B2C47 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4CDCAC901CA25A29008AAEF1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4C9F0F2B1CB265F90032903E;
+			remoteInfo = "TheAmazingAudioEngine macOS";
+		};
 		4CDCACAE1CA25A6E008AAEF1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4CDCAC901CA25A29008AAEF1 /* Project object */;
@@ -343,6 +359,7 @@
 		4C94E2981CADFFB6006EB497 /* AEDSPUtilities.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEDSPUtilities.m; sourceTree = "<group>"; };
 		4C94E2A31CAE6AFF006EB497 /* AEAudioFileRecorderModule.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEAudioFileRecorderModule.h; sourceTree = "<group>"; };
 		4C94E2A41CAE6AFF006EB497 /* AEAudioFileRecorderModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEAudioFileRecorderModule.m; sourceTree = "<group>"; };
+		4C97793728F50197000B2C47 /* TheAmazingAudioEngineTests macOS.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "TheAmazingAudioEngineTests macOS.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4C9F0F201CB1E9FC0032903E /* AEIOAudioUnit.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AEIOAudioUnit.h; sourceTree = "<group>"; };
 		4C9F0F211CB1E9FC0032903E /* AEIOAudioUnit.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AEIOAudioUnit.m; sourceTree = "<group>"; };
 		4C9F0F741CB265F90032903E /* libTheAmazingAudioEngine macOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTheAmazingAudioEngine macOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -366,7 +383,7 @@
 		4CBCF29D1CFBC3D200CA2EA0 /* AESplitterModule.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AESplitterModule.m; sourceTree = "<group>"; };
 		4CDCAC981CA25A29008AAEF1 /* libTheAmazingAudioEngine.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTheAmazingAudioEngine.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CDCAC9B1CA25A29008AAEF1 /* TheAmazingAudioEngine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = TheAmazingAudioEngine.h; sourceTree = "<group>"; };
-		4CDCACA81CA25A6E008AAEF1 /* Tests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = Tests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		4CDCACA81CA25A6E008AAEF1 /* TheAmazingAudioEngineTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = TheAmazingAudioEngineTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		4CDCACAA1CA25A6E008AAEF1 /* AEArrayTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AEArrayTests.m; sourceTree = "<group>"; };
 		4CDCACAC1CA25A6E008AAEF1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		4CDCAD1E1CA3A67A008AAEF1 /* TPCircularBuffer.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = TPCircularBuffer.c; sourceTree = "<group>"; };
@@ -431,6 +448,14 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		4C97793128F50197000B2C47 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4C97793A28F501C1000B2C47 /* libTheAmazingAudioEngine macOS.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4C9F0F4D1CB265F90032903E /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -472,6 +497,13 @@
 			path = Taps;
 			sourceTree = "<group>";
 		};
+		4C97793928F501C1000B2C47 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		4CB2F2D41D49ABC6008F745F /* Core */ = {
 			isa = PBXGroup;
 			children = (
@@ -497,6 +529,7 @@
 				4CDCAC9A1CA25A29008AAEF1 /* TheAmazingAudioEngine */,
 				4CDCACA91CA25A6E008AAEF1 /* Tests */,
 				4CDCAC991CA25A29008AAEF1 /* Products */,
+				4C97793928F501C1000B2C47 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -504,9 +537,10 @@
 			isa = PBXGroup;
 			children = (
 				4CDCAC981CA25A29008AAEF1 /* libTheAmazingAudioEngine.a */,
-				4CDCACA81CA25A6E008AAEF1 /* Tests.xctest */,
+				4CDCACA81CA25A6E008AAEF1 /* TheAmazingAudioEngineTests.xctest */,
 				4C9F0F741CB265F90032903E /* libTheAmazingAudioEngine macOS.a */,
 				4C9F0FBC1CB269C30032903E /* libTheAmazingAudioEngine tvOS.a */,
+				4C97793728F50197000B2C47 /* TheAmazingAudioEngineTests macOS.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -847,6 +881,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		4C97792528F50197000B2C47 /* TheAmazingAudioEngineTests macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4C97793428F50197000B2C47 /* Build configuration list for PBXNativeTarget "TheAmazingAudioEngineTests macOS" */;
+			buildPhases = (
+				4C97792828F50197000B2C47 /* Sources */,
+				4C97793128F50197000B2C47 /* Frameworks */,
+				4C97793328F50197000B2C47 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4C97793C28F501C6000B2C47 /* PBXTargetDependency */,
+			);
+			name = "TheAmazingAudioEngineTests macOS";
+			productName = Tests;
+			productReference = 4C97793728F50197000B2C47 /* TheAmazingAudioEngineTests macOS.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 		4C9F0F2B1CB265F90032903E /* TheAmazingAudioEngine macOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4C9F0F711CB265F90032903E /* Build configuration list for PBXNativeTarget "TheAmazingAudioEngine macOS" */;
@@ -898,9 +950,9 @@
 			productReference = 4CDCAC981CA25A29008AAEF1 /* libTheAmazingAudioEngine.a */;
 			productType = "com.apple.product-type.library.static";
 		};
-		4CDCACA71CA25A6E008AAEF1 /* Tests */ = {
+		4CDCACA71CA25A6E008AAEF1 /* TheAmazingAudioEngineTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4CDCACB21CA25A6E008AAEF1 /* Build configuration list for PBXNativeTarget "Tests" */;
+			buildConfigurationList = 4CDCACB21CA25A6E008AAEF1 /* Build configuration list for PBXNativeTarget "TheAmazingAudioEngineTests" */;
 			buildPhases = (
 				4CDCACA41CA25A6E008AAEF1 /* Sources */,
 				4CDCACA51CA25A6E008AAEF1 /* Frameworks */,
@@ -911,9 +963,9 @@
 			dependencies = (
 				4CDCACAF1CA25A6E008AAEF1 /* PBXTargetDependency */,
 			);
-			name = Tests;
+			name = TheAmazingAudioEngineTests;
 			productName = Tests;
-			productReference = 4CDCACA81CA25A6E008AAEF1 /* Tests.xctest */;
+			productReference = 4CDCACA81CA25A6E008AAEF1 /* TheAmazingAudioEngineTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
 /* End PBXNativeTarget section */
@@ -949,12 +1001,20 @@
 				4CDCAC971CA25A29008AAEF1 /* TheAmazingAudioEngine */,
 				4C9F0F2B1CB265F90032903E /* TheAmazingAudioEngine macOS */,
 				4C9F0F751CB269C30032903E /* TheAmazingAudioEngine tvOS */,
-				4CDCACA71CA25A6E008AAEF1 /* Tests */,
+				4CDCACA71CA25A6E008AAEF1 /* TheAmazingAudioEngineTests */,
+				4C97792528F50197000B2C47 /* TheAmazingAudioEngineTests macOS */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		4C97793328F50197000B2C47 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4CDCACA61CA25A6E008AAEF1 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -965,6 +1025,21 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4C97792828F50197000B2C47 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4C97792928F50197000B2C47 /* AEBufferStackTests.m in Sources */,
+				4C97792A28F50197000B2C47 /* AEDSPUtilitiesTests.m in Sources */,
+				4C97792B28F50197000B2C47 /* AECrossThreadMessagingTests.m in Sources */,
+				4C97792C28F50197000B2C47 /* AEAudioFileReadWriteTests.m in Sources */,
+				4C97792D28F50197000B2C47 /* AEAudioBufferListUtilitiesTests.m in Sources */,
+				4C97792E28F50197000B2C47 /* AEManagedValueTests.m in Sources */,
+				4C97792F28F50197000B2C47 /* AENewTimePitchModuleTests.m in Sources */,
+				4C97793028F50197000B2C47 /* AEArrayTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4C9F0F2C1CB265F90032903E /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1149,6 +1224,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		4C97793C28F501C6000B2C47 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4C9F0F2B1CB265F90032903E /* TheAmazingAudioEngine macOS */;
+			targetProxy = 4C97793B28F501C6000B2C47 /* PBXContainerItemProxy */;
+		};
 		4CDCACAF1CA25A6E008AAEF1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4CDCAC971CA25A29008AAEF1 /* TheAmazingAudioEngine */;
@@ -1157,6 +1237,30 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		4C97793528F50197000B2C47 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = Tests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.atastypixel.Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		4C97793628F50197000B2C47 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEVELOPMENT_TEAM = "";
+				INFOPLIST_FILE = Tests/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks @loader_path/Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = com.atastypixel.Tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
 		4C9F0F721CB265F90032903E /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1346,6 +1450,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		4C97793428F50197000B2C47 /* Build configuration list for PBXNativeTarget "TheAmazingAudioEngineTests macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4C97793528F50197000B2C47 /* Debug */,
+				4C97793628F50197000B2C47 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		4C9F0F711CB265F90032903E /* Build configuration list for PBXNativeTarget "TheAmazingAudioEngine macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1382,7 +1495,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4CDCACB21CA25A6E008AAEF1 /* Build configuration list for PBXNativeTarget "Tests" */ = {
+		4CDCACB21CA25A6E008AAEF1 /* Build configuration list for PBXNativeTarget "TheAmazingAudioEngineTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4CDCACB01CA25A6E008AAEF1 /* Debug */,

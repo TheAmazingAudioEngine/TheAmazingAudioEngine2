@@ -42,8 +42,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4CDCACA71CA25A6E008AAEF1"
-               BuildableName = "Tests.xctest"
-               BlueprintName = "Tests"
+               BuildableName = "TheAmazingAudioEngineTests.xctest"
+               BlueprintName = "TheAmazingAudioEngineTests"
                ReferencedContainer = "container:TheAmazingAudioEngine.xcodeproj">
             </BuildableReference>
          </TestableReference>
