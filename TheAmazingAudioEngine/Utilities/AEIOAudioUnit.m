@@ -386,7 +386,7 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull T
             AECheckOSStatus(status, "AudioConverterFillComplexBuffer");
         }
     } else {
-        AECircularBufferDequeue(&THIS->_ringBuffer, &frames, buffer, NULL);
+        AEIOAudioUnitDequeueRingBuffer(THIS, &frames, buffer);
     }
 #else
     AudioUnitRenderActionFlags flags = 0;
@@ -705,24 +705,7 @@ static OSStatus AEIOAudioUnitConversionDataProc(AudioConverterRef inAudioConvert
     
     if ( THIS->_inputEnabled ) {
         // Input
-        UInt32 available = AECircularBufferPeek(&THIS->_ringBuffer, NULL);
-        if ( available < *ioNumberDataPackets ) {
-            THIS->_lowWaterMark = 0;
-            *ioNumberDataPackets = 0;
-            return kEmptyBufferErr;
-        }
-        available -= *ioNumberDataPackets;
-        THIS->_lowWaterMark = MIN(THIS->_lowWaterMark, available);
-        if ( THIS->_lowWaterMarkSampleCount++ > 25 ) {
-            if ( THIS->_lowWaterMark > 32 ) {
-                UInt32 discard = THIS->_lowWaterMark;
-                AECircularBufferDequeue(&THIS->_ringBuffer, &discard, NULL, NULL);
-                available -= discard;
-            }
-            THIS->_lowWaterMark = available;
-            THIS->_lowWaterMarkSampleCount = 1;
-        }
-        AECircularBufferDequeue(&THIS->_ringBuffer, ioNumberDataPackets, ioData, NULL);
+        AEIOAudioUnitDequeueRingBuffer(THIS, ioNumberDataPackets, ioData);
     } else {
         // Output
         __unsafe_unretained AEIOAudioUnitRenderBlock renderBlock = (__bridge AEIOAudioUnitRenderBlock)AEManagedValueGetValue(THIS->_renderBlockValue);
@@ -732,6 +715,34 @@ static OSStatus AEIOAudioUnitConversionDataProc(AudioConverterRef inAudioConvert
             AEAudioBufferListSilence(THIS->_scratchBuffer, 0, *ioNumberDataPackets);
         }
     }
+    return noErr;
+}
+
+static OSStatus AEIOAudioUnitDequeueRingBuffer(__unsafe_unretained AEIOAudioUnit * THIS, UInt32 * frames, const AudioBufferList * buffer) {
+    UInt32 available = AECircularBufferPeek(&THIS->_ringBuffer, NULL);
+    if ( available < *frames ) {
+        #ifdef DEBUG
+        NSLog(@"Input buffer ran dry (wanted %d input frames, got %d)", (int)*frames, available);
+        #endif
+        THIS->_lowWaterMark = 0;
+        *frames = 0;
+        return kEmptyBufferErr;
+    }
+    available -= *frames;
+    THIS->_lowWaterMark = MIN(THIS->_lowWaterMark, available);
+    if ( THIS->_lowWaterMarkSampleCount++ > 25 ) {
+        if ( THIS->_lowWaterMark > 32 ) {
+            UInt32 discard = THIS->_lowWaterMark;
+            #ifdef DEBUG
+            NSLog(@"Discarding %d input frames", (int)discard);
+            #endif
+            AECircularBufferDequeue(&THIS->_ringBuffer, &discard, NULL, NULL);
+            available -= discard;
+        }
+        THIS->_lowWaterMark = available;
+        THIS->_lowWaterMarkSampleCount = 1;
+    }
+    AECircularBufferDequeue(&THIS->_ringBuffer, frames, buffer, NULL);
     return noErr;
 }
 #endif
