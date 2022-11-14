@@ -29,7 +29,6 @@
 #import <pthread.h>
 #import <os/lock.h>
 #import "AEUtilities.h"
-#import "AEWeakRetainingProxy.h"
 
 typedef struct __linkedlistitem_t {
     void * data;
@@ -305,8 +304,10 @@ static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
         if ( !self.pollTimer ) {
             // Start polling for pending releases
             double interval = completionBlock ? 0.01 : 0.1;
-            self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:interval target:[AEWeakRetainingProxy proxyWithTarget:self]
-                                                            selector:@selector(pollReleaseList) userInfo:nil repeats:YES];
+            __weak typeof(self) weakSelf = self;
+            self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:interval repeats:YES block:^(NSTimer * timer) {
+                [weakSelf pollReleaseList];
+            }];
             self.pollTimer.tolerance = completionBlock ? 0.01 : 0.5;
         }
         
