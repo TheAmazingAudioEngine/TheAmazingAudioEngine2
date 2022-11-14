@@ -245,11 +245,6 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
         [self performSelector:@selector(handleReleasedEndpoint) withObject:nil afterDelay:0];
         return;
     }
-    
-    if ( self.endpoints.allObjects.count == 0 ) {
-        __sharedThread = nil;
-        [self cancel];
-    }
     pthread_mutex_unlock(&_mutex);
 }
 
