@@ -12,8 +12,6 @@
 static const UInt32 kMaxFramesPerSlice = 8192;
 static const float kGainSmoothingRampStep = 1.0 / 8192;
 static const UInt32 kGainSmoothingRampMaxDuration = 512;
-static const UInt32 kMinRampDurationForPowerCurve = 8192;
-static const float kPowerCurvePower = 3.0;
 
 void AEDSPApplyGain(const AudioBufferList * bufferList, float gain, UInt32 frames, const AudioBufferList * output) {
     for ( int i=0; i < bufferList->mNumberBuffers; i++ ) {
@@ -72,19 +70,6 @@ void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain
     if ( duration > 0 ) {
         // Need to apply ramp
         float step = (targetGain - *currentGain) / duration;
-        
-        if ( duration > kMinRampDurationForPowerCurve ) {
-            // We're going to use a power function curve for more linear-sounding transitions.
-            // Invert power function to get current t
-            float t = powf(*currentGain, 1.0/kPowerCurvePower);
-            
-            // Calculate target for this segment
-            float localTarget = powf(t + (step * duration), kPowerCurvePower);
-            
-            // Calculate step
-            step = (localTarget - *currentGain) / duration;
-        }
-        
         duration = MIN(duration, frames);
         AEDSPApplyRamp(bufferList, currentGain, step, duration, output);
         
