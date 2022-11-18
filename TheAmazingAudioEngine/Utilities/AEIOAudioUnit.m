@@ -49,6 +49,11 @@ NSString * const AEIOAudioUnitSessionInterruptionEndedNotification = @"AEIOAudio
 static const double kAVAudioSession0dBGain = 0.75;
 #endif
 
+#if TARGET_OS_OSX
+static const AESeconds kInputRingBufferLowWaterMarkDetectionInterval = 0.5;
+static const UInt32 kInputRingBufferImmediateDrainThreshold = 3182;
+#endif
+
 @interface AEIOAudioUnit ()
 @property (nonatomic, strong) AEManagedValue * renderBlockValue;
 @property (nonatomic, readwrite) double currentSampleRate;
@@ -730,8 +735,10 @@ static OSStatus AEIOAudioUnitDequeueRingBuffer(__unsafe_unretained AEIOAudioUnit
     }
     available -= *frames;
     THIS->_lowWaterMark = MIN(THIS->_lowWaterMark, available);
-    if ( THIS->_lowWaterMarkSampleCount++ > 25 ) {
-        if ( THIS->_lowWaterMark > 32 ) {
+    
+    int interval = kInputRingBufferLowWaterMarkDetectionInterval * THIS->_currentSampleRate;
+    if ( (THIS->_lowWaterMarkSampleCount+=*frames) > interval || THIS->_lowWaterMark > kInputRingBufferImmediateDrainThreshold ) {
+        if ( THIS->_lowWaterMark > 16 ) {
             UInt32 discard = THIS->_lowWaterMark;
             #ifdef DEBUG
             NSLog(@"Discarding %d input frames", (int)discard);
@@ -740,7 +747,7 @@ static OSStatus AEIOAudioUnitDequeueRingBuffer(__unsafe_unretained AEIOAudioUnit
             available -= discard;
         }
         THIS->_lowWaterMark = available;
-        THIS->_lowWaterMarkSampleCount = 1;
+        THIS->_lowWaterMarkSampleCount = *frames;
     }
     AECircularBufferDequeue(&THIS->_ringBuffer, frames, buffer, NULL);
     return noErr;
