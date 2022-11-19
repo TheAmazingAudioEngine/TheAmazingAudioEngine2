@@ -66,7 +66,7 @@ static void AEBlockModuleProcess(__unsafe_unretained AEBlockModule * THIS, const
 }
 
 static BOOL AEBlockModuleIsActive(__unsafe_unretained AEBlockModule * THIS) {
-    __unsafe_unretained AEModuleIsActiveBlock block = (__bridge AEModuleIsActiveBlock)AEManagedValueGetValue(THIS->_processBlockValue);
+    __unsafe_unretained AEModuleIsActiveBlock block = (__bridge AEModuleIsActiveBlock)AEManagedValueGetValue(THIS->_isActiveBlockValue);
     if ( block ) return block();
     return AEManagedValueGetValue(THIS->_processBlockValue) != NULL;
 }
