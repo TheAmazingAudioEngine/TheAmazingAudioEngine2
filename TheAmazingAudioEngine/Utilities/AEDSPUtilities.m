@@ -64,7 +64,7 @@ void AEDSPApplyGainSmoothed(const AudioBufferList * bufferList, float targetGain
 void AEDSPApplyGainWithRamp(const AudioBufferList * bufferList, float targetGain, float * currentGain, UInt32 frames, float step, UInt32 maximumRampDuration, const AudioBufferList * output) {
     if ( step == 0 || step == INFINITY ) *currentGain = targetGain;
     float diff = fabsf(targetGain - *currentGain);
-    UInt32 duration = round(diff / step);
+    UInt32 duration = round(diff / fabs(step));
     if ( maximumRampDuration ) duration = MIN(maximumRampDuration, duration);
     
     if ( duration > 0 ) {
