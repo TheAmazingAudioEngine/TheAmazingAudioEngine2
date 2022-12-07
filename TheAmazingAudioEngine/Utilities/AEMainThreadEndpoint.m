@@ -32,7 +32,6 @@
 #import <pthread.h>
 
 static const int kMaxMessagesEachService = 20;
-static const int kMaxMessageLengthForCopy = 256;
 
 @class AEMainThreadEndpointThread;
 
@@ -159,21 +158,13 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
         if ( pthread_main_np() ) {
             self.handler(data, length);
         } else {
-            if ( length < kMaxMessageLengthForCopy ) {
-                // Copy data so we can run asynchronously
-                void * dataCopy = malloc(length);
-                memcpy(dataCopy, data, length);
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    // Run handler
-                    self.handler(dataCopy, length);
-                    free(dataCopy);
-                });
-            } else {
-                // Run handler synchronously
-                dispatch_sync(dispatch_get_main_queue(), ^{
-                    self.handler(data, length);
-                });
-            }
+            void * dataCopy = malloc(length);
+            memcpy(dataCopy, data, length);
+            dispatch_async(dispatch_get_main_queue(), ^{
+                // Run handler
+                self.handler(dataCopy, length);
+                free(dataCopy);
+            });
         }
         
         // Mark as read
