@@ -250,6 +250,7 @@ static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
 }
 
 - (void)setObjectValue:(id)objectValue withCompletionBlock:(void (^)(id))completionBlock {
+    if ( objectValue == _value ) return;
     NSAssert(!_valueSet || _isObjectValue, @"You can use objectValue or pointerValue, but not both");
     _isObjectValue = YES;
     [self setValue:(__bridge_retained void*)objectValue completionBlock:(void (^)(void *))completionBlock];
