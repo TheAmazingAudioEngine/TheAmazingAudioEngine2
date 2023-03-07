@@ -171,6 +171,8 @@ AudioBufferList *TPCircularBufferNextBufferListAfter(TPCircularBuffer *buffer, c
 }
 
 void TPCircularBufferConsumeNextBufferListPartial(TPCircularBuffer *buffer, int framesToConsume, const AudioStreamBasicDescription *audioFormat) {
+    if ( framesToConsume == 0 ) return;
+    
     assert(framesToConsume >= 0);
     
     int32_t dontcare;
@@ -209,11 +211,13 @@ void TPCircularBufferConsumeNextBufferListPartial(TPCircularBuffer *buffer, int 
     }
     
     // Reposition block forward, just before the audio data, ensuring 16-byte alignment
-    TPCircularBufferABLBlockHeader *newBlock = (TPCircularBufferABLBlockHeader*)(((unsigned long)block + bytesToConsume) & ~0xFul);
-    memmove(newBlock, block, sizeof(TPCircularBufferABLBlockHeader) + (block->bufferList.mNumberBuffers-1)*sizeof(AudioBuffer));
-    intptr_t bytesFreed = (intptr_t)newBlock - (intptr_t)block;
-    newBlock->totalLength -= bytesFreed;
-    TPCircularBufferConsume(buffer, (int32_t)bytesFreed);
+    int advance = bytesToConsume & ~0xF;
+    if ( advance > 0 ) {
+        TPCircularBufferABLBlockHeader *newBlock = (TPCircularBufferABLBlockHeader*)((char *)block + advance);
+        memmove(newBlock, block, sizeof(TPCircularBufferABLBlockHeader) + (block->bufferList.mNumberBuffers-1)*sizeof(AudioBuffer));
+        newBlock->totalLength -= advance;
+        TPCircularBufferConsume(buffer, advance);
+    }
 }
 
 static void _TPCircularBufferCopyOutBufferListFrames(TPCircularBuffer *buffer, UInt32 *ioLengthInFrames, const AudioBufferList *outputBufferList, AudioTimeStamp *outTimestamp, const AudioStreamBasicDescription *audioFormat, bool dequeue) {

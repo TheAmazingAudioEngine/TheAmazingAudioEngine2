@@ -131,10 +131,10 @@ AudioBufferList *TPCircularBufferNextBufferListAfter(TPCircularBuffer *buffer, c
  * @param buffer Circular buffer
  */
 static __inline__ __attribute__((always_inline)) void TPCircularBufferConsumeNextBufferList(TPCircularBuffer *buffer) {
-    int32_t dontcare;
-    TPCircularBufferABLBlockHeader *block = (TPCircularBufferABLBlockHeader*)TPCircularBufferTail(buffer, &dontcare);
+    int32_t total;
+    TPCircularBufferABLBlockHeader *block = (TPCircularBufferABLBlockHeader*)TPCircularBufferTail(buffer, &total);
     if ( !block ) return;
-    TPCircularBufferConsume(buffer, block->totalLength);
+    TPCircularBufferConsume(buffer, block->totalLength > total ? total : block->totalLength);
 }
 
 /*!
