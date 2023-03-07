@@ -416,6 +416,11 @@ void * _Nullable AEArrayGetItem(AEArrayToken _Nullable token, int index);
  */
 @property (nonatomic) BOOL usedOnAudioThread;
 
+/*!
+ * Whether to use weak references for objects
+ */
+@property (nonatomic) BOOL useWeakReferences;
+
 @end
 
 #ifdef __cplusplus

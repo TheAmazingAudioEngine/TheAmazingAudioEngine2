@@ -34,7 +34,7 @@ typedef struct {
 
 typedef struct {
     int count;
-    __unsafe_unretained NSArray * objects;
+    __unsafe_unretained NSPointerArray * objects;
     array_entry_t * entries[1];
 } array_t;
 
@@ -44,7 +44,6 @@ typedef struct {
 
 @interface AEArray ()
 @property (nonatomic, strong) AEArrayManagedValue * value;
-@property (nonatomic, strong, readwrite) NSArray * allValues;
 @property (nonatomic, copy) void*(^mappingBlock)(id item);
 @end
 
@@ -83,7 +82,7 @@ typedef struct {
 
 - (NSArray *)allValues {
     array_t * array = (array_t*)_value.pointerValue;
-    return array->objects ? array->objects : @[];
+    return array->objects ? array->objects.allObjects : @[];
 }
 
 - (int)count {
@@ -98,7 +97,7 @@ typedef struct {
 
 - (id)objectAtIndexedSubscript:(NSUInteger)idx {
     array_t * array = (array_t*)_value.pointerValue;
-    return [array->objects objectAtIndexedSubscript:idx];
+    return [array->objects pointerAtIndex:idx];
 }
 
 - (void *)pointerValueAtIndex:(int)index {
@@ -109,7 +108,7 @@ typedef struct {
 - (void *)pointerValueForObject:(id)object {
     array_t * array = (array_t*)_value.pointerValue;
     if ( !array->objects ) return NULL;
-    NSUInteger index = [array->objects indexOfObject:object];
+    NSUInteger index = [array->objects.allObjects indexOfObject:object];
     if ( index == NSNotFound ) return NULL;
     return [self pointerValueAtIndex:(int)index];
 }
@@ -118,7 +117,7 @@ typedef struct {
     array_t * array = (array_t*)_value.pointerValue;
     for ( int i=0; i<array->count; i++ ) {
         if ( array->entries[i]->pointer == pointer ) {
-            return array->objects[i];
+            return [array->objects pointerAtIndex:i];
         }
     }
     return NULL;
@@ -127,7 +126,7 @@ typedef struct {
 - (void)updatePointerValue:(void *)value forObject:(id)object {
     array_t * array = (array_t*)_value.pointerValue;
     if ( !array->objects ) return;
-    NSUInteger index = [array->objects indexOfObject:object];
+    NSUInteger index = [array->objects.allObjects indexOfObject:object];
     if ( index == NSNotFound || index >= array->count ) return;
     
     size_t size = sizeof(array_t) + (sizeof(void*) * array->count-1);
@@ -177,24 +176,25 @@ typedef struct {
                     customMapping:(AEArrayIndexedCustomMappingBlock)block
                   completionBlock:(void (^)(void))completionBlock {
     array_t * currentArray = (array_t*)_value.pointerValue;
-    if ( currentArray && currentArray->objects && [currentArray->objects isEqualToArray:array] ) {
+    if ( currentArray && currentArray->objects && [currentArray->objects.allObjects isEqualToArray:array] ) {
         // Arrays are identical - skip
         return;
     }
     
-    array = [array copy];
-    
     // Create new array
     array_t * newArray = (array_t*)malloc(sizeof(array_t) + (sizeof(void*) * array.count-1));
     newArray->count = (int)array.count;
-    newArray->objects = array;
-    CFBridgingRetain(array);
+    
+    NSPointerArray * objects = [NSPointerArray pointerArrayWithOptions:self.useWeakReferences ? NSPointerFunctionsOpaqueMemory : NSPointerFunctionsStrongMemory];
+    newArray->objects = objects;
+    CFBridgingRetain(objects);
     
     array_t * priorArray = (array_t*)_value.pointerValue;
     
     int i=0;
     for ( id item in array ) {
-        NSUInteger priorIndex = priorArray && priorArray->objects ? [priorArray->objects indexOfObject:item] : NSNotFound;
+        [objects addPointer:(__bridge void*)item];
+        NSUInteger priorIndex = priorArray && priorArray->objects ? [priorArray->objects.allObjects indexOfObject:item] : NSNotFound;
         if ( priorIndex != NSNotFound ) {
             // Copy value from prior array
             newArray->entries[i] = priorArray->entries[priorIndex];
@@ -248,8 +248,8 @@ void * AEArrayGetItem(AEArrayToken token, int index) {
             array->entries[i]->referenceCount--;
             if ( array->entries[i]->referenceCount == 0 ) {
                 if ( weakSelf.arrayReleaseBlock ) {
-                    weakSelf.arrayReleaseBlock(array->objects[i], array->entries[i]->pointer);
-                } else if ( array->entries[i]->pointer && array->entries[i]->pointer != (__bridge void*)array->objects[i] ) {
+                    weakSelf.arrayReleaseBlock([array->objects pointerAtIndex:i], array->entries[i]->pointer);
+                } else if ( array->entries[i]->pointer && array->entries[i]->pointer != [array->objects pointerAtIndex:i] ) {
                     free(array->entries[i]->pointer);
                 }
                 free(array->entries[i]);
