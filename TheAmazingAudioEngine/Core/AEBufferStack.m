@@ -128,7 +128,7 @@ const AudioBufferList * AEBufferStackPush(AEBufferStack * stack, int count) {
 }
 
 #ifdef DEBUG
-static void AEBufferStackPushFailed() {}
+static void AEBufferStackPushFailed(void) {}
 #endif
 
 const AudioBufferList * AEBufferStackPushWithChannels(AEBufferStack * stack, int count, int channelCount) {

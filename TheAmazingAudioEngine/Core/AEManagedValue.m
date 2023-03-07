@@ -334,7 +334,7 @@ static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
 
 #pragma mark - Realtime thread
 
-void AEManagedValueCommitPendingUpdates() {
+void AEManagedValueCommitPendingUpdates(void) {
     #ifdef DEBUG
     if ( AERealtimeThreadIdentifier && AERealtimeThreadIdentifier != pthread_self() ) {
         if ( AERateLimit() ) printf("%s called from outside realtime thread\n", __FUNCTION__);
