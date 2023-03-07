@@ -159,7 +159,7 @@ static const UInt32 kNoValue = -1;
 }
 
 - (void)setCurrentTime:(AESeconds)currentTime {
-    [self schedulePlayRegionFromPosition:currentTime * _fileSampleRate];
+    [self schedulePlayRegionFromPosition:round(currentTime * _fileSampleRate)];
 }
 
 - (void)setRegionDuration:(NSTimeInterval)regionDuration {
@@ -375,7 +375,7 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
     Float64 mainRegionStartTime = 0;
     if ( position > start ) {
         // Schedule the remaining part of the audio
-        UInt32 framesToPlay = ((self.regionStartTime + self.regionDuration) * _fileSampleRate) - position;
+        UInt32 framesToPlay = round((self.regionStartTime + self.regionDuration) * _fileSampleRate) - position;
         ScheduledAudioFileRegion region = {
             .mAudioFile = _audioFile,
             .mStartFrame = position,
