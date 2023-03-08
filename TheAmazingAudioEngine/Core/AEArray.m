@@ -176,7 +176,8 @@ typedef struct {
                     customMapping:(AEArrayIndexedCustomMappingBlock)block
                   completionBlock:(void (^)(void))completionBlock {
     array_t * currentArray = (array_t*)_value.pointerValue;
-    if ( currentArray && currentArray->objects && [currentArray->objects.allObjects isEqualToArray:array] ) {
+    NSArray * currentArrayObjects = currentArray && currentArray->objects ? currentArray->objects.allObjects : nil;
+    if ( [currentArrayObjects isEqualToArray:array] ) {
         // Arrays are identical - skip
         return;
     }
@@ -189,15 +190,13 @@ typedef struct {
     newArray->objects = objects;
     CFBridgingRetain(objects);
     
-    array_t * priorArray = (array_t*)_value.pointerValue;
-    
     int i=0;
     for ( id item in array ) {
         [objects addPointer:(__bridge void*)item];
-        NSUInteger priorIndex = priorArray && priorArray->objects ? [priorArray->objects.allObjects indexOfObject:item] : NSNotFound;
+        NSUInteger priorIndex = currentArrayObjects ? [currentArrayObjects indexOfObject:item] : NSNotFound;
         if ( priorIndex != NSNotFound ) {
             // Copy value from prior array
-            newArray->entries[i] = priorArray->entries[priorIndex];
+            newArray->entries[i] = currentArray->entries[priorIndex];
             newArray->entries[i]->referenceCount++;
         } else {
             // Add new value
