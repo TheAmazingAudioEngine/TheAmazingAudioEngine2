@@ -42,7 +42,7 @@ NSString * const AEAudioUnitOutputDidChangeSampleRateNotification = @"AEAudioUni
 NSString * const AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification = @"AEAudioUnitOutputDidChangeNumberOfOutputChannelsNotification";
 
 #ifdef DEBUG
-@import os.signpost;
+#import <os/signpost.h>
 static const AESeconds kRenderTimeReportInterval = 0.0;   // Seconds between render time reports; 0 = no reporting
 static const double kRenderBudgetWarningThreshold = 0.75; // Ratio of total buffer duration to hit before budget overrun warnings
 static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wait before warning about budget overrun
