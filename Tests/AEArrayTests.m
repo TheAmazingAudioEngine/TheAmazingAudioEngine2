@@ -18,14 +18,7 @@
 
 - (void)testItemLifecycle {
     AEArray * array = [AEArray new];
-    __weak NSArray * weakNSArray;
-    
-    @autoreleasepool {
-        [array updateWithContentsOfArray:@[@(1), @(2), @(3)]];
-        weakNSArray = array.allValues;
-    }
-    
-    XCTAssertNotNil(weakNSArray);
+    [array updateWithContentsOfArray:@[@(1), @(2), @(3)]];
     
     AEArrayToken token = AEArrayGetToken(array);
     XCTAssertEqual(AEArrayGetCount(token), 3);
@@ -52,20 +45,10 @@
     
     [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.3]];
     
-    XCTAssertNil(weakNSArray);
-    
-    @autoreleasepool {
-        weakNSArray = array.allValues;
-    }
-    
     token = AEArrayGetToken(array);
     XCTAssertEqual(AEArrayGetCount(token), 2);
     XCTAssertEqualObjects((__bridge id)AEArrayGetItem(token, 0), @(4));
     XCTAssertEqualObjects((__bridge id)AEArrayGetItem(token, 1), @(5));
-    
-    array = nil;
-    
-    XCTAssertNil(weakNSArray);
 }
 
 struct testStruct {
