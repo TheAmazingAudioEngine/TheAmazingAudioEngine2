@@ -29,6 +29,9 @@
 #import "AEManagedValue.h"
 #import "AEAudioBufferListUtilities.h"
 
+static const int kBufferStackPoolSize = 64;
+static const int kBufferStackBaseBufferCount = 64;
+
 @interface AERenderer () {
     UInt32 _sampleTime;
     AEHostTicks _lastRenderTimestamp;
@@ -55,7 +58,7 @@
     _sampleRate = 44100.0;
     self.blockValue = [AEManagedValue new];
     self.stackValue = [AEManagedValue new];
-    self.stackValue.pointerValue = AEBufferStackNewWithOptions(AEBufferStackDefaultPoolSize, (_numberOfOutputChannels * 4) + (AEBufferStackDefaultPoolSize * 2));
+    self.stackValue.pointerValue = AEBufferStackNewWithOptions(kBufferStackPoolSize, (_numberOfOutputChannels * 4) + kBufferStackBaseBufferCount);
     self.stackValue.releaseBlock = ^(void * value) { AEBufferStackFree(value); };
     return self;
 }
@@ -137,7 +140,7 @@ AEHostTicks AERendererGetNextRenderTimestamp(__unsafe_unretained AERenderer * TH
     
     [self willChangeValueForKey:NSStringFromSelector(@selector(numberOfOutputChannels))];
     _numberOfOutputChannels = numberOfOutputChannels;
-    self.stackValue.pointerValue = AEBufferStackNewWithOptions(AEBufferStackDefaultPoolSize, (_numberOfOutputChannels * 4) + (AEBufferStackDefaultPoolSize * 2));
+    self.stackValue.pointerValue = AEBufferStackNewWithOptions(kBufferStackPoolSize, (_numberOfOutputChannels * 4) + kBufferStackBaseBufferCount);
     [self didChangeValueForKey:NSStringFromSelector(@selector(numberOfOutputChannels))];
 }
 
