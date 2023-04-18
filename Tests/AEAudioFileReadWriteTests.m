@@ -94,7 +94,7 @@ static const NSTimeInterval kTestFileLength = 0.5;
     __block BOOL done = NO;
     __block float position = 0;
     __block UInt32 framesSeen = 0;
-    __weak AEAudioFileReader * reader =
+    __block __weak AEAudioFileReader * reader =
     [AEAudioFileReader readFileAtPath:self.file
               targetAudioDescription:AEAudioDescription
                            readBlock:^(const AudioBufferList * buffer, UInt32 length) {
