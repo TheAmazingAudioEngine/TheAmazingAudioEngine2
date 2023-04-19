@@ -53,12 +53,16 @@ static const int kBufferStackBaseBufferCount = 64;
 }
 
 - (instancetype)init {
+    return [self initWithBufferStack:AEBufferStackNewWithOptions(kBufferStackPoolSize, (_numberOfOutputChannels * 4) + kBufferStackBaseBufferCount)];
+}
+
+- (instancetype)initWithBufferStack:(AEBufferStack *)bufferStack {
     if ( !(self = [super init]) ) return nil;
     _numberOfOutputChannels = 2;
     _sampleRate = 44100.0;
     self.blockValue = [AEManagedValue new];
     self.stackValue = [AEManagedValue new];
-    self.stackValue.pointerValue = AEBufferStackNewWithOptions(kBufferStackPoolSize, (_numberOfOutputChannels * 4) + kBufferStackBaseBufferCount);
+    self.stackValue.pointerValue = bufferStack;
     self.stackValue.releaseBlock = ^(void * value) { AEBufferStackFree(value); };
     return self;
 }

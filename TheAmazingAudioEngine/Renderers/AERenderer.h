@@ -67,6 +67,18 @@ typedef void (^AERenderLoopBlock)(const AERenderContext * _Nonnull context);
 @interface AERenderer : NSObject
 
 /*!
+ * Default initializer
+ */
+- (instancetype _Nullable)init;
+
+/*!
+ * Initializer with provided buffer stack
+ *
+ *  The instance will take ownership of the given buffer stack, and will deallocate upon release
+ */
+- (instancetype _Nullable)initWithBufferStack:(AEBufferStack * _Nonnull)bufferStack NS_DESIGNATED_INITIALIZER;
+
+/*!
  * Perform one pass of the render loop
  *
  * @param renderer The renderer instance
