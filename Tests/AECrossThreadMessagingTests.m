@@ -183,16 +183,16 @@ typedef struct {
 }
 
 - (void)testReleaseWithinHandler {
-    __block AEMainThreadEndpoint * endpoint
-            = [[AEMainThreadEndpoint alloc] initWithHandler:^(void * data, size_t length) {
-        endpoint = nil;
-    }];
-    
-    __weak AEMainThreadEndpoint * weakEndpoint = endpoint;
-    
-    AEMainThreadEndpointSend(endpoint, NULL, 0);
-    
-    [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    __weak AEMainThreadEndpoint * weakEndpoint = nil;
+    @autoreleasepool {
+        __block AEMainThreadEndpoint * endpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(void * data, size_t length) {
+            endpoint = nil;
+        }];
+        
+        weakEndpoint = endpoint;
+        AEMainThreadEndpointSend(endpoint, NULL, 0);
+        [[NSRunLoop currentRunLoop] runUntilDate:[NSDate dateWithTimeIntervalSinceNow:0.01]];
+    }
     
     XCTAssertNil(weakEndpoint);
 }
