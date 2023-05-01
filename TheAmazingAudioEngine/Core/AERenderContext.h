@@ -104,6 +104,40 @@ void AERenderContextOutput(const AERenderContext * _Nonnull context, int bufferC
  */
 void AERenderContextOutputToChannels(const AERenderContext * _Nonnull context, int bufferCount, AEChannelSet channels);
 
+/*!
+ * Make a copy of the given render context on the stack, with a given offset and length
+ *
+ * @param name Name of the variable to create on the stack
+ * @param context The original context to copy
+ * @param offsetFrames Offset, in frames, for the copy (will advance all buffers of the original context)
+ * @param lengthFrames Length, in frames, for the copy
+ */
+#define AERenderContextCopyOnStack(name, context, offsetFrames, lengthFrames) \
+    AERenderContext name = *context; \
+    name.frames = (UInt32)(lengthFrames); \
+    const UInt32 name ## _offsetFrames = (UInt32)(offsetFrames); \
+    AEBufferStackSetFrameCount(name.stack, name.frames); \
+    AEAudioBufferListCopyOnStack(name ## _output, context->output, name ## _offsetFrames); \
+    AEAudioBufferListSetLength(name ## _output, name.frames); \
+    name.output = name ## _output; \
+    AudioTimeStamp name ## _timestamp = *context->timestamp; \
+    name ## _timestamp.mSampleTime += offsetFrames; \
+    name ## _timestamp.mHostTime += AEHostTicksFromSeconds(offsetFrames / context->sampleRate); \
+    name.timestamp = & name ## _timestamp; \
+    AEBufferStackSetTimeStamp(name.stack, & name ## _timestamp); \
+    int name ## _auxiliaryBufferTotalBytes = 0; \
+    for ( int i=0; i<name.auxiliaryBufferCount; i++ ) { name ## _auxiliaryBufferTotalBytes += AEAudioBufferListGetStructSize(name.auxiliaryBuffers[i].bufferList); }; \
+    char * name ## _auxiliaryBufferBytes = alloca(name ## _auxiliaryBufferTotalBytes); \
+    char * name ## _auxiliaryBufferPtr = name ## _auxiliaryBufferBytes; \
+    AEAuxiliaryBuffer * name ## _auxiliaryBuffers = alloca(name.auxiliaryBufferCount * sizeof(AEAuxiliaryBuffer)); \
+    name.auxiliaryBuffers = name.auxiliaryBufferCount > 0 ? name ## _auxiliaryBuffers : NULL; \
+    for ( int i=0; i<name.auxiliaryBufferCount; i++ ) { \
+        name ## _auxiliaryBuffers[i].identifier = context->auxiliaryBuffers[i].identifier; \
+        name ## _auxiliaryBuffers[i].bufferList = (AudioBufferList *)name ## _auxiliaryBufferPtr; \
+        AEAudioBufferListAssign(name.auxiliaryBuffers[i].bufferList, context->auxiliaryBuffers[i].bufferList, name ## _offsetFrames, name.frames); \
+        name ## _auxiliaryBufferPtr += AEAudioBufferListGetStructSize(context->auxiliaryBuffers[i].bufferList); \
+    }
+
 #ifdef __cplusplus
 }
 #endif
