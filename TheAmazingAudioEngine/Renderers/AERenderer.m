@@ -62,8 +62,10 @@ static const int kBufferStackBaseBufferCount = 64;
     _sampleRate = 44100.0;
     self.blockValue = [AEManagedValue new];
     self.stackValue = [AEManagedValue new];
-    self.stackValue.pointerValue = bufferStack;
     self.stackValue.releaseBlock = ^(void * value) { AEBufferStackFree(value); };
+    [AEManagedValue performBlockBypassingAtomicBatchUpdate:^{
+        self.stackValue.pointerValue = bufferStack;
+    }];
     return self;
 }
 
