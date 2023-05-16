@@ -12,6 +12,7 @@
 #import "AERenderer.h"
 #import "AEBufferStack.h"
 #import "AEAudioBufferListUtilities.h"
+#import "AEManagedValue.h"
 #import <Accelerate/Accelerate.h>
 
 const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
@@ -97,7 +98,9 @@ static const UInt32 kFramesPerSlice = 1024;
             AEAudioBufferListSetLength(abl, frames);
             
             // Run renderer
-            AERendererRun(self.renderer, abl, frames, &self->_timestamp);
+            [AEManagedValue performBlockBypassingAtomicBatchUpdate:^{
+                AERendererRun(self.renderer, abl, frames, &self->_timestamp);
+            }];
             
             if ( remainingFrames > 0 ) remainingFrames -= frames;
             if ( remainingFrames == 0 && waitForSilence ) {
