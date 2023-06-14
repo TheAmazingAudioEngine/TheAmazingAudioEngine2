@@ -34,6 +34,7 @@
 #import "AEDSPUtilities.h"
 #import "AECircularBuffer.h"
 #import <AVFoundation/AVFoundation.h>
+#import <Accelerate/Accelerate.h>
 
 #if TARGET_OS_OSX
 #import "AEAudioDevice.h"
@@ -50,8 +51,10 @@ static const double kAVAudioSession0dBGain = 0.75;
 #endif
 
 #if TARGET_OS_OSX
-static const AESeconds kInputRingBufferLowWaterMarkDetectionInterval = 0.5;
-static const UInt32 kInputRingBufferImmediateDrainThreshold = 3182;
+static const AESeconds kInputRingBufferLowWaterMarkDetectionInterval = 2.0;
+static const UInt32 kInputRingBufferImmediateDrainThreshold = 2048;
+static const UInt32 kInputRingBufferMinimumDiscardThreshold = 24;
+static const UInt32 kInputRingBufferDiscardCrossfade = 256;
 #endif
 
 @interface AEIOAudioUnit ()
@@ -78,6 +81,7 @@ static const UInt32 kInputRingBufferImmediateDrainThreshold = 3182;
 @property (nonatomic) UInt32 lowWaterMarkSampleCount;
 @property (nonatomic) AECircularBuffer ringBuffer;
 @property (nonatomic) AudioBufferList * scratchBuffer;
+@property (nonatomic) AudioBufferList * crossfadeBuffer;
 #endif
 @end
 
@@ -313,6 +317,8 @@ struct _conversion_proc_arg_t {
     [[NSNotificationCenter defaultCenter] removeObserver:self.defaultDeviceObserverToken];
     self.defaultDeviceObserverToken = nil;
     if ( _ringBuffer.buffer.buffer ) AECircularBufferCleanup(&_ringBuffer);
+    if ( _crossfadeBuffer ) AEAudioBufferListFree(_crossfadeBuffer);
+    _crossfadeBuffer = NULL;
     if ( _audioConverter ) AudioConverterDispose(_audioConverter);
     _audioConverter = NULL;
     if ( _scratchBuffer ) AEAudioBufferListFree(_scratchBuffer);
@@ -733,23 +739,32 @@ static OSStatus AEIOAudioUnitDequeueRingBuffer(__unsafe_unretained AEIOAudioUnit
         *frames = 0;
         return kEmptyBufferErr;
     }
-    available -= *frames;
-    THIS->_lowWaterMark = MIN(THIS->_lowWaterMark, available);
+    UInt32 excess = available - *frames;
+    THIS->_lowWaterMark = MIN(THIS->_lowWaterMark, excess);
     
     int interval = kInputRingBufferLowWaterMarkDetectionInterval * THIS->_currentSampleRate;
+    UInt32 crossfade = 0;
     if ( (THIS->_lowWaterMarkSampleCount+=*frames) > interval || THIS->_lowWaterMark > kInputRingBufferImmediateDrainThreshold ) {
-        if ( THIS->_lowWaterMark > 16 ) {
+        if ( THIS->_lowWaterMark >= kInputRingBufferMinimumDiscardThreshold ) {
             UInt32 discard = THIS->_lowWaterMark;
             #ifdef DEBUG
             NSLog(@"Discarding %d input frames", (int)discard);
             #endif
+            crossfade = MIN(MIN(available, *frames), kInputRingBufferDiscardCrossfade);
+            AECircularBufferCopyOut(&THIS->_ringBuffer, &crossfade, THIS->_crossfadeBuffer, NULL);
             AECircularBufferDequeue(&THIS->_ringBuffer, &discard, NULL, NULL);
-            available -= discard;
+            excess -= discard;
         }
-        THIS->_lowWaterMark = available;
+        THIS->_lowWaterMark = excess;
         THIS->_lowWaterMarkSampleCount = *frames;
     }
     AECircularBufferDequeue(&THIS->_ringBuffer, frames, buffer, NULL);
+    if ( crossfade ) {
+        // Blend discarded audio with new audio, crossfaded to avoid glitches
+        for ( int i=0; i<buffer->mNumberBuffers; i++ ) {
+            vDSP_vtmerg(THIS->_crossfadeBuffer->mBuffers[i].mData, 1, buffer->mBuffers[i].mData, 1, buffer->mBuffers[i].mData, 1, crossfade);
+        }
+    }
     return noErr;
 }
 #endif
@@ -883,8 +898,15 @@ static OSStatus AEIOAudioUnitDequeueRingBuffer(__unsafe_unretained AEIOAudioUnit
             if ( _ringBuffer.buffer.buffer && _ringBuffer.audioDescription.mChannelsPerFrame != asbd.mChannelsPerFrame ) {
                 AECircularBufferCleanup(&_ringBuffer);
             }
+            if ( _crossfadeBuffer && _crossfadeBuffer->mNumberBuffers != asbd.mChannelsPerFrame ) {
+                AEAudioBufferListFree(_crossfadeBuffer);
+                _crossfadeBuffer = NULL;
+            }
             if ( !_ringBuffer.buffer.buffer ) {
                 AECircularBufferInit(&_ringBuffer, AEGetMaxFramesPerSlice(), asbd.mChannelsPerFrame, asbd.mSampleRate);
+            }
+            if ( !_crossfadeBuffer ) {
+                _crossfadeBuffer = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(asbd.mChannelsPerFrame, asbd.mSampleRate), kInputRingBufferDiscardCrossfade);
             }
             double availableRate = [self.audioDevice closestSupportedSampleRateTo:self.currentSampleRate];
             if ( fabs(availableRate - asbd.mSampleRate) > 0.1 ) {
