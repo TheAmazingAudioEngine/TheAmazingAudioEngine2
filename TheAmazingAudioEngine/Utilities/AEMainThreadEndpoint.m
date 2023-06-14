@@ -45,6 +45,7 @@ static AEMainThreadEndpointThread * __sharedThread = nil;
 @property (nonatomic, copy) AEMainThreadEndpointHandler handler;
 @property (nonatomic) semaphore_t semaphore;
 @property (nonatomic, strong) AEMainThreadEndpointThread * thread;
+@property (nonatomic, strong) NSMutableArray <void (^)(void)> * mainThreadBlocks;
 @end
 
 @interface AEMainThreadEndpointThread : NSThread
@@ -81,6 +82,7 @@ static AEMainThreadEndpointThread * __sharedThread = nil;
     [self.thread addEndpoint:self];
     self.semaphore = self.thread.semaphore;
     
+    self.mainThreadBlocks = [NSMutableArray array];
     pthread_mutex_init(&_mutex, NULL);
     
     return self;
@@ -141,6 +143,10 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 }
 
 - (void)serviceMessages {
+    if ( pthread_main_np() ) {
+        [self serviceBlockQueue];
+    }
+    
     pthread_mutex_lock(&_mutex);
     for ( int i=0; i<kMaxMessagesEachService; i++ ) {
         // Get pointer to readable bytes
@@ -160,17 +166,30 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
         } else {
             void * dataCopy = malloc(length);
             memcpy(dataCopy, data, length);
-            dispatch_async(dispatch_get_main_queue(), ^{
+            __weak typeof(self) weakSelf = self;
+            [self.mainThreadBlocks addObject:^{
                 // Run handler
-                self.handler(dataCopy, length);
+                weakSelf.handler(dataCopy, length);
                 free(dataCopy);
-            });
+            }];
+            dispatch_async(dispatch_get_main_queue(), ^{ [self serviceBlockQueue]; });
         }
         
         // Mark as read
         TPCircularBufferConsume(&_buffer, (int32_t)(sizeof(size_t) + length));
     }
     pthread_mutex_unlock(&_mutex);
+}
+
+- (void)serviceBlockQueue {
+    pthread_mutex_lock(&_mutex);
+    NSArray <void (^)(void)> * mainThreadBlocks = self.mainThreadBlocks.copy;
+    [self.mainThreadBlocks removeAllObjects];
+    pthread_mutex_unlock(&_mutex);
+    
+    for ( void (^block)(void) in mainThreadBlocks ) {
+        block();
+    }
 }
 
 @end
