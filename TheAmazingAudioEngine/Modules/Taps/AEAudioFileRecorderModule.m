@@ -151,6 +151,9 @@ void AEAudioFileRecorderModuleBeginRecording(__unsafe_unretained AEAudioFileReco
 }
 
 static void AEAudioFileRecorderModuleProcess(__unsafe_unretained AEAudioFileRecorderModule * THIS, const AERenderContext * _Nonnull context) {
+    if ( !AEBufferStackGet(context->stack, 0) ) {
+        return;
+    }
     
     if ( !os_unfair_lock_trylock(&THIS->_audioFileMutex) ) {
         return;
