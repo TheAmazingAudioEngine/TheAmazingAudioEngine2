@@ -306,10 +306,11 @@ static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
             // Start polling for pending releases
             double interval = completionBlock ? 0.01 : 0.1;
             __weak typeof(self) weakSelf = self;
-            self.pollTimer = [NSTimer scheduledTimerWithTimeInterval:interval repeats:YES block:^(NSTimer * timer) {
+            self.pollTimer = [NSTimer timerWithTimeInterval:interval repeats:YES block:^(NSTimer * timer) {
                 [weakSelf pollReleaseList];
             }];
             self.pollTimer.tolerance = completionBlock ? 0.01 : 0.5;
+            [NSRunLoop.mainRunLoop addTimer:self.pollTimer forMode:NSDefaultRunLoopMode];
         }
         
         if ( self.usedOnAudioThread ) {
