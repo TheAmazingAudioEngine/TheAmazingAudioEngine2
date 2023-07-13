@@ -143,7 +143,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 }
 
 - (void)serviceMessages {
-    if ( pthread_main_np() ) {
+    if ( NSThread.isMainThread ) {
         [self serviceBlockQueue];
     }
     
@@ -161,7 +161,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
         size_t length = *((size_t*)tail);
         void * data = length > 0 ? (tail + sizeof(size_t)) : NULL;
         
-        if ( pthread_main_np() ) {
+        if ( NSThread.isMainThread ) {
             self.handler(data, length);
         } else {
             void * dataCopy = malloc(length);
