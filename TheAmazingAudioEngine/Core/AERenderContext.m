@@ -34,3 +34,8 @@ void AERenderContextOutput(const AERenderContext * context, int bufferCount) {
 void AERenderContextOutputToChannels(const AERenderContext * _Nonnull context, int bufferCount, AEChannelSet channels) {
     AEBufferStackMixToBufferListChannels(context->stack, bufferCount, channels, context->output);
 }
+
+void AERenderContextRestoreBufferStack(const AERenderContext * context) {
+    AEBufferStackSetFrameCount(context->stack, context->frames);
+    AEBufferStackSetTimeStamp(context->stack, context->timestamp);
+}

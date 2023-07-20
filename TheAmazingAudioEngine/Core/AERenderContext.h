@@ -107,6 +107,9 @@ void AERenderContextOutputToChannels(const AERenderContext * _Nonnull context, i
 /*!
  * Make a copy of the given render context on the stack, with a given offset and length
  *
+ *  Note that this method will change the context's buffer stack frame count. You must call
+ *  AERenderContextRestoreBufferStack when you resume accessing the original context.
+ *
  * @param name Name of the variable to create on the stack
  * @param context The original context to copy
  * @param offsetFrames Offset, in frames, for the copy (will advance all buffers of the original context)
@@ -137,6 +140,11 @@ void AERenderContextOutputToChannels(const AERenderContext * _Nonnull context, i
         AEAudioBufferListAssign(name.auxiliaryBuffers[i].bufferList, context->auxiliaryBuffers[i].bufferList, name ## _offsetFrames, name.frames); \
         name ## _auxiliaryBufferPtr += AEAudioBufferListGetStructSize(context->auxiliaryBuffers[i].bufferList); \
     }
+
+/*!
+ * Restore buffer stack after using a copy via AERenderContextCopyOnStack
+ */
+void AERenderContextRestoreBufferStack(const AERenderContext * _Nonnull context);
 
 #ifdef __cplusplus
 }
