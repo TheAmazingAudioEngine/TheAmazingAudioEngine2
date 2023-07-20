@@ -12,6 +12,8 @@
 static const UInt32 kMaxFramesPerSlice = 8192;
 static const float kGainSmoothingRampStep = 1.0 / 8192;
 static const UInt32 kGainSmoothingRampMaxDuration = 512;
+static const double kUpperFaderRange = 4.0/5.0;
+static const double kLowerFaderRange = 1.0/5.0;
 
 void AEDSPApplyGain(const AudioBufferList * bufferList, float gain, UInt32 frames, const AudioBufferList * output) {
     for ( int i=0; i < bufferList->mNumberBuffers; i++ ) {
@@ -264,6 +266,32 @@ void AEDSPCrossfade(const AudioBufferList * a, const AudioBufferList * b, const 
     assert(a->mNumberBuffers == b->mNumberBuffers && b->mNumberBuffers == target->mNumberBuffers);
     for ( int i=0; i<a->mNumberBuffers; i++ ) {
         vDSP_vtmerg(a->mBuffers[i].mData, 1, b->mBuffers[i].mData, 1, target->mBuffers[i].mData, 1, frames);
+    }
+}
+
+double AEDSPFaderPositionToDecibels(double position, double minDb, double midDb, double maxDb) {
+    double upperRange = maxDb > 0 ? kUpperFaderRange : 1;
+    if ( position == 0 ) {
+        return -INFINITY;
+    } else if ( position <= kLowerFaderRange ) {
+        return minDb + position / kLowerFaderRange * (midDb - minDb);
+    } else if ( position <= upperRange ) {
+        return midDb + (position - kLowerFaderRange) / (upperRange - kLowerFaderRange) * (0 - midDb);
+    } else {
+        return 0 + (position - upperRange) / (1.0 - upperRange) * maxDb;
+    }
+}
+
+double AEDSPDecibelsToFaderPosition(double decibels, double minDb, double midDb, double maxDb) {
+    if ( decibels < minDb ) decibels = minDb;
+    if ( decibels > maxDb ) decibels = maxDb;
+    double upperRange = maxDb > 0 ? kUpperFaderRange : 1;
+    if ( decibels <= midDb ) {
+        return (decibels - minDb) / (midDb - minDb) * kLowerFaderRange;
+    } else if ( decibels < 0 ) {
+        return kLowerFaderRange + (decibels - midDb) / (0 - midDb) * (upperRange - kLowerFaderRange);
+    } else {
+        return maxDb == 0 ? 1 : upperRange + (decibels / maxDb) * (1.0 - upperRange);
     }
 }
 

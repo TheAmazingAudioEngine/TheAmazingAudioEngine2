@@ -216,11 +216,38 @@ static inline double AEDSPRatioToDecibels(double ratio) {
  * Convert decibels to power ratio
  *
  * @param decibels Value in decibels
+ * @param minDb Minimum value in dB
  * @return Power ratio value
  */
 static inline double AEDSPDecibelsToRatioClipped(double decibels, double minDb) {
     return decibels <= minDb ? 0 : pow(10.0, decibels / 20.0);
 }
+
+/*!
+ * Convert a UI fader position to decibels
+ *
+ *  Position of 0 corresponds to -INFINITY; position of 1 corresponds to maxDb.
+ *
+ * @param position Fader position (0 - 1)
+ * @param minDb Minimum value in dB
+ * @param midDb Middle value in dB; the largest range of the fader will range from 0dB to this value
+ * @param maxDb Maximum value in dB
+ * @return Corresponding value in decibels
+ */
+double AEDSPFaderPositionToDecibels(double position, double minDb, double midDb, double maxDb);
+
+/*!
+ * Convert a UI fader position to decibels
+ *
+ *  Position of 0 corresponds to -INFINITY; position of 1 corresponds to maxDb.
+ *
+ * @param decibels Value in decibels
+ * @param minDb Minimum value in dB (at position 0, will return -INFINITY)
+ * @param midDb Middle value in dB; the largest range of the fader will range from 0dB to this value
+ * @param maxDb Maximum value in dB
+ * @return Corresponding fader position
+ */
+double AEDSPDecibelsToFaderPosition(double decibels, double minDb, double midDb, double maxDb);
 
 /*!
  * Structure for FFT convolution
