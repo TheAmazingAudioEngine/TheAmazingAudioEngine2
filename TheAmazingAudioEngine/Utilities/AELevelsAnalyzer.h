@@ -77,6 +77,7 @@ double AELevelsAnalyzerGetAverage(__unsafe_unretained AELevelsAnalyzer * analyze
 
 @property (nonatomic, readonly) double peak; //!< Retrieve the peak value, in decibels
 @property (nonatomic, readonly) double average; //!< Retrieve the average value, in decibels
+@property (nonatomic) double gain; //!< Gain to apply when analyzing
 
 @end
 
@@ -120,6 +121,7 @@ void AEStereoLevelsAnalyzerSetNextBufferIsFirst(__unsafe_unretained AEStereoLeve
 
 @property (nonatomic, strong, readonly) AELevelsAnalyzer * left;
 @property (nonatomic, strong, readonly) AELevelsAnalyzer * right;
+@property (nonatomic) double gain; //!< Gain to apply when analyzing
 @end
 
  

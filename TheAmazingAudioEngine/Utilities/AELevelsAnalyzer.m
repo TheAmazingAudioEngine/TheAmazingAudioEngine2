@@ -36,6 +36,12 @@ static const AESeconds kQueryTimeout = 0.5;
 @implementation AELevelsAnalyzer
 @dynamic peak, average;
 
+- (instancetype)init {
+    if ( !(self = [super init]) ) return nil;
+    _gain = 1;
+    return self;
+}
+
 void AELevelsAnalyzerAnalyzeBuffer(__unsafe_unretained AELevelsAnalyzer * THIS, const AudioBufferList * buffer, UInt32 numberFrames) {
     AELevelsAnalyzerMixAndAnalyzeChannel(THIS, buffer, -1, numberFrames, YES);
 }
@@ -84,6 +90,9 @@ static void AELevelsAnalyzerMixAndAnalyzeChannel(__unsafe_unretained AELevelsAna
     AESeconds sinceLastAnalysis = now-THIS->_lastAnalysis;
     THIS->_lastAnalysis = now;
 
+    max *= THIS->_gain;
+    sumOfSquares *= THIS->_gain*THIS->_gain;
+    
     // Calculate peak, with dropoff
     if ( max >= THIS->_peak ) {
         THIS->_lastPeak = now;
@@ -175,6 +184,7 @@ double AELevelsAnalyzerGetAverage(__unsafe_unretained AELevelsAnalyzer * THIS) {
 
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
+    _gain = 1;
     self.left = [AELevelsAnalyzer new];
     self.right = [AELevelsAnalyzer new];
     return self;
@@ -193,6 +203,12 @@ void AEStereoLevelsAnalyzerMixAndAnalyzeBuffer(__unsafe_unretained AEStereoLevel
 void AEStereoLevelsAnalyzerSetNextBufferIsFirst(__unsafe_unretained AEStereoLevelsAnalyzer * THIS) {
     AELevelsAnalyzerSetNextBufferIsFirst(THIS->_left);
     AELevelsAnalyzerSetNextBufferIsFirst(THIS->_right);
+}
+
+- (void)setGain:(double)gain {
+    _gain = gain;
+    self.left.gain = gain;
+    self.right.gain = gain;
 }
 
 @end
