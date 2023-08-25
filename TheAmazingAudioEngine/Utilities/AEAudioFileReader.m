@@ -115,6 +115,10 @@ static const UInt32 kMaxAudioFileReadSize = 16384;
                      readBlock:(AEAudioFileReaderIncrementalReadBlock)readBlock
                completionBlock:(AEAudioFileReaderCompletionBlock)completionBlock
                      blockSize:(UInt32)blockSize {
+    if ( !path || ![NSFileManager.defaultManager fileExistsAtPath:path] ) {
+        completionBlock([NSError errorWithDomain:NSOSStatusErrorDomain code:kAudio_FileNotFoundError userInfo:@{NSLocalizedDescriptionKey: @"No such file"}]);
+        return nil;
+    }
     AEAudioFileReader * reader = [AEAudioFileReader new];
     reader.path = path;
     reader.targetAudioDescription = targetAudioDescription;
