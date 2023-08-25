@@ -367,6 +367,20 @@ void AEAudioBufferListCopyContentsWithFormat(const AudioBufferList * target,
 static inline size_t AEAudioBufferListGetStructSize(const AudioBufferList *bufferList) {
     return sizeof(AudioBufferList) + (bufferList->mNumberBuffers-1) * sizeof(AudioBuffer);
 }
+
+/*!
+ * Determine if the audio in the buffer is silence
+ *
+ *  Checks samples at the start, end and middle first, and if all samples are zero,
+ *  scans buffer for first non-silent value. Consequently this function runs fastest when
+ *  the buffer is not silent.
+ *
+ *  Assumes a noninterleaved floating-point format
+ *
+ * @param bufferList Pointer to an AudioBufferList containing audio
+ * @return YES if buffer contains silence
+ */
+BOOL AEAudioBufferListIsSilent(const AudioBufferList *bufferList);
     
 #ifdef __cplusplus
 }

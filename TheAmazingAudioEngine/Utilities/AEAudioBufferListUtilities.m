@@ -222,3 +222,19 @@ void AEAudioBufferListCopyContentsWithFormat(const AudioBufferList * target,
                length * audioFormat.mBytesPerFrame);
     }
 }
+
+BOOL AEAudioBufferListIsSilent(const AudioBufferList *bufferList) {
+    for ( int i=0; i<bufferList->mNumberBuffers; i++ ) {
+        float * samples = (float *)bufferList->mBuffers[i].mData;
+        UInt32 length = bufferList->mBuffers[i].mDataByteSize / sizeof(float);
+        if ( length == 0 ) continue;
+        
+        if ( samples[0] != 0.0f ) return NO;
+        if ( samples[length-1] != 0.0f ) return NO;
+        if ( samples[(length-1)/2] != 0.0f ) return NO;
+        for ( int j=1; j<length-2; j++ ) {
+            if ( samples[j] != 0.0f ) return NO;
+        }
+    }
+    return YES;
+}
