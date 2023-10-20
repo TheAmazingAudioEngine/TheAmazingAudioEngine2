@@ -43,6 +43,7 @@ static BOOL __atomicUpdateWaitingForCommit = NO;
 static NSMutableArray * __atomicUpdateCompletionBlocks = nil;
 static NSTimer * __atomicUpdateCompletionTimer = nil;
 static os_unfair_lock __atomicBypassMutex = OS_UNFAIR_LOCK_INIT;
+static os_unfair_lock __atomicBatchUpdateMutex = OS_UNFAIR_LOCK_INIT;
 static int __atomicBypassCounter = 0;
 static const int kAtomicBypassSectionTableSize = 31;
 static struct {
@@ -118,7 +119,7 @@ static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
  *    do on the realtime thread.
  */
 + (void)performAtomicBatchUpdate:(AEManagedValueUpdateBlock)block withCompletionBlock:(void (^)(void))completionBlock {
-    
+    os_unfair_lock_lock(&__atomicBatchUpdateMutex);
     if ( !__atomicUpdateWaitingForCommit ) {
         // Perform deferred sync to _atomicBatchUpdateLastValue for previously-batch-updated values
         for ( AEManagedValue * value in __atomicUpdatedDeferredSyncValues ) {
@@ -136,16 +137,16 @@ static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
     }
     
     if ( completionBlock ) {
-        @synchronized ( __atomicUpdateCompletionBlocks ) {
-            [__atomicUpdateCompletionBlocks addObject:completionBlock];
-        }
+        [__atomicUpdateCompletionBlocks addObject:completionBlock];
     }
     
     __atomicUpdateCounter++;
+    os_unfair_lock_unlock(&__atomicBatchUpdateMutex);
     
     // Perform the updates
     block();
     
+    os_unfair_lock_lock(&__atomicBatchUpdateMutex);
     __atomicUpdateCounter--;
     
     if ( __atomicUpdateCounter == 0 ) {
@@ -155,19 +156,24 @@ static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
     
     if ( completionBlock && !__atomicUpdateCompletionTimer ) {
         __atomicUpdateCompletionTimer = [NSTimer scheduledTimerWithTimeInterval:0.01 repeats:YES block:^(NSTimer * _Nonnull timer) {
+            NSArray * blocks = nil;
+            os_unfair_lock_unlock(&__atomicBatchUpdateMutex);
             if ( !__atomicUpdateWaitingForCommit ) {
-                @synchronized ( __atomicUpdateCompletionBlocks ) {
-                    [__atomicUpdateCompletionTimer invalidate];
-                    __atomicUpdateCompletionTimer = nil;
-                    for ( void (^block)(void) in __atomicUpdateCompletionBlocks ) {
-                        block();
-                    }
-                    [__atomicUpdateCompletionBlocks removeAllObjects];
+                [__atomicUpdateCompletionTimer invalidate];
+                __atomicUpdateCompletionTimer = nil;
+                blocks = [__atomicUpdateCompletionBlocks copy];
+                [__atomicUpdateCompletionBlocks removeAllObjects];
+            }
+            os_unfair_lock_unlock(&__atomicBatchUpdateMutex);
+            if ( blocks ) {
+                for ( void (^block)(void) in blocks ) {
+                    block();
                 }
             }
         }];
         __atomicUpdateCompletionTimer.tolerance = 0.01;
     }
+    os_unfair_lock_unlock(&__atomicBatchUpdateMutex);
 }
 
 + (void)performBlockBypassingAtomicBatchUpdate:(AEManagedValueUpdateBlock)block {
