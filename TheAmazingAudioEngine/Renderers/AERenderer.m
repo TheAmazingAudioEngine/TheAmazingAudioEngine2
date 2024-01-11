@@ -74,6 +74,7 @@ void AERendererRun(__unsafe_unretained AERenderer * THIS, const AudioBufferList 
 }
 
 void AERendererRunMultiOutput(__unsafe_unretained AERenderer * THIS, const AudioBufferList * primaryBufferList, int auxiliaryBufferListCount, const AEAuxiliaryBuffer * auxiliaryBuffers, UInt32 frames, const AudioTimeStamp * timestamp) {
+    THIS->_nextRenderTimestamp = timestamp->mHostTime + AEHostTicksFromSeconds(frames/THIS->_sampleRate);
     
     AEBufferStack * stack = (AEBufferStack *)AEManagedValueGetValue(THIS->_stackValue);
     
@@ -115,7 +116,6 @@ void AERendererRunMultiOutput(__unsafe_unretained AERenderer * THIS, const Audio
     }
     
     THIS->_lastRenderTimestamp = timestamp->mHostTime;
-    THIS->_nextRenderTimestamp = timestamp->mHostTime + AEHostTicksFromSeconds(frames/THIS->_sampleRate);
 }
 
 AEHostTicks AERendererGetLastRenderTimestamp(__unsafe_unretained AERenderer * THIS) {
