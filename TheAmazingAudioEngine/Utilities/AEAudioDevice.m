@@ -62,7 +62,7 @@ NSString * const AEAudioDeviceAvailableDevicesChangedNotification = @"AEAudioDev
     AudioDeviceID deviceId;
     UInt32 size = sizeof(deviceId);
     AudioObjectPropertyAddress addr = {kAudioHardwarePropertyDefaultInputDevice, kAudioObjectPropertyScopeGlobal};
-    if ( !AECheckOSStatus(AudioObjectGetPropertyData(kAudioObjectSystemObject, &addr, 0, NULL, &size, &deviceId), "kAudioHardwarePropertyDefaultInputDevice") ) {
+    if ( !AECheckOSStatus(AudioObjectGetPropertyData(kAudioObjectSystemObject, &addr, 0, NULL, &size, &deviceId), "kAudioHardwarePropertyDefaultInputDevice") || deviceId == kAudioObjectUnknown ) {
         return nil;
     }
     AEAudioDevice * device = [[AEAudioDevice alloc] initWithObjectID:deviceId];
@@ -74,7 +74,7 @@ NSString * const AEAudioDeviceAvailableDevicesChangedNotification = @"AEAudioDev
     AudioDeviceID deviceId;
     UInt32 size = sizeof(deviceId);
     AudioObjectPropertyAddress addr = {kAudioHardwarePropertyDefaultOutputDevice, kAudioObjectPropertyScopeGlobal};
-    if ( !AECheckOSStatus(AudioObjectGetPropertyData(kAudioObjectSystemObject, &addr, 0, NULL, &size, &deviceId), "kAudioHardwarePropertyDefaultOutputDevice") ) {
+    if ( !AECheckOSStatus(AudioObjectGetPropertyData(kAudioObjectSystemObject, &addr, 0, NULL, &size, &deviceId), "kAudioHardwarePropertyDefaultOutputDevice") || deviceId == kAudioObjectUnknown ) {
         return nil;
     }
     AEAudioDevice * device = [[AEAudioDevice alloc] initWithObjectID:deviceId];
@@ -87,7 +87,7 @@ NSString * const AEAudioDeviceAvailableDevicesChangedNotification = @"AEAudioDev
     UInt32 size = sizeof(deviceId);
     CFStringRef UIDStr = (__bridge CFStringRef)UID;
     AudioObjectPropertyAddress addr = {kAudioHardwarePropertyTranslateUIDToDevice, kAudioObjectPropertyScopeGlobal};
-    if ( !AECheckOSStatus(AudioObjectGetPropertyData(kAudioObjectSystemObject, &addr, sizeof(UIDStr), &UIDStr, &size, &deviceId), "kAudioHardwarePropertyTranslateUIDToDevice") ) {
+    if ( !AECheckOSStatus(AudioObjectGetPropertyData(kAudioObjectSystemObject, &addr, sizeof(UIDStr), &UIDStr, &size, &deviceId), "kAudioHardwarePropertyTranslateUIDToDevice") || deviceId == kAudioObjectUnknown ) {
         return nil;
     }
     return [[AEAudioDevice alloc] initWithObjectID:deviceId];
