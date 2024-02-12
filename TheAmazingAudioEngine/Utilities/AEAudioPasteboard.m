@@ -178,7 +178,7 @@ typedef struct {
         *ioFrames = MIN(*ioFrames, remainingFrames);
         ExtAudioFileRead(audioFile, ioFrames, buffer);
         remainingFrames -= *ioFrames;
-        if ( remainingFrames == 0 ) {
+        if ( remainingFrames == 0 || *ioFrames == 0 ) {
             *finished = YES;
         }
     } audioDescription:fileAudioDescription completionBlock:^(NSError *errorOrNil) {
