@@ -99,7 +99,7 @@ BOOL AERateLimit(void) {
     return YES;
 }
 
-void AEError(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line) {
+void AEError(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line, va_list args) {
 #ifndef DEBUG
     if ( pthread_self() == AERealtimeThreadIdentifier ) {
         // Don't do error logging on audio thread
@@ -109,10 +109,12 @@ void AEError(OSStatus result, const char * _Nonnull operation, const char * _Non
     if ( AERateLimit() ) {
         AERealtimeWatchdogPause();
         int fourCC = CFSwapInt32HostToBig(result);
+        char formattedOperation[256]; // Adjust size as needed
+        vsnprintf(formattedOperation, sizeof(formattedOperation), operation, args);
         if ( isascii(((char*)&fourCC)[0]) && isascii(((char*)&fourCC)[1]) && isascii(((char*)&fourCC)[2]) ) {
-            NSLog(@"%s:%d: %s: '%4.4s' (%d)", file, line, operation, (char*)&fourCC, (int)result);
+            NSLog(@"%s:%d: %s: '%4.4s' (%d)", file, line, formattedOperation, (char*)&fourCC, (int)result);
         } else {
-            NSLog(@"%s:%d: %s: %d", file, line, operation, (int)result);
+            NSLog(@"%s:%d: %s: %d", file, line, formattedOperation, (int)result);
         }
         AERealtimeWatchdogResume();
     }

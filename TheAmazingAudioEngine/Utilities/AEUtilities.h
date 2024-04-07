@@ -83,7 +83,7 @@ BOOL AERateLimit(void);
  *
  *  Create a symbolic breakpoint with this function name to break on errors.
  */
-void AEError(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line);
+void AEError(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line, va_list args);
 
 /*!
  * Check an OSStatus condition
@@ -91,10 +91,13 @@ void AEError(OSStatus result, const char * _Nonnull operation, const char * _Non
  * @param result The result
  * @param operation A description of the operation, for logging purposes
  */
-#define AECheckOSStatus(result,operation) (_AECheckOSStatus((result),(operation),strrchr(__FILE__, '/')+1,__LINE__))
-static inline BOOL _AECheckOSStatus(OSStatus result, const char * _Nonnull operation, const char * _Nonnull file, int line) {
+#define AECheckOSStatus(result, operation, ...) (_AECheckOSStatus((result), strrchr(__FILE__, '/')+1, __LINE__, (operation), ##__VA_ARGS__))
+static inline BOOL _AECheckOSStatus(OSStatus result, const char * _Nonnull file, int line, const char * _Nonnull operation, ...) {
     if ( result != noErr ) {
-        AEError(result, operation, file, line);
+        va_list args;
+        va_start(args, operation);
+        AEError(result, operation, file, line, args);
+        va_end(args);
         return NO;
     }
     return YES;
