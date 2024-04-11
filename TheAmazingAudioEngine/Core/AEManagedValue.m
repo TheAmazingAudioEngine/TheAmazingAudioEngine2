@@ -122,10 +122,12 @@ static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
     os_unfair_lock_lock(&__atomicBatchUpdateMutex);
     if ( !__atomicUpdateWaitingForCommit ) {
         // Perform deferred sync to _atomicBatchUpdateLastValue for previously-batch-updated values
-        for ( AEManagedValue * value in __atomicUpdatedDeferredSyncValues ) {
-            value->_atomicBatchUpdateLastValue = value->_value;
+        @synchronized ( __atomicUpdatedDeferredSyncValues ) {
+            for ( AEManagedValue * value in __atomicUpdatedDeferredSyncValues ) {
+                value->_atomicBatchUpdateLastValue = value->_value;
+            }
+            [__atomicUpdatedDeferredSyncValues removeAllObjects];
         }
-        [__atomicUpdatedDeferredSyncValues removeAllObjects];
     }
     
     if ( __atomicUpdateCounter == 0 ) {
@@ -214,7 +216,9 @@ static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
 
 - (void)dealloc {
     // Remove self from deferred sync list
-    [__atomicUpdatedDeferredSyncValues removeObject:self];
+    @synchronized ( __atomicUpdatedDeferredSyncValues ) {
+        [__atomicUpdatedDeferredSyncValues removeObject:self];
+    }
     
     // Remove self from instances awaiting service list
     os_unfair_lock_lock(&__pendingInstancesMutex);
