@@ -532,6 +532,8 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
 - (void)setInputEnabled:(BOOL)inputEnabled {
     if ( _inputEnabled == inputEnabled ) return;
     
+    _inputEnabled = inputEnabled;
+    
     if ( _audioUnit ) {
         BOOL wasRunning = self.running;
         AECheckOSStatus(AudioUnitUninitialize(_audioUnit), "AudioUnitUninitialize");
@@ -545,8 +547,6 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
             }
         }
     }
-    
-    _inputEnabled = inputEnabled;
 }
 
 - (void)setInputGain:(double)inputGain {
