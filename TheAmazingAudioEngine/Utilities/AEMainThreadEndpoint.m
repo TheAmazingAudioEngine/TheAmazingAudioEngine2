@@ -50,7 +50,7 @@ static AEMainThreadEndpointThread * __sharedThread = nil;
 
 @interface AEMainThreadEndpointThread : NSThread
 - (void)addEndpoint:(AEMainThreadEndpoint *)endpoint;
-- (void)handleReleasedEndpoint;
+- (void)removeEndpoint:(AEMainThreadEndpoint *)endpoint;
 @property (nonatomic) semaphore_t semaphore;
 @end
 
@@ -89,7 +89,7 @@ static AEMainThreadEndpointThread * __sharedThread = nil;
 }
 
 - (void)dealloc {
-    [self.thread handleReleasedEndpoint];
+    [self.thread removeEndpoint:self];
     TPCircularBufferCleanup(&_buffer);
     pthread_mutex_destroy(&_mutex);
 }
@@ -198,10 +198,8 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 
 @interface AEMainThreadEndpointThread () {
     pthread_mutex_t _mutex;
-    pthread_mutex_t _deferredMutex;
 }
 @property (nonatomic, strong) NSHashTable * endpoints;
-@property (nonatomic, strong) NSMutableSet * deferredAdditions;
 @end
 
 @implementation AEMainThreadEndpointThread
@@ -210,19 +208,13 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
     if ( !(self = [super init]) ) return nil;
     semaphore_create(mach_task_self(), &_semaphore, SYNC_POLICY_FIFO, 0);
     self.endpoints = [NSHashTable weakObjectsHashTable];
-    
-    pthread_mutexattr_t attr;
-    pthread_mutexattr_init(&attr);
-    pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutex_init(&_mutex, &attr);
-    pthread_mutex_init(&_deferredMutex, 0);
+    pthread_mutex_init(&_mutex, NULL);
     return self;
 }
 
 - (void)dealloc {
     semaphore_destroy(mach_task_self(), _semaphore);
     pthread_mutex_destroy(&_mutex);
-    pthread_mutex_destroy(&_deferredMutex);
 }
 
 - (void)cancel {
@@ -231,67 +223,31 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 }
 
 - (void)addEndpoint:(AEMainThreadEndpoint *)endpoint {
-    if ( pthread_mutex_trylock(&_mutex) == 0 ) {
-        [self.endpoints addObject:endpoint];
-        pthread_mutex_unlock(&_mutex);
-        semaphore_signal(_semaphore);
-    } else {
-        // Defer addition to avoid contention over endpoints list
-        pthread_mutex_lock(&_deferredMutex);
-        if ( !self.deferredAdditions ) {
-            self.deferredAdditions = [NSMutableSet set];
-        }
-        [self.deferredAdditions addObject:endpoint];
-        semaphore_signal(_semaphore);
-        pthread_mutex_unlock(&_deferredMutex);
-    }
+    pthread_mutex_lock(&_mutex);
+    [self.endpoints addObject:endpoint];
+    pthread_mutex_unlock(&_mutex);
 }
 
-- (void)handleReleasedEndpoint {
-    // Endpoints are removed when they are deallocated (as we store weak references). Note that NSHashTable count doesn't
-    // work properly with weak references, so we use allObjects.count, which does.
-    if ( pthread_mutex_trylock(&_mutex) != 0 ) {
-        // Contended lock - try again later to avoid a deadlock
-        [self performSelector:@selector(handleReleasedEndpoint) withObject:nil afterDelay:0];
-        return;
-    }
+- (void)removeEndpoint:(AEMainThreadEndpoint *)endpoint {
+    pthread_mutex_lock(&_mutex);
+    [self.endpoints removeObject:endpoint];
     pthread_mutex_unlock(&_mutex);
 }
 
 - (void)main {
     pthread_setname_np("AEMainThreadEndpoint");
     
-    while ( 1 ) {
-        pthread_mutex_lock(&_mutex);
-        
+    while ( !self.cancelled ) {
         @autoreleasepool {
-            if ( self.cancelled ) {
-                pthread_mutex_unlock(&_mutex);
-                break;
-            }
+            // Get list of endpoints (protected by mutex)
+            pthread_mutex_lock(&_mutex);
+            NSArray <AEMainThreadEndpoint *> * endpoints = self.endpoints.allObjects;
+            pthread_mutex_unlock(&_mutex);
             
-            // Keep strong reference to all endpoints to avoid deallocation during servicing
-            NSArray * endpoints = self.endpoints.allObjects;
+            // Service endpoints
             for ( AEMainThreadEndpoint * endpoint in endpoints ) {
                 [endpoint serviceMessages];
             }
-        
-            if ( self.deferredAdditions ) {
-                // Apply deferred additions/removals (deferred to avoid contention over the endpoints list)
-                pthread_mutex_lock(&_deferredMutex);
-                for ( AEMainThreadEndpoint * endpoint in self.deferredAdditions ) {
-                    [self.endpoints addObject:endpoint];
-                }
-                self.deferredAdditions = nil;
-                pthread_mutex_unlock(&_deferredMutex);
-            }
-        }
-        
-        pthread_mutex_unlock(&_mutex);
-        
-        if ( self.cancelled ) {
-            // We'll be cancelled here if the endpoint was released during servicing, so exit
-            break;
         }
         
         semaphore_wait(_semaphore);
