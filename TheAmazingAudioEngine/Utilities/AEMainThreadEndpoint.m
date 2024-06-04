@@ -52,6 +52,7 @@ static AEMainThreadEndpointThread * __sharedThread = nil;
 - (void)addEndpoint:(AEMainThreadEndpoint *)endpoint;
 - (void)removeEndpoint:(AEMainThreadEndpoint *)endpoint;
 @property (nonatomic) semaphore_t semaphore;
+@property (nonatomic, strong) NSHashTable * endpoints;
 @end
 
 @implementation AEMainThreadEndpoint
@@ -192,6 +193,10 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
     }
 }
 
++ (int)totalEndpointCount {
+    return (int)[self sharedThread].endpoints.count;
+}
+
 @end
 
 #pragma mark - Handler thread
@@ -199,7 +204,6 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 @interface AEMainThreadEndpointThread () {
     pthread_mutex_t _mutex;
 }
-@property (nonatomic, strong) NSHashTable * endpoints;
 @end
 
 @implementation AEMainThreadEndpointThread

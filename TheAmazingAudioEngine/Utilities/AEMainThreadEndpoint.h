@@ -112,6 +112,13 @@ void * _Nullable AEMainThreadEndpointCreateMessage(__unsafe_unretained AEMainThr
  */
 void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoint * _Nonnull endpoint);
 
+/*!
+ * Total number of registered endpoints
+ *
+ *  For diagnostic use
+ */
++ (int)totalEndpointCount;
+
 @end
 
 #ifdef __cplusplus
