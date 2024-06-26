@@ -367,6 +367,18 @@ void AEDSPFFTConvolutionReset(AEDSPFFTConvolution * setup);
  */
 int AEDSPFindPeaksInDistribution(float * distribution, int startIndex, int endIndex, float leadingDelta, float trailingDelta, int minimumSeparation, BOOL sort, int * peaks, int maxPeaks);
 
+/*!
+ * Perform a peak-descent given the distribution, to find the onset of a peak
+ *
+ * @param index Index of the peak, from which we will descend backwards in the distribution
+ * @param distribution Array of floats to analyse
+ * @param length Length of distribution
+ * @param maxOffset The maximum number of samples to move backward; the returned value will be >= index-maxOffset
+ * @param maxStep The maximum step size at each step of the algorithm (e.g. 10 samples)
+ * @param minimumGradient The gradient threshold (e.g. 0.1); to continue descent, (distribution[prior] - distribution[candidate])  / distribution[peak] must be greater than this
+ */
+int AEDSPFindPeakOnset(int index, float * distribution, int length, int maxOffset, int maxStep, float minimumGradient);
+
 #ifdef __cplusplus
 }
 #endif
