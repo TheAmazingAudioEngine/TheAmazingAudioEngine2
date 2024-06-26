@@ -516,7 +516,14 @@ int AEDSPFindPeaksInDistribution(float * distribution, int start, int end, float
         
         if ( seekMax ) {
             if ( sample < max-trailingDelta && lastValley < max-leadingDelta ) {
-                if ( !minimumSeparation || lastPeak == -1 || i-lastPeak >= minimumSeparation ) {
+                BOOL withinMinimumSeparationDistance = minimumSeparation && lastPeak != -1 && i-lastPeak < minimumSeparation;
+                if ( withinMinimumSeparationDistance && distribution[lastPeak] < max ) {
+                    // Within the min separation distance, but the last peak is lower, so ignore it
+                    withinMinimumSeparationDistance = NO;
+                    peakCount--;
+                }
+                
+                if ( !withinMinimumSeparationDistance ) {
                     if ( sort && peakCount >= bufferSize ) {
                         bufferSize += 128;
                         results = realloc(results, sizeof(*results)*bufferSize);
