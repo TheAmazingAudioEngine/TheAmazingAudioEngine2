@@ -65,6 +65,16 @@ typedef struct {
 #endif
 }
 
++ (BOOL)hasAudioOnPasteboard {
+#if TARGET_OS_IPHONE
+    UIPasteboard * pasteboard = UIPasteboard.generalPasteboard;
+    return [pasteboard containsPasteboardTypes:[self audioUTTypes]];
+#else
+    NSPasteboard * pasteboard = NSPasteboard.generalPasteboard;
+    return [pasteboard canReadItemWithDataConformingToTypes:[self audioUTTypes]];
+#endif
+}
+
 + (void)loadInfoForAudioPasteboardItemWithCompletionBlock:(void (^)(NSDictionary *))block {
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         NSData * data = [self dataForAudioOnPasteboard];
@@ -252,27 +262,19 @@ typedef struct {
 
 #pragma mark - Helpers
 
++ (NSArray <NSString *> *)audioUTTypes {
+    return @[(NSString *)kUTTypeAudio, AVFileTypeWAVE, AVFileTypeAIFC, AVFileTypeAIFF, AVFileTypeAppleM4A, AVFileTypeAC3, AVFileTypeMPEGLayer3, AVFileTypeCoreAudioFormat];
+}
+
 + (NSData *)dataForAudioOnPasteboard {
+    NSArray * supportedTypes = [self audioUTTypes];
+
 #if TARGET_OS_IPHONE
     UIPasteboard * pasteboard = UIPasteboard.generalPasteboard;
-#else
-    NSPasteboard * pasteboard = NSPasteboard.generalPasteboard;
-#endif
-    
-    NSArray * supportedTypes = @[(NSString *)kUTTypeAudio, AVFileTypeWAVE, AVFileTypeAIFC, AVFileTypeAIFF, AVFileTypeAppleM4A, AVFileTypeAC3, AVFileTypeMPEGLayer3, AVFileTypeCoreAudioFormat];
-    
-#if TARGET_OS_IPHONE
     if ( ![pasteboard containsPasteboardTypes:supportedTypes] ) {
         return NULL;
     }
-#else
-    if ( ![pasteboard canReadItemWithDataConformingToTypes:supportedTypes] ) {
-        return NULL;
-    }
-#endif
-    
     for ( NSString * type in supportedTypes ) {
-#if TARGET_OS_IPHONE
         NSIndexSet * itemSet = [pasteboard itemSetWithPasteboardTypes:@[type]];
         if ( itemSet.count > 0 ) {
             NSArray <NSData *> * dataArray = [pasteboard dataForPasteboardType:type inItemSet:itemSet];
@@ -286,13 +288,19 @@ typedef struct {
                 return data;
             }
         }
+    }
 #else
+    for ( NSString * type in supportedTypes ) {
+        NSPasteboard * pasteboard = NSPasteboard.generalPasteboard;
+        if ( ![pasteboard canReadItemWithDataConformingToTypes:supportedTypes] ) {
+            return NULL;
+        }
         NSData * data = [pasteboard dataForType:type];
         if ( data ) {
             return data;
         }
-#endif
     }
+#endif
     
     return NULL;
 }

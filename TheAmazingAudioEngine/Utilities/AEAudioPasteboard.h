@@ -47,6 +47,11 @@ typedef void (^AEAudioPasteboardGeneratorBlock)(AudioBufferList * buffer, UInt32
 @interface AEAudioPasteboard : NSObject
 
 /*!
+ * Determine if there's any audio available on the pasteboard
+ */
++ (BOOL)hasAudioOnPasteboard;
+
+/*!
  * Get info about the current pasteboard item
  *
  *  Provides, via the completion block, a dictionary of items (keyed by the AEAudioPasteboardInfo
