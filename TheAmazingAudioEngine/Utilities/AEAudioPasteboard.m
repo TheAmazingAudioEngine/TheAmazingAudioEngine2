@@ -62,6 +62,21 @@ typedef struct {
             [[NSNotificationCenter defaultCenter] postNotificationName:AEAudioPasteboardChangedNotification object:nil];
         }];
     });
+#else
+    static dispatch_once_t onceToken;
+    dispatch_once(&onceToken, ^{
+        // NSPasteboard does not send change notifications by default. We need to poll for changes.
+        __block NSInteger lastChangeCount = [[NSPasteboard generalPasteboard] changeCount];
+        NSTimer * pasteboardPollingTimer = [NSTimer scheduledTimerWithTimeInterval:1.0 repeats:YES block:^(NSTimer * _Nonnull timer) {
+            NSInteger changeCount = [[NSPasteboard generalPasteboard] changeCount];
+            if ( changeCount != lastChangeCount ) {
+                lastChangeCount = changeCount;
+                [[NSNotificationCenter defaultCenter] postNotificationName:AEAudioPasteboardChangedNotification object:nil];
+            }
+        }];
+        pasteboardPollingTimer.tolerance = 1.0;
+        [[NSRunLoop mainRunLoop] addTimer:pasteboardPollingTimer forMode:NSRunLoopCommonModes];
+    });
 #endif
 }
 
