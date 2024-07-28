@@ -12,7 +12,7 @@
 #import <AVFoundation/AVFoundation.h>
 
 #if TARGET_OS_IPHONE
-#import <MobileCoreServices/UTCoreTypes.h>
+#import <MobileCoreServices/MobileCoreServices.h>
 #import <UIKit/UIKit.h>
 #else
 #import <AppKit/AppKit.h>
@@ -83,11 +83,57 @@ typedef struct {
 + (BOOL)hasAudioOnPasteboard {
 #if TARGET_OS_IPHONE
     UIPasteboard * pasteboard = UIPasteboard.generalPasteboard;
-    return [pasteboard containsPasteboardTypes:[self audioUTTypes]];
+    return [pasteboard containsPasteboardTypes:[self audioUTTypes]] || [self hasFilesOfTypes:[self audioUTTypes]];
 #else
     NSPasteboard * pasteboard = NSPasteboard.generalPasteboard;
-    return [pasteboard canReadItemWithDataConformingToTypes:[self audioUTTypes]];
+    return [pasteboard canReadItemWithDataConformingToTypes:[self audioUTTypes]] || [self hasFilesOfTypes:[self audioUTTypes]];
 #endif
+}
+
++ (BOOL)hasFilesOfTypes:(NSArray<NSString *> *)types {
+#if TARGET_OS_IPHONE
+    if ( ![UIPasteboard.generalPasteboard containsPasteboardTypes:@[(NSString *)kUTTypeFileURL]] ) {
+        return NO;
+    }
+    NSArray *items = UIPasteboard.generalPasteboard.items;
+#else
+    if ( ![NSPasteboard.generalPasteboard canReadItemWithDataConformingToTypes:@[(NSString *)kUTTypeFileURL]] ) {
+        return NO;
+    }
+    NSArray *items = [NSPasteboard.generalPasteboard pasteboardItems];
+#endif
+    
+    for ( id item in items ) {
+        NSURL *fileURL = nil;
+#if TARGET_OS_IPHONE
+        fileURL = [NSURL URLWithString:[[NSString alloc] initWithData:item[(NSString *)kUTTypeFileURL] encoding:NSUTF8StringEncoding]];
+#else
+        fileURL = [NSURL URLWithString:[item stringForType:(NSString *)kUTTypeFileURL]];
+#endif
+        if ( fileURL && [self isFileURL:fileURL ofTypes:types] ) {
+            return YES;
+        }
+    }
+    
+    return NO;
+}
+
++ (BOOL)isFileURL:(NSURL *)url ofTypes:(NSArray<NSString *> *)types {
+    NSError *error = nil;
+    NSString *fileType = nil;
+    [url getResourceValue:&fileType forKey:NSURLTypeIdentifierKey error:&error];
+
+    if ( error != nil ) {
+        return NO;
+    }
+
+    for ( NSString *type in types ) {
+        if ( UTTypeConformsTo((__bridge CFStringRef)fileType, (__bridge CFStringRef)type) ) {
+            return YES;
+        }
+    }
+
+    return NO;
 }
 
 + (void)loadInfoForAudioPasteboardItemWithCompletionBlock:(void (^)(NSDictionary *))block {
@@ -286,37 +332,62 @@ typedef struct {
 
 #if TARGET_OS_IPHONE
     UIPasteboard * pasteboard = UIPasteboard.generalPasteboard;
-    if ( ![pasteboard containsPasteboardTypes:supportedTypes] ) {
+    if ( [pasteboard containsPasteboardTypes:supportedTypes] ) {
+        for ( NSString * type in supportedTypes ) {
+            NSIndexSet * itemSet = [pasteboard itemSetWithPasteboardTypes:@[type]];
+            if ( itemSet.count > 0 ) {
+                NSArray <NSData *> * dataArray = [pasteboard dataForPasteboardType:type inItemSet:itemSet];
+                if ( dataArray.count == 1 ) {
+                    return dataArray.firstObject;
+                } else if ( dataArray.count > 1 ) {
+                    NSMutableData * data = [NSMutableData data];
+                    for ( NSData * block in dataArray ) {
+                        [data appendData:block];
+                    }
+                    return data;
+                }
+            }
+        }
+    }
+    
+    if ( ![pasteboard containsPasteboardTypes:@[(NSString *)kUTTypeFileURL]] ) {
         return NULL;
     }
-    for ( NSString * type in supportedTypes ) {
-        NSIndexSet * itemSet = [pasteboard itemSetWithPasteboardTypes:@[type]];
-        if ( itemSet.count > 0 ) {
-            NSArray <NSData *> * dataArray = [pasteboard dataForPasteboardType:type inItemSet:itemSet];
-            if ( dataArray.count == 1 ) {
-                return dataArray.firstObject;
-            } else if ( dataArray.count > 1 ) {
-                NSMutableData * data = [NSMutableData data];
-                for ( NSData * block in dataArray ) {
-                    [data appendData:block];
-                }
+    
+    NSArray *items = UIPasteboard.generalPasteboard.items;
+#else
+    NSPasteboard * pasteboard = NSPasteboard.generalPasteboard;
+    if ( [pasteboard canReadItemWithDataConformingToTypes:supportedTypes] ) {
+        for ( NSString * type in supportedTypes ) {
+            NSData * data = [pasteboard dataForType:type];
+            if ( data ) {
                 return data;
             }
         }
     }
-#else
-    for ( NSString * type in supportedTypes ) {
-        NSPasteboard * pasteboard = NSPasteboard.generalPasteboard;
-        if ( ![pasteboard canReadItemWithDataConformingToTypes:supportedTypes] ) {
-            return NULL;
-        }
-        NSData * data = [pasteboard dataForType:type];
-        if ( data ) {
-            return data;
-        }
+    if ( ![pasteboard canReadItemWithDataConformingToTypes:@[(NSString *)kUTTypeFileURL]] ) {
+        return NULL;
     }
+    
+    NSArray *items = [NSPasteboard.generalPasteboard pasteboardItems];
 #endif
     
+    // Handle file URLs
+    for ( id item in items ) {
+        NSURL *fileURL = nil;
+#if TARGET_OS_IPHONE
+        NSString *urlString = [[NSString alloc] initWithData:item[(NSString *)kUTTypeFileURL] encoding:NSUTF8StringEncoding];
+#else
+        NSString *urlString = [item stringForType:(NSString *)kUTTypeFileURL];
+#endif
+        if ( urlString ) {
+            fileURL = [NSURL URLWithString:urlString];
+        }
+        if ( fileURL && [self isFileURL:fileURL ofTypes:supportedTypes] ) {
+            return [NSData dataWithContentsOfURL:fileURL];
+        }
+    }
+
     return NULL;
 }
 
