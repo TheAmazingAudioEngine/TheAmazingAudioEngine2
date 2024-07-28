@@ -240,6 +240,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 
 - (void)main {
     pthread_setname_np("AEMainThreadEndpoint");
+    pthread_set_qos_class_self_np(QOS_CLASS_USER_INTERACTIVE, 0);
     
     while ( !self.cancelled ) {
         @autoreleasepool {
