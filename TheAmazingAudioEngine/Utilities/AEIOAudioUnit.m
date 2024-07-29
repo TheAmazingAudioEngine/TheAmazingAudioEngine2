@@ -775,6 +775,7 @@ static OSStatus AEIOAudioUnitDequeueRingBuffer(__unsafe_unretained AEIOAudioUnit
     BOOL hasChanges = NO;
     BOOL iaaInput = NO;
     BOOL iaaOutput = NO;
+    double priorSampleRate = self.currentSampleRate;
     
 #if TARGET_OS_IPHONE
     UInt32 iaaConnected = NO;
@@ -809,7 +810,7 @@ static OSStatus AEIOAudioUnitDequeueRingBuffer(__unsafe_unretained AEIOAudioUnit
         BOOL hasOutputChanges = NO;
         
         double newSampleRate = self.sampleRate == 0 ? asbd.mSampleRate : self.sampleRate;
-        if ( fabs(_currentSampleRate - newSampleRate) > DBL_EPSILON ) {
+        if ( fabs(priorSampleRate - newSampleRate) > DBL_EPSILON ) {
             hasChanges = hasOutputChanges = YES;
             self.currentSampleRate = newSampleRate;
         }
@@ -875,10 +876,10 @@ static OSStatus AEIOAudioUnitDequeueRingBuffer(__unsafe_unretained AEIOAudioUnit
             self.numberOfInputChannels = channels;
         }
         
-        if ( !self.outputEnabled ) {
-            double newSampleRate = self.sampleRate == 0 ? asbd.mSampleRate : self.sampleRate;
-            if ( fabs(_currentSampleRate - newSampleRate) > DBL_EPSILON ) {
-                hasChanges = hasInputChanges = YES;
+        double newSampleRate = self.sampleRate == 0 ? asbd.mSampleRate : self.sampleRate;
+        if ( fabs(priorSampleRate - newSampleRate) > DBL_EPSILON ) {
+            hasChanges = hasInputChanges = YES;
+            if ( !self.outputEnabled ) {
                 self.currentSampleRate = newSampleRate;
             }
         }
