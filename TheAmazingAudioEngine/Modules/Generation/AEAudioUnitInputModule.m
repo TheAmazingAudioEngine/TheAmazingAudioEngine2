@@ -153,10 +153,6 @@ AESeconds AEAudioUnitInputModuleGetInputLatency(__unsafe_unretained AEAudioUnitI
 }
 #endif
 
-AudioTimeStamp AEAudioUnitInputModuleGetInputTimestamp(__unsafe_unretained AEAudioUnitInputModule * THIS) {
-    return AEIOAudioUnitGetInputTimestamp(THIS->_ioUnit);
-}
-
 static void AEAudioUnitInputModuleProcess(__unsafe_unretained AEAudioUnitInputModule * THIS,
                                           const AERenderContext * _Nonnull context) {
     if ( !THIS->_numberOfInputChannels || !AEIOAudioUnitGetInputEnabled(THIS->_ioUnit) ) {
@@ -168,9 +164,7 @@ static void AEAudioUnitInputModuleProcess(__unsafe_unretained AEAudioUnitInputMo
     const AudioBufferList * abl = AEBufferStackPushWithChannels(context->stack, 1, THIS->_numberOfInputChannels);
     if ( !abl) return;
     
-    *AEBufferStackGetTimeStampForBuffer(context->stack, 0) = AEIOAudioUnitGetInputTimestamp(THIS->_ioUnit);
-    
-    OSStatus status = AEIOAudioUnitRenderInput(THIS->_ioUnit, abl, context->frames);
+    OSStatus status = AEIOAudioUnitRenderInput(THIS->_ioUnit, abl, context->frames, AEBufferStackGetTimeStampForBuffer(context->stack, 0));
     if ( status != noErr ) {
         if ( status == -1 || status == kAudioToolboxErr_CannotDoInCurrentContext ) {
             // Ignore these errors silently

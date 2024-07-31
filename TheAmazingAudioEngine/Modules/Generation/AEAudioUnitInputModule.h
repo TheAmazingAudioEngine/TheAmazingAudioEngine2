@@ -86,16 +86,6 @@ extern "C" {
  */
 AudioUnit _Nullable AEAudioUnitInputModuleGetAudioUnit(__unsafe_unretained AEAudioUnitInputModule * _Nonnull module);
 
-/*!
- * Get the last received input timestamp
- *
- *  This gives access to the most recent AudioTimeStamp associated with input audio. Use this to perform synchronization.
- *
- * @param module The module instance
- * @return The most recent audio timestamp
- */
-AudioTimeStamp AEAudioUnitInputModuleGetInputTimestamp(__unsafe_unretained AEAudioUnitInputModule * _Nonnull module);
-
 #if TARGET_OS_IPHONE
 
 /*!

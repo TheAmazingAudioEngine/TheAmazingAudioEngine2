@@ -141,9 +141,11 @@ AudioUnit _Nullable AEIOAudioUnitGetAudioUnit(__unsafe_unretained AEIOAudioUnit 
  * @param unit The unit instance
  * @param buffer The audio buffer list
  * @param frames Number of frames
+ * @param outTimestamp On output, if not NULL, the corresponding audio timestamp
  */
 OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull unit,
-                                  const AudioBufferList * _Nonnull buffer, UInt32 frames);
+                                  const AudioBufferList * _Nonnull buffer, UInt32 frames,
+                                  AudioTimeStamp * _Nullable outTimestamp);
 
 /*!
  * Determine whether input is enabled
@@ -154,17 +156,6 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull u
  * @return Whether audio input is enabled
  */
 BOOL AEIOAudioUnitGetInputEnabled(__unsafe_unretained AEIOAudioUnit * _Nonnull unit);
-
-/*!
- * Get the last received input timestamp
- *
- *  For use with input-enabled instances, this gives access to the most recent AudioTimeStamp
- *  associated with input audio. Use this to perform synchronization.
- *
- * @param unit The unit instance
- * @return The most recent audio timestamp
- */
-AudioTimeStamp AEIOAudioUnitGetInputTimestamp(__unsafe_unretained AEIOAudioUnit * _Nonnull unit);
 
 /*!
  * Get the current sample rate
