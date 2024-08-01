@@ -69,6 +69,11 @@ typedef BOOL (^AEAudioFileOutputConditionBlock)(void);
 @interface AEAudioFileOutput : NSObject
 
 /*!
+ * Look up file extension for a given type
+ */
++ (NSString * _Nonnull)fileExtensionForType:(AEAudioFileType)type;
+
+/*!
  * Initializer
  *
  * @param renderer Renderer to use to drive processing

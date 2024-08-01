@@ -30,6 +30,13 @@ static const UInt32 kFramesPerSlice = 1024;
 
 @implementation AEAudioFileOutput
 
++ (NSString *)fileExtensionForType:(AEAudioFileType)type {
+    return
+        type == AEAudioFileTypeM4A ? @"m4a" :
+        (type == AEAudioFileTypeWAVInt16 || type == AEAudioFileTypeWAVInt24 || type == AEAudioFileTypeWAVFloat32) ? @"wav" :
+        @"aiff";;
+}
+
 - (instancetype)initWithRenderer:(AERenderer *)renderer path:(NSString *)path type:(AEAudioFileType)type
                       sampleRate:(double)sampleRate channelCount:(int)channelCount
                            error:(NSError *__autoreleasing  _Nullable *)error {
@@ -47,7 +54,7 @@ static const UInt32 kFramesPerSlice = 1024;
     if ( audioFileCount == 1 ) {
         if ( !(_audioFiles[0] = AEExtAudioFileCreate([NSURL fileURLWithPath:path], type, sampleRate, channelCount, error)) ) return nil;
     } else {
-        NSString * pathExtension = type == AEAudioFileTypeM4A ? @"m4a" : (type == AEAudioFileTypeWAVInt16 || type == AEAudioFileTypeWAVInt24 || type == AEAudioFileTypeWAVFloat32) ? @"wav" : @"aiff";
+        NSString * pathExtension = [AEAudioFileOutput fileExtensionForType:type];
         for ( int i=0; i<audioFileCount; i++ ) {
             NSString * filename = [[NSString stringWithFormat:@"Track %02d", i+1] stringByAppendingPathExtension:pathExtension];
             if ( !(_audioFiles[i] = AEExtAudioFileCreate([NSURL fileURLWithPath:[path stringByAppendingPathComponent:filename]], type, sampleRate, 2, error)) ) return nil;
