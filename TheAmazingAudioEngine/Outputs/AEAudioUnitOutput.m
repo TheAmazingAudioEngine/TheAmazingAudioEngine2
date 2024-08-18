@@ -95,29 +95,31 @@ static const AESeconds kRenderBudgetWarningInitialDelay = 4.0; // Seconds to wai
     
     self.ioUnit = [AEIOAudioUnit new];
     self.ioUnit.outputEnabled = YES;
-    
+
     __unsafe_unretained AEAudioUnitOutput * THIS = self;
-    self.ioUnit.renderBlock = ^(AudioBufferList * _Nonnull ioData, UInt32 frames, const AudioTimeStamp * _Nonnull timestamp) {
-        AERealtimeThreadIdentifier = pthread_self();
-        AEManagedValueCommitPendingUpdates();
-        
-        __unsafe_unretained AERenderer * renderer = (__bridge AERenderer*)AEManagedValueGetValue(rendererValue);
-        if ( renderer ) {
-            #ifdef DEBUG
+    [AEManagedValue performBlockBypassingAtomicBatchUpdate:^{
+        self.ioUnit.renderBlock = ^(AudioBufferList * _Nonnull ioData, UInt32 frames, const AudioTimeStamp * _Nonnull timestamp) {
+            AERealtimeThreadIdentifier = pthread_self();
+            AEManagedValueCommitPendingUpdates();
+            
+            __unsafe_unretained AERenderer * renderer = (__bridge AERenderer*)AEManagedValueGetValue(rendererValue);
+            if ( renderer ) {
+#ifdef DEBUG
                 AEHostTicks start = AECurrentTimeInHostTicks();
-            #endif
-            
-            AERendererRun(renderer, ioData, frames, timestamp);
-            
-            #ifdef DEBUG
+#endif
+                
+                AERendererRun(renderer, ioData, frames, timestamp);
+                
+#ifdef DEBUG
                 AEAudioUnitOutputReportRenderTime(THIS,
-                    AESecondsFromHostTicks(AECurrentTimeInHostTicks() - start),
-                    (double)frames / AEIOAudioUnitGetSampleRate(THIS->_ioUnit));
-            #endif
-        } else {
-            AEAudioBufferListSilence(ioData, 0, frames);
-        }
-    };
+                                                  AESecondsFromHostTicks(AECurrentTimeInHostTicks() - start),
+                                                  (double)frames / AEIOAudioUnitGetSampleRate(THIS->_ioUnit));
+#endif
+            } else {
+                AEAudioBufferListSilence(ioData, 0, frames);
+            }
+        };
+    }];
     
     self.ioUnitStreamChangeObserverToken =
     [[NSNotificationCenter defaultCenter] addObserverForName:AEIOAudioUnitDidUpdateStreamFormatNotification object:self.ioUnit
