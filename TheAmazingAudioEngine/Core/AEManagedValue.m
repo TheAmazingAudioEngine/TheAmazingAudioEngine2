@@ -208,6 +208,10 @@ static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
     os_unfair_lock_unlock(&__atomicBypassMutex);
 }
 
++ (BOOL)inAtomicBatchUpdate {
+    return __atomicUpdateCounter > 0;
+}
+
 - (instancetype)init {
     if ( !(self = [super init]) ) return nil;
     _usedOnAudioThread = YES;
