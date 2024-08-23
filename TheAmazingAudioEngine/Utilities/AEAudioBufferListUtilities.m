@@ -26,6 +26,7 @@
 
 #import "AEAudioBufferListUtilities.h"
 #import "AEUtilities.h"
+#import <Accelerate/Accelerate.h>
 
 AudioBufferList *AEAudioBufferListCreate(int frameCount) {
     return AEAudioBufferListCreateWithFormat(AEAudioDescription, frameCount);
@@ -181,7 +182,9 @@ void AEAudioBufferListAssignWithFormat(AudioBufferList * target, const AudioBuff
 }
 
 void AEAudioBufferListSilence(const AudioBufferList *bufferList, UInt32 offset, UInt32 length) {
-    return AEAudioBufferListSilenceWithFormat(bufferList, AEAudioDescription, offset, length);
+    for ( int i=0; i<bufferList->mNumberBuffers; i++ ) {
+        vDSP_vclr(((float *)bufferList->mBuffers[i].mData) + offset, 1, length);
+    }
 }
 
 void AEAudioBufferListSilenceWithFormat(const AudioBufferList *bufferList,

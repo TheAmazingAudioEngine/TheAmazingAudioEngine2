@@ -473,7 +473,7 @@ static void _AEDSPFFTConvolutionExecute(AEDSPFFTConvolution * setup, float * inp
     }
     
     if ( outputLength > 0 ) {
-        memset(output, 0, outputLength * sizeof(float));
+        vDSP_vclr(output, 1, outputLength);
     }
 }
 
