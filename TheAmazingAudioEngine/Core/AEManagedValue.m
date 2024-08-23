@@ -159,7 +159,7 @@ static os_unfair_lock __pendingInstancesMutex = OS_UNFAIR_LOCK_INIT;
     if ( completionBlock && !__atomicUpdateCompletionTimer ) {
         __atomicUpdateCompletionTimer = [NSTimer scheduledTimerWithTimeInterval:0.01 repeats:YES block:^(NSTimer * _Nonnull timer) {
             NSArray * blocks = nil;
-            os_unfair_lock_unlock(&__atomicBatchUpdateMutex);
+            os_unfair_lock_lock(&__atomicBatchUpdateMutex);
             if ( !__atomicUpdateWaitingForCommit ) {
                 [__atomicUpdateCompletionTimer invalidate];
                 __atomicUpdateCompletionTimer = nil;
