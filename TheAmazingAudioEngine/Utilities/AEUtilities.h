@@ -144,6 +144,19 @@ ExtAudioFileRef _Nullable AEExtAudioFileCreate(NSURL * _Nonnull url, AEAudioFile
 ExtAudioFileRef _Nullable AEExtAudioFileOpen(NSURL * _Nonnull url, AudioStreamBasicDescription * _Nullable outAudioDescription,
                                              UInt64 * _Nullable outLengthInFrames, NSError * _Nullable * _Nullable error);
 
+
+/*!
+ * Lookup info about an audio file
+ *
+ * @param url URL to the file to inspect
+ * @param outAudioDescription The file audio description
+ * @param outLengthInFrames On output, the total length in frames
+ * @param error If not NULL, the error on output
+ * @return YES on success, NO on failure
+ */
+BOOL AEExtAudioFileInspect(NSURL * _Nonnull url, AudioStreamBasicDescription * _Nullable outAudioDescription,
+                           UInt64 * _Nullable outLengthInFrames, NSError * _Nullable * _Nullable error);
+
 #ifdef __cplusplus
 }
 #endif

@@ -225,8 +225,7 @@ ExtAudioFileRef AEExtAudioFileCreate(NSURL * url, AEAudioFileType fileType, doub
     return audioFile;
 }
 
-ExtAudioFileRef _Nullable AEExtAudioFileOpen(NSURL * url, AudioStreamBasicDescription * outAudioDescription,
-                                             UInt64 * outLengthInFrames, NSError ** error) {
+static ExtAudioFileRef _Nullable _AEExtAudioFileOpen(NSURL * url, AudioStreamBasicDescription * outAudioDescription, UInt64 * outLengthInFrames, BOOL setFormats, NSError ** error) {
     if ( outAudioDescription ) *outAudioDescription = (AudioStreamBasicDescription){};
     if ( outLengthInFrames ) *outLengthInFrames = 0;
     if ( error ) *error = NULL;
@@ -282,20 +281,39 @@ ExtAudioFileRef _Nullable AEExtAudioFileOpen(NSURL * url, AudioStreamBasicDescri
         *outLengthInFrames = fileLengthInFrames;
     }
     
-    // Set the client format
-    AudioStreamBasicDescription clientFormat =
+    if ( setFormats ) {
+        // Set the client format
+        AudioStreamBasicDescription clientFormat =
         AEAudioDescriptionWithChannelsAndRate(fileDescription.mChannelsPerFrame, fileDescription.mSampleRate);
-    result = ExtAudioFileSetProperty(reader, kExtAudioFileProperty_ClientDataFormat, sizeof(clientFormat), &clientFormat);
-    if ( !AECheckOSStatus(result, "ExtAudioFileGetProperty(kExtAudioFileProperty_ClientDataFormat)") ) {
-        ExtAudioFileDispose(reader);
-        if ( error )
-            *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
-                                     userInfo:@{NSLocalizedDescriptionKey: @"Couldn't configure file for reading"}];
-        return NULL;
+        result = ExtAudioFileSetProperty(reader, kExtAudioFileProperty_ClientDataFormat, sizeof(clientFormat), &clientFormat);
+        if ( !AECheckOSStatus(result, "ExtAudioFileGetProperty(kExtAudioFileProperty_ClientDataFormat)") ) {
+            ExtAudioFileDispose(reader);
+            if ( error )
+                *error = [NSError errorWithDomain:NSOSStatusErrorDomain code:result
+                                         userInfo:@{NSLocalizedDescriptionKey: @"Couldn't configure file for reading"}];
+            return NULL;
+        }
+        
+        if ( outAudioDescription ) *outAudioDescription = clientFormat;
+    } else {
+        if ( outAudioDescription ) *outAudioDescription = fileDescription;
     }
-    
-    if ( outAudioDescription ) *outAudioDescription = clientFormat;
     
     return reader;
 }
 
+ExtAudioFileRef _Nullable AEExtAudioFileOpen(NSURL * url, AudioStreamBasicDescription * outAudioDescription, UInt64 * outLengthInFrames, NSError ** error) {
+    return _AEExtAudioFileOpen(url, outAudioDescription, outLengthInFrames, YES, error);
+}
+
+BOOL AEExtAudioFileInspect(NSURL * url, AudioStreamBasicDescription * outAudioDescription, UInt64 * outLengthInFrames, NSError ** error) {
+    ExtAudioFileRef ref = _AEExtAudioFileOpen(url, outAudioDescription, outLengthInFrames, NO, error);
+    
+    if ( !ref ) {
+        return NO;
+    }
+    
+    ExtAudioFileDispose(ref);
+    
+    return YES;
+}
