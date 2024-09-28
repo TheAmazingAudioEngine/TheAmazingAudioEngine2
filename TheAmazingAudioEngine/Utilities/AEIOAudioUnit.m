@@ -405,6 +405,7 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull T
     AudioTimeStamp timestamp = THIS->_inputTimestamp;
     AEAudioBufferListCopyOnStack(mutableAbl, buffer, 0);
     status = AudioUnitRender(THIS->_audioUnit, &flags, &timestamp, 1, frames, mutableAbl);
+    if ( outTimestamp ) *outTimestamp = timestamp;
     AECheckOSStatus(status, "AudioUnitRender");
 #endif
     
