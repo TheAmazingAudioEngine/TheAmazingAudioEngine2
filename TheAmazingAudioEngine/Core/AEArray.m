@@ -246,10 +246,12 @@ void * AEArrayGetItem(AEArrayToken token, int index) {
         for ( int i=0; i<array->count; i++ ) {
             array->entries[i]->referenceCount--;
             if ( array->entries[i]->referenceCount == 0 ) {
-                if ( weakSelf.arrayReleaseBlock ) {
-                    weakSelf.arrayReleaseBlock([array->objects pointerAtIndex:i], array->entries[i]->pointer);
-                } else if ( array->entries[i]->pointer && array->entries[i]->pointer != [array->objects pointerAtIndex:i] ) {
-                    free(array->entries[i]->pointer);
+                if ( array->entries[i]->pointer ) {
+                    if ( weakSelf.arrayReleaseBlock ) {
+                        weakSelf.arrayReleaseBlock([array->objects pointerAtIndex:i], array->entries[i]->pointer);
+                    } else if ( array->entries[i]->pointer && array->entries[i]->pointer != [array->objects pointerAtIndex:i] ) {
+                        free(array->entries[i]->pointer);
+                    }
                 }
                 free(array->entries[i]);
             }
