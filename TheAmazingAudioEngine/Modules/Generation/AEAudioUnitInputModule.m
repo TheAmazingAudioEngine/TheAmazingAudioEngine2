@@ -40,7 +40,7 @@
 @end
 
 @implementation AEAudioUnitInputModule
-@dynamic audioUnit, running, inputGain;
+@dynamic audioUnit, running;
 #if TARGET_OS_IPHONE
 @dynamic latencyCompensation;
 #endif
@@ -129,14 +129,6 @@
         }
     }
     return self.ioUnit.audioUnit;
-}
-
-- (void)setInputGain:(double)inputGain {
-    self.ioUnit.inputGain = inputGain;
-}
-
-- (double)inputGain {
-    return self.ioUnit.inputGain;
 }
 
 #if TARGET_OS_IPHONE

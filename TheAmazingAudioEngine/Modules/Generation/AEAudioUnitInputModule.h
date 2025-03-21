@@ -109,7 +109,6 @@ AESeconds AEAudioUnitInputModuleGetInputLatency(__unsafe_unretained AEAudioUnitI
 @property (nonatomic, readonly) AudioUnit _Nullable audioUnit; //!< The audio unit
 @property (nonatomic, readonly) BOOL running; //!< Whether unit is currently active
 @property (nonatomic, readonly) int numberOfInputChannels; //!< The current number of input channels (key-value observable)
-@property (nonatomic) double inputGain; //!< The input gain level (as power ratio)
 
 #if TARGET_OS_IPHONE
 @property (nonatomic) BOOL latencyCompensation; //!< Whether to automatically perform latency compensation (default YES)

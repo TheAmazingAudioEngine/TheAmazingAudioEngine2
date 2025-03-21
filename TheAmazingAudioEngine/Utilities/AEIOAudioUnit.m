@@ -46,10 +46,6 @@ NSString * const AEIOAudioUnitDidSetupNotification = @"AEIOAudioUnitDidSetupNoti
 NSString * const AEIOAudioUnitSessionInterruptionBeganNotification = @"AEIOAudioUnitSessionInterruptionBeganNotification";
 NSString * const AEIOAudioUnitSessionInterruptionEndedNotification = @"AEIOAudioUnitSessionInterruptionEndedNotification";
 
-#if TARGET_OS_IPHONE
-static const double kAVAudioSession0dBGain = 0.75;
-#endif
-
 #if TARGET_OS_OSX
 static const AESeconds kInputRingBufferLowWaterMarkDetectionInterval = 2.0;
 static const UInt32 kInputRingBufferImmediateDrainThreshold = 2048;
@@ -64,8 +60,6 @@ static const UInt32 kInputRingBufferDiscardCrossfade = 256;
 @property (nonatomic) BOOL hasSetInitialStreamFormat;
 @property (nonatomic, readwrite) int numberOfOutputChannels;
 @property (nonatomic, readwrite) int numberOfInputChannels;
-@property (nonatomic) BOOL needsInputGainScaling;
-@property (nonatomic) float currentInputGain;
 #if TARGET_OS_IPHONE
 @property (nonatomic, strong) id sessionInterruptionObserverToken;
 @property (nonatomic, strong) id mediaResetObserverToken;
@@ -109,8 +103,6 @@ struct _conversion_proc_arg_t {
     
     _outputEnabled = YES;
     self.renderBlockValue = [AEManagedValue new];
-    
-    _currentInputGain = _inputGain = 1.0;
     
     AETimeInit();
     
@@ -272,7 +264,6 @@ struct _conversion_proc_arg_t {
         dispatch_async(dispatch_get_main_queue(), ^{
             weakSelf.outputLatency = AVAudioSession.sharedInstance.outputLatency;
             weakSelf.inputLatency = AVAudioSession.sharedInstance.inputLatency;
-            weakSelf.inputGain = weakSelf.inputGain;
         });
     }];
     
@@ -346,7 +337,6 @@ struct _conversion_proc_arg_t {
     
     self.outputLatency = AVAudioSession.sharedInstance.outputLatency;
     self.inputLatency = AVAudioSession.sharedInstance.inputLatency;
-    self.inputGain = self.inputGain;
 #endif
     
     [self updateStreamFormat];
@@ -409,10 +399,6 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull T
     AECheckOSStatus(status, "AudioUnitRender");
 #endif
     
-    if ( status == noErr && THIS->_needsInputGainScaling &&
-            (fabs(THIS->_inputGain - 1.0) > 1.0e-5 || fabs(THIS->_inputGain - THIS->_currentInputGain) > 1.0e-5) ) {
-        AEDSPApplyGainSmoothed(buffer, THIS->_inputGain, &THIS->_currentInputGain, frames, buffer);
-    }
     return status;
 }
 
@@ -545,32 +531,6 @@ AESeconds AEIOAudioUnitGetOutputLatency(__unsafe_unretained AEIOAudioUnit * _Non
             }
         }
     }
-}
-
-- (void)setInputGain:(double)inputGain {
-    _inputGain = inputGain;
-    
-#if TARGET_OS_IPHONE
-    AVAudioSession * audioSession = AVAudioSession.sharedInstance;
-    
-    // Try to set the hardware gain; zero seems to still be audible, though, so we'll bypass for that
-    if ( audioSession.inputGainSettable && inputGain > 0 ) {
-        // AVAudioSession's gain seems to be logarithmic, so we'll do a little rough scaling on the input values (power ratio).
-        // The default gain is not 1.0, so we'll consider the default value kAVAudioSession0dBGain as the 0dB point
-        double gain = (inputGain > 1.0-1.0e-5 ? 1.0 : 1.0 - (AEDSPRatioToDecibels(inputGain) / -30.0)) * kAVAudioSession0dBGain;
-        NSError * error = nil;
-        if ( ![audioSession setInputGain:MIN(1.0, gain) error:&error] ) {
-            NSLog(@"Couldn't set input gain: %@", error);
-            _needsInputGainScaling = YES;
-        } else {
-            _needsInputGainScaling = NO;
-        }
-    } else {
-        _needsInputGainScaling = YES;
-    }
-#else
-    _needsInputGainScaling = YES;
-#endif
 }
 
 - (int)numberOfInputChannels {
