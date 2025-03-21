@@ -74,6 +74,16 @@ typedef void (^AEMainThreadEndpointHandler)(void * _Nullable data, size_t length
 - (instancetype _Nullable)initWithHandler:(AEMainThreadEndpointHandler _Nonnull)handler bufferCapacity:(size_t)bufferCapacity;
 
 /*!
+ * Initializer with custom buffer capacity, and multiple producer support
+ *
+ * @param handler The handler block to use for incoming messages
+ * @param bufferCapacity The buffer capacity, in bytes (default is 8192 bytes).  Note that
+ *  due to the underlying implementation, actual capacity may be larger.
+ * @param producerCount The maximum number of producers that can send messages to this endpoint (default 1)
+ */
+- (instancetype _Nullable)initWithHandler:(AEMainThreadEndpointHandler _Nonnull)handler bufferCapacity:(size_t)bufferCapacity producerCount:(int)producerCount;
+
+/*!
  * Service any pending messages
  */
 - (void)serviceMessages;
