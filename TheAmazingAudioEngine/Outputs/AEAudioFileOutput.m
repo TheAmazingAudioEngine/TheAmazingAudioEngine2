@@ -38,12 +38,12 @@ static const UInt32 kFramesPerSlice = 1024;
 }
 
 - (instancetype)initWithRenderer:(AERenderer *)renderer path:(NSString *)path type:(AEAudioFileType)type
-                      sampleRate:(double)sampleRate channelCount:(int)channelCount
+                      sampleRate:(double)sampleRate channelCount:(int)channelCount multitrack:(BOOL)multitrack
                            error:(NSError *__autoreleasing  _Nullable *)error {
     if ( !(self = [super init]) ) return nil;
  
     NSFileManager * fm = [NSFileManager defaultManager];
-    if ( channelCount > 2 && ![fm fileExistsAtPath:path] ) {
+    if ( multitrack && ![fm fileExistsAtPath:path] ) {
         if ( ![fm createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:error] ) {
             return nil;
         }
@@ -51,7 +51,7 @@ static const UInt32 kFramesPerSlice = 1024;
     
     int audioFileCount = ceil(channelCount/2.0);
     self.audioFiles = malloc(sizeof(ExtAudioFileRef) * audioFileCount);
-    if ( audioFileCount == 1 ) {
+    if ( !multitrack ) {
         if ( !(_audioFiles[0] = AEExtAudioFileCreate([NSURL fileURLWithPath:path], type, sampleRate, channelCount, error)) ) return nil;
     } else {
         NSString * pathExtension = [AEAudioFileOutput fileExtensionForType:type];

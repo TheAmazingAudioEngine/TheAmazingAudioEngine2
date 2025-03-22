@@ -81,6 +81,7 @@ typedef BOOL (^AEAudioFileOutputConditionBlock)(void);
  * @param type The type of the file to write
  * @param sampleRate Sample rate to use
  * @param channelCount Number of channels. If more than two, each stereo pair is output to a different file
+ * @param multitrack Whether to output each stereo pair to a different file
  * @param error If not NULL, the error on output
  */
 - (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer
@@ -88,6 +89,7 @@ typedef BOOL (^AEAudioFileOutputConditionBlock)(void);
                                       type:(AEAudioFileType)type
                                 sampleRate:(double)sampleRate
                               channelCount:(int)channelCount
+                                multitrack:(BOOL)multitrack
                                      error:(NSError * _Nullable * _Nullable)error;
 
 /*!
