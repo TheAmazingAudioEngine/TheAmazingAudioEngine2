@@ -81,16 +81,20 @@ typedef BOOL (^AEAudioFileOutputConditionBlock)(void);
  * @param type The type of the file to write
  * @param sampleRate Sample rate to use
  * @param channelCount Number of channels. If more than two, each stereo pair is output to a different file
- * @param multitrack Whether to output each stereo pair to a different file
- * @param error If not NULL, the error on output
  */
 - (instancetype _Nullable)initWithRenderer:(AERenderer * _Nonnull)renderer
                                       path:(NSString * _Nonnull)path
                                       type:(AEAudioFileType)type
                                 sampleRate:(double)sampleRate
-                              channelCount:(int)channelCount
-                                multitrack:(BOOL)multitrack
-                                     error:(NSError * _Nullable * _Nullable)error;
+                              channelCount:(int)channelCount;
+
+
+/*!
+ * Prepare for writing
+ *
+ * @param error The error, if one occurred
+ */
+- (BOOL)prepareForWriting:(NSError * _Nullable * _Nullable)error;
 
 /*!
  * Run offline rendering for a specified duration
@@ -127,6 +131,12 @@ typedef BOOL (^AEAudioFileOutputConditionBlock)(void);
 
 //! Whether to extend recording until silence reached, to capture effect tails (default NO)
 @property (nonatomic) BOOL extendRecordingUntilSilence;
+
+//! Whether to do multi-track output, one file per stereo pair
+@property (nonatomic) BOOL multitrack;
+
+//! The filenames of each channel's output file, if using multitrack mode
+@property (nonatomic, strong) NSArray <NSString *> * _Nullable channelFileNames;
 
 //! The sample rate
 @property (nonatomic, readonly) double sampleRate;

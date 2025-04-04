@@ -19,9 +19,9 @@ const AEHostTicks AEAudioFileOutputInitialHostTicksValue = 1000;
 static const UInt32 kFramesPerSlice = 1024;
 
 @interface AEAudioFileOutput ()
+@property (nonatomic) AEAudioFileType type;
 @property (nonatomic, readwrite) double sampleRate;
 @property (nonatomic, readwrite) int numberOfChannels;
-@property (nonatomic, readwrite) BOOL multiTrackOutput;
 @property (nonatomic, strong, readwrite) NSString * path;
 @property (nonatomic) ExtAudioFileRef * audioFiles;
 @property (nonatomic, readwrite) UInt64 numberOfFramesRecorded;
@@ -34,34 +34,14 @@ static const UInt32 kFramesPerSlice = 1024;
     return
         type == AEAudioFileTypeM4A ? @"m4a" :
         (type == AEAudioFileTypeWAVInt16 || type == AEAudioFileTypeWAVInt24 || type == AEAudioFileTypeWAVFloat32) ? @"wav" :
-        @"aiff";;
+        @"aiff";
 }
 
-- (instancetype)initWithRenderer:(AERenderer *)renderer path:(NSString *)path type:(AEAudioFileType)type
-                      sampleRate:(double)sampleRate channelCount:(int)channelCount multitrack:(BOOL)multitrack
-                           error:(NSError *__autoreleasing  _Nullable *)error {
+- (instancetype)initWithRenderer:(AERenderer *)renderer path:(NSString *)path type:(AEAudioFileType)type sampleRate:(double)sampleRate channelCount:(int)channelCount {
     if ( !(self = [super init]) ) return nil;
- 
-    NSFileManager * fm = [NSFileManager defaultManager];
-    if ( multitrack && ![fm fileExistsAtPath:path] ) {
-        if ( ![fm createDirectoryAtPath:path withIntermediateDirectories:YES attributes:nil error:error] ) {
-            return nil;
-        }
-    }
-    
-    int audioFileCount = ceil(channelCount/2.0);
-    self.audioFiles = malloc(sizeof(ExtAudioFileRef) * audioFileCount);
-    if ( !multitrack ) {
-        if ( !(_audioFiles[0] = AEExtAudioFileCreate([NSURL fileURLWithPath:path], type, sampleRate, channelCount, error)) ) return nil;
-    } else {
-        NSString * pathExtension = [AEAudioFileOutput fileExtensionForType:type];
-        for ( int i=0; i<audioFileCount; i++ ) {
-            NSString * filename = [[NSString stringWithFormat:@"Track %02d", i+1] stringByAppendingPathExtension:pathExtension];
-            if ( !(_audioFiles[i] = AEExtAudioFileCreate([NSURL fileURLWithPath:[path stringByAppendingPathComponent:filename]], type, sampleRate, 2, error)) ) return nil;
-        }
-    }
-    
+     
     self.path = path;
+    self.type = type;
     self.sampleRate = sampleRate;
     self.numberOfChannels = channelCount;
     self.renderer = renderer;
@@ -69,6 +49,32 @@ static const UInt32 kFramesPerSlice = 1024;
     _timestamp.mHostTime = AEAudioFileOutputInitialHostTicksValue;
     
     return self;
+}
+
+- (BOOL)prepareForWriting:(NSError * _Nullable __autoreleasing *)error {
+    if ( self.audioFiles ) return YES;
+    
+    NSFileManager * fm = [NSFileManager defaultManager];
+    if ( self.multitrack && ![fm fileExistsAtPath:self.path] ) {
+        if ( ![fm createDirectoryAtPath:self.path withIntermediateDirectories:YES attributes:nil error:error] ) {
+            return NO;
+        }
+    }
+    
+    int audioFileCount = ceil(self.numberOfChannels/2.0);
+    self.audioFiles = malloc(sizeof(ExtAudioFileRef) * audioFileCount);
+    if ( !self.multitrack ) {
+        if ( !(_audioFiles[0] = AEExtAudioFileCreate([NSURL fileURLWithPath:self.path], self.type, self.sampleRate, self.numberOfChannels, error)) ) return NO;
+    } else {
+        NSString * pathExtension = [AEAudioFileOutput fileExtensionForType:self.type];
+        for ( int i=0; i<audioFileCount; i++ ) {
+            NSString * filename = i < self.channelFileNames.count ? self.channelFileNames[i] : [NSString stringWithFormat:@"Track %02d", i+1];
+            filename = [filename stringByAppendingPathExtension:pathExtension];
+            if ( !(_audioFiles[i] = AEExtAudioFileCreate([NSURL fileURLWithPath:[self.path stringByAppendingPathComponent:filename]], self.type, self.sampleRate, 2, error)) ) return NO;
+        }
+    }
+    
+    return YES;
 }
 
 - (void)dealloc {
@@ -84,9 +90,12 @@ static const UInt32 kFramesPerSlice = 1024;
     _renderer.flags = AERendererContextFlagIsOffline;
 }
 
+- (void)setChannelFileNames:(NSArray<NSString *> * _Nullable)channelFileNames {
+    _channelFileNames = channelFileNames;
+    _multitrack = YES;
+}
+
 - (void)runForDuration:(AESeconds)duration completionBlock:(AEAudioFileOutputCompletionBlock)completionBlock {
-    assert(_audioFiles);
-    
     // Perform render in background thread
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         
@@ -95,7 +104,7 @@ static const UInt32 kFramesPerSlice = 1024;
         
         // Run for frame count
         UInt32 remainingFrames = round(duration * self.sampleRate);
-        BOOL waitForSilence = self.extendRecordingUntilSilence;
+        BOOL waitForSilence = self->_audioFiles && self.extendRecordingUntilSilence;
         UInt32 remainingDecayFrames = 10 * self.sampleRate;
         OSStatus status = noErr;
         while ( 1 ) {
@@ -125,13 +134,15 @@ static const UInt32 kFramesPerSlice = 1024;
             }
             
             // Write to file
-            if ( ![self writeFrames:frames fromBuffer:abl] ) {
-                break;
+            if ( self->_audioFiles ) {
+                if ( ![self writeFrames:frames fromBuffer:abl] ) {
+                    break;
+                }
+                self->_numberOfFramesRecorded += frames;
             }
             
             self->_timestamp.mSampleTime += frames;
             self->_timestamp.mHostTime += AEHostTicksFromSeconds((double)frames / self.sampleRate);
-            self->_numberOfFramesRecorded += frames;
         }
         
         AEAudioBufferListFree(abl);

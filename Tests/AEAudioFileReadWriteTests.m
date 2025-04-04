@@ -136,9 +136,9 @@ static const NSTimeInterval kTestFileLength = 0.5;
 - (NSError *)createTestFile {
     AERenderer * renderer = [AERenderer new];
     
+    AEAudioFileOutput * output = [[AEAudioFileOutput alloc] initWithRenderer:renderer path:self.file type:AEAudioFileTypeAIFFInt16 sampleRate:44100.0 channelCount:1];
     __block NSError * error = nil;
-    AEAudioFileOutput * output = [[AEAudioFileOutput alloc] initWithRenderer:renderer path:self.file type:AEAudioFileTypeAIFFInt16 sampleRate:44100.0 channelCount:1 error:&error];
-    if ( !output ) {
+    if ( ![output prepareForWriting:&error] ) {
         return error;
     }
     
