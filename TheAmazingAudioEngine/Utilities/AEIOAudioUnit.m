@@ -402,6 +402,10 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull T
     return status;
 }
 
+BOOL AEIOAudioUnitIsRunning(__unsafe_unretained AEIOAudioUnit * _Nonnull THIS) {
+    return THIS->_running;
+}
+
 BOOL AEIOAudioUnitGetInputEnabled(__unsafe_unretained AEIOAudioUnit * _Nonnull THIS) {
     return THIS->_inputEnabled && THIS->_numberOfInputChannels > 0;
 }

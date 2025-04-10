@@ -72,6 +72,7 @@
     
     self.numberOfInputChannels = self.ioUnit.numberOfInputChannels;
     self.processFunction = AEAudioUnitInputModuleProcess;
+    self.isActiveFunction = AEAudioUnitInputModuleIsActive;
     
 #if TARGET_OS_IPHONE
     self.latencyCompensation = YES;
@@ -144,6 +145,10 @@ AESeconds AEAudioUnitInputModuleGetInputLatency(__unsafe_unretained AEAudioUnitI
     return AEIOAudioUnitGetInputLatency(THIS->_ioUnit);
 }
 #endif
+
+static BOOL AEAudioUnitInputModuleIsActive(__unsafe_unretained AEAudioUnitInputModule * THIS) {
+    return AEIOAudioUnitIsRunning(THIS->_ioUnit) && AEIOAudioUnitGetInputEnabled(THIS->_ioUnit);
+}
 
 static void AEAudioUnitInputModuleProcess(__unsafe_unretained AEAudioUnitInputModule * THIS,
                                           const AERenderContext * _Nonnull context) {

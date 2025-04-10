@@ -52,6 +52,7 @@
     self.moduleValue = [AEManagedValue new];
     self.module = module;
     self.processFunction = AESplitterModuleProcess;
+    self.isActiveFunction = AESplitterModuleIsActive;
     return self;
 }
 
@@ -68,6 +69,11 @@
     AEAudioBufferListFree(_buffer);
     _buffer = AEAudioBufferListCreateWithFormat(AEAudioDescriptionWithChannelsAndRate(_numberOfChannels, 0),
                                                 AEGetMaxFramesPerSlice());
+}
+
+static BOOL AESplitterModuleIsActive(__unsafe_unretained AESplitterModule * THIS) {
+    __unsafe_unretained AEModule * module = (__bridge AEModule *)AEManagedValueGetValue(THIS->_moduleValue);
+    return module ? AEModuleIsActive(module) : NO;
 }
 
 static void AESplitterModuleProcess(__unsafe_unretained AESplitterModule * THIS, const AERenderContext * _Nonnull context) {

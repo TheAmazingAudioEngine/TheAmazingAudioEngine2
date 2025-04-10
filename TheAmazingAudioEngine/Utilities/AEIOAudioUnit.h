@@ -148,6 +148,14 @@ OSStatus AEIOAudioUnitRenderInput(__unsafe_unretained AEIOAudioUnit * _Nonnull u
                                   AudioTimeStamp * _Nullable outTimestamp);
 
 /*!
+ * Determine whether unit is running
+ *
+ * @param unit The unit instance
+ * @return Whether the unit is running
+ */
+BOOL AEIOAudioUnitIsRunning(__unsafe_unretained AEIOAudioUnit * _Nonnull unit);
+
+/*!
  * Determine whether input is enabled
  *
  *  For use with input-enabled instances.
