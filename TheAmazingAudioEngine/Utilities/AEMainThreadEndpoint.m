@@ -167,7 +167,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
             // Get pointer to readable bytes
             int32_t availableBytes;
             void * tail = TPCircularBufferTail(buffer, &availableBytes);
-            if ( availableBytes == 0 ) {
+            if ( availableBytes < sizeof(size_t) ) {
                 continue;
             }
             byteCount += availableBytes;
@@ -175,6 +175,12 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
             // Get length and data
             size_t length = *((size_t*)tail);
             void * data = length > 0 ? (tail + sizeof(size_t)) : NULL;
+            
+            if ( length > availableBytes - sizeof(size_t) ) {
+                NSLog(@"Invalid length: %zu (available: %d)", length, availableBytes);
+                TPCircularBufferConsume(buffer, availableBytes);
+                break;
+            }
             
             if ( NSThread.isMainThread ) {
                 self.handler(data, length);
