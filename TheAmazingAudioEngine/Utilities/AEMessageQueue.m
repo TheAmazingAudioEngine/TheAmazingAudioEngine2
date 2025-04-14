@@ -70,14 +70,14 @@ typedef struct {
     if ( !(self = [super init]) ) return nil;
     
     // Create main thread endpoint
-    self.mainThreadEndpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(void * _Nullable data, size_t length) {
+    self.mainThreadEndpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void * _Nullable data, size_t length) {
         const AEMessageQueueMessageType * type = (AEMessageQueueMessageType *)data;
         if ( *type == AEMessageQueueMainThreadMessage ) {
             const main_thread_message_t * message = (const main_thread_message_t *)data;
             id target = message->target;
-            const char * selectorString = ((char *)data) + sizeof(main_thread_message_t);
-            const char * arguments = ((char *)data) + sizeof(main_thread_message_t) + message->selectorLength;
-            const char * argumentEnd = ((char *)data) + length;
+            const char * selectorString = ((const char *)data) + sizeof(main_thread_message_t);
+            const char * arguments = ((const char *)data) + sizeof(main_thread_message_t) + message->selectorLength;
+            const char * argumentEnd = ((const char *)data) + length;
             
             // Create invocation
             SEL selector = sel_registerName(selectorString);

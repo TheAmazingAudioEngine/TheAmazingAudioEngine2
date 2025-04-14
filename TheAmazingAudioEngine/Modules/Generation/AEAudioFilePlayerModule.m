@@ -229,7 +229,7 @@ BOOL AEAudioFilePlayerModuleGetPlaying(__unsafe_unretained AEAudioFilePlayerModu
 - (void)setupMainThreadEndpoint {
     __unsafe_unretained AEAudioFilePlayerModule * weakSelf = self;
     self.mainThreadEndpointValue.objectValue
-            = [[AEMainThreadEndpoint alloc] initWithHandler:^(void * data, size_t length) {
+            = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void * data, size_t length) {
         if ( weakSelf.beginBlock && weakSelf->_anchorTime != 0 ) {
             weakSelf.beginBlock();
             weakSelf.beginBlock = nil;

@@ -119,7 +119,7 @@ void AEAudioFileRecorderModuleBeginRecording(__unsafe_unretained AEAudioFileReco
     if ( time && _lastTimestamp > AECurrentTimeInHostTicks()-AEHostTicksFromSeconds(0.5) ) {
         // Stop after a delay
         __weak typeof(self) weakSelf = self;
-        self.stopRecordingNotificationEndpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(void * _Nullable data, size_t length) {
+        self.stopRecordingNotificationEndpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void * _Nullable data, size_t length) {
             [weakSelf.stopTimeout invalidate];
             weakSelf.stopTimeout = nil;
             weakSelf.stopRecordingNotificationEndpoint = nil;

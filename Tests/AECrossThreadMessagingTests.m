@@ -27,7 +27,7 @@ typedef struct {
 
 - (void)testMainThreadEndpointMessaging {
     NSMutableArray * messages = [NSMutableArray array];
-    AEMainThreadEndpoint * endpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(void *data, size_t length) {
+    AEMainThreadEndpoint * endpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void *data, size_t length) {
         [messages addObject:[NSData dataWithBytes:data length:length]];
     }];
     
@@ -64,7 +64,7 @@ typedef struct {
 
 - (void)testMainThreadEndpointStressTest {
     __block int counter = 0;
-    AEMainThreadEndpoint * endpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(void *data, size_t length) {
+    AEMainThreadEndpoint * endpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void *data, size_t length) {
         counter++;
     }];
     
@@ -185,7 +185,7 @@ typedef struct {
 - (void)testReleaseWithinHandler {
     __weak AEMainThreadEndpoint * weakEndpoint = nil;
     @autoreleasepool {
-        __block AEMainThreadEndpoint * endpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(void * data, size_t length) {
+        __block AEMainThreadEndpoint * endpoint = [[AEMainThreadEndpoint alloc] initWithHandler:^(const void * data, size_t length) {
             endpoint = nil;
         }];
         

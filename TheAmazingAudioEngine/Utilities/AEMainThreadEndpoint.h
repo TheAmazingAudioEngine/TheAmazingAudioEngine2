@@ -40,7 +40,7 @@ extern "C" {
  * @param data Message data (or NULL)
  * @param length Length of message
  */
-typedef void (^AEMainThreadEndpointHandler)(void * _Nullable data, size_t length);
+typedef void (^AEMainThreadEndpointHandler)(const void * _Nullable data, size_t length);
 
 /*!
  * Main thread message endpoint
