@@ -694,7 +694,9 @@ static OSStatus AEIOAudioUnitDequeueRingBuffer(__unsafe_unretained AEIOAudioUnit
     UInt32 available = AECircularBufferPeek(&THIS->_ringBuffer, NULL);
     if ( available < *frames ) {
         #ifdef DEBUG
-        NSLog(@"Input buffer ran dry (wanted %d input frames, got %d)", (int)*frames, available);
+        if ( THIS->_inputEnabled ) {
+            NSLog(@"Input buffer ran dry (wanted %d input frames, got %d)", (int)*frames, available);
+        }
         #endif
         THIS->_lowWaterMark = 0;
         *frames = 0;
