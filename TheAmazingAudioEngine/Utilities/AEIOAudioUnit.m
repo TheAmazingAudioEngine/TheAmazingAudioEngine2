@@ -221,6 +221,7 @@ struct _conversion_proc_arg_t {
                                                   usingBlock:^(NSNotification *notification) {
         NSInteger type = [notification.userInfo[AVAudioSessionInterruptionTypeKey] integerValue];
         if ( type == AVAudioSessionInterruptionTypeBegan ) {
+            NSLog(@"Audio Session interruption began");
             wasRunning = weakSelf.running;
             
             UInt32 interAppAudioConnected;
@@ -240,6 +241,7 @@ struct _conversion_proc_arg_t {
         } else {
             NSUInteger optionFlags =
                 [notification.userInfo[AVAudioSessionInterruptionOptionKey] unsignedIntegerValue];
+            NSLog(@"Audio Session interruption ended (should resume: %@)", optionFlags & AVAudioSessionInterruptionOptionShouldResume ? @"Yes" : @"No");
             if (optionFlags & AVAudioSessionInterruptionOptionShouldResume) {
                 if ( wasRunning ) {
                     [weakSelf start:NULL];
