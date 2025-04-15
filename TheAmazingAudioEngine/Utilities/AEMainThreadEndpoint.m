@@ -41,6 +41,7 @@ static AEMainThreadEndpointThread * __sharedThread = nil;
     TPMultiProducerBuffer _buffer;
     BOOL _hasPendingMainThreadMessages;
     pthread_mutex_t _mutex;
+    BOOL _mutexHeldByMainThread;
 }
 @property (nonatomic, copy) AEMainThreadEndpointHandler handler;
 @property (nonatomic) semaphore_t semaphore;
@@ -154,11 +155,18 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
 }
 
 - (void)serviceMessages {
-    if ( NSThread.isMainThread ) {
+    BOOL isMainThread = NSThread.isMainThread;
+    
+    if ( isMainThread ) {
         [self serviceBlockQueue];
     }
     
-    pthread_mutex_lock(&_mutex);
+    BOOL alreadyHeld = isMainThread && _mutexHeldByMainThread;
+    if ( !alreadyHeld ) {
+        pthread_mutex_lock(&_mutex);
+        if ( isMainThread ) _mutexHeldByMainThread = YES;
+    }
+    
     TPCircularBuffer * buffer;
     for ( int i=0; i<kMaxMessagesEachService; i++ ) {
         int byteCount = 0;
@@ -182,7 +190,7 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
                 break;
             }
             
-            if ( NSThread.isMainThread ) {
+            if ( isMainThread ) {
                 self.handler(data, length);
             } else {
                 void * dataCopy = malloc(length);
@@ -204,14 +212,28 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
             break;
         }
     }
-    pthread_mutex_unlock(&_mutex);
+    
+    if ( !alreadyHeld ) {
+        if ( isMainThread ) _mutexHeldByMainThread = NO;
+        pthread_mutex_unlock(&_mutex);
+    }
 }
 
 - (void)serviceBlockQueue {
-    pthread_mutex_lock(&_mutex);
+    BOOL isMainThread = NSThread.isMainThread;
+    BOOL alreadyHeld = isMainThread && _mutexHeldByMainThread;
+    if ( !alreadyHeld ) {
+        pthread_mutex_lock(&_mutex);
+        if ( isMainThread ) _mutexHeldByMainThread = YES;
+    }
+    
     NSArray <void (^)(void)> * mainThreadBlocks = self.mainThreadBlocks.copy;
     [self.mainThreadBlocks removeAllObjects];
-    pthread_mutex_unlock(&_mutex);
+    
+    if ( !alreadyHeld ) {
+        if ( isMainThread ) _mutexHeldByMainThread = NO;
+        pthread_mutex_unlock(&_mutex);
+    }
     
     for ( void (^block)(void) in mainThreadBlocks ) {
         block();
