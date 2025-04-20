@@ -190,11 +190,17 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
                 break;
             }
             
+            // Make local copy of data
+            void * dataCopy = malloc(length);
+            memcpy(dataCopy, data, length);
+            
+            // Mark as read
+            TPCircularBufferConsume(buffer, (int32_t)(sizeof(size_t) + length));
+            
             if ( isMainThread ) {
-                self.handler(data, length);
+                self.handler(dataCopy, length);
+                free(dataCopy);
             } else {
-                void * dataCopy = malloc(length);
-                memcpy(dataCopy, data, length);
                 __weak typeof(self) weakSelf = self;
                 [self.mainThreadBlocks addObject:^{
                     // Run handler
@@ -203,9 +209,6 @@ void AEMainThreadEndpointDispatchMessage(__unsafe_unretained AEMainThreadEndpoin
                 }];
                 dispatch_async(dispatch_get_main_queue(), ^{ [self serviceBlockQueue]; });
             }
-            
-            // Mark as read
-            TPCircularBufferConsume(buffer, (int32_t)(sizeof(size_t) + length));
         }
         
         if ( byteCount == 0 ) {
